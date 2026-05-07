@@ -1,0 +1,91 @@
+# .gitignore — Sen_parcelle
+# Fichier généré pour ignorer les fichiers inutiles dans Git
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# Django
+*.log
+*.pot
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Node / Blockchain
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.cache/
+artifacts/
+coverage/
+typechain/
+
+# Flutter / Dart
+.dart-tool/
+.pub/
+.build/
+.dart_tool/
+*.flutter-plugins
+*.flutter-plugins-dependencies
+*.package_blob
+*.package_config.json
+.flutter-plugins-dependencies
+/android/
+/ios/
+/linux/
+/macos/
+/web/
+/test_data/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.DS_Store
+Desktop.ini
+Thumbs.db
+
+# Logs / Temp
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+*.cache
+.session/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+.AppleDouble
+.LSOverride

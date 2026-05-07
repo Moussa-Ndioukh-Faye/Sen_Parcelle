@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\mouss\\OneDrive\\Desktop\\SEN_PARCELLE\\SEN_PARCELLE\\blockchain\\contracts\\SenParcelle.sol": {
+      "lastModificationDate": 1778081076019,
+      "contentHash": "661f56514c3f2bed27c7492b514a4b1b",
+      "sourceName": "contracts/SenParcelle.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "SenParcelle"
+      ]
+    }
+  }
+}
