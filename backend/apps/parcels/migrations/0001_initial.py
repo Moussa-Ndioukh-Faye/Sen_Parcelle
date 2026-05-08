@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('surface', models.FloatField(help_text='Superficie en m²')),
                 ('price', models.DecimalField(decimal_places=2, help_text='Prix en FCFA', max_digits=14)),
                 ('status', models.CharField(choices=[('pending', 'En attente'), ('validated', 'Validée'), ('certified', 'Certifiée'), ('rejected', 'Rejetée'), ('sold', 'Vendue')], db_index=True, default='pending', max_length=20)),
-                ('location', models.JSONField(blank=True, null=True)),
+                ('location', django.contrib.gis.db.models.fields.PointField(blank=True, geography=True, help_text='Point GPS (longitude, latitude)', null=True, srid=4326)),
                 ('document_hash', models.CharField(blank=True, db_index=True, max_length=64)),
                 ('ipfs_hash', models.CharField(blank=True, max_length=100)),
                 ('blockchain_tx_hash', models.CharField(blank=True, db_index=True, max_length=100)),
@@ -71,8 +71,5 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='parcel',
             index=models.Index(fields=['document_hash'], name='parcels_documen_56564d_idx'),
-        ),
-    ]
-, name='parcels_documen_56564d_idx'),
         ),
     ]

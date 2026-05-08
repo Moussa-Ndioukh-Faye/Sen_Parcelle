@@ -178,14 +178,14 @@ class BlockchainService:
     def _parcel_id_to_uint(self, parcel_id_str: str) -> int:
         """
         Convertit un UUID Django en uint256 pour Solidity.
-        Prend les 8 premiers octets de l'UUID.
+        Les UUID sont sur 128 bits, ils tiennent parfaitement dans uint256.
         """
         import uuid
         try:
             uid = uuid.UUID(parcel_id_str)
-            return uid.int & 0xFFFFFFFFFFFFFFFF  # 64 bits max
+            return uid.int
         except ValueError:
-            return abs(hash(parcel_id_str)) % (2**64)
+            return abs(hash(parcel_id_str))
 
     def _str_to_bytes32(self, s: str) -> bytes:
         """Convertit une chaîne en bytes32 pour Solidity."""

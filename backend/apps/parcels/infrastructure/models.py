@@ -188,8 +188,10 @@ class DjangoParcelRepository(IParcelRepository):
         ).exclude(status="rejected")
         return [p.to_domain() for p in qs]
 
-    def find_by_region(self, region: str, status: Optional[str] = None) -> List[ParcelEntity]:
-        qs = Parcel.objects.filter(region=region)
+    def find_by_region(self, region: Optional[str], status: Optional[str] = None) -> List[ParcelEntity]:
+        qs = Parcel.objects.all()
+        if region:
+            qs = qs.filter(region=region)
         if status:
             qs = qs.filter(status=status)
         return [p.to_domain() for p in qs]

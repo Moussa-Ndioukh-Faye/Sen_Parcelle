@@ -71,9 +71,8 @@ class ParcelRepository {
       'region':       region,
       'latitude':     latitude,
       'longitude':    longitude,
-      'superficie':   surface,
-      'prix':         price,
-      'type_terrain': typeTerrain,
+      'surface':      surface,
+      'price':        price,
       'document': await MultipartFile.fromFile(documentPath),
       'photos': [
         for (final p in photoPaths) await MultipartFile.fromFile(p),

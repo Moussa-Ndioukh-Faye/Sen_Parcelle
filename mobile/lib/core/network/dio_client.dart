@@ -3,6 +3,7 @@
 // Client HTTP Dio avec interceptors JWT + retry + offline
 // ═══════════════════════════════════════════════════════════════
 
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -40,6 +41,7 @@ class JWTInterceptor extends Interceptor {
   final Ref         _ref;
   final _storage  = const FlutterSecureStorage();
   bool _isRefreshing = false;
+  Completer<String?>? _refreshTokenCompleter;
 
   JWTInterceptor(this._dio, this._ref);
 
@@ -60,23 +62,35 @@ class JWTInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401 && !_isRefreshing) {
-      _isRefreshing = true;
-      try {
-        final newToken = await _refreshToken();
-        if (newToken != null) {
-          // Rejouer la requête originale avec le nouveau token
-          err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+    if (err.response?.statusCode == 401) {
+      // Si une session de rafraîchissement est déjà en cours, on attend
+      if (_isRefreshing) {
+        final token = await _refreshTokenCompleter?.future;
+        if (token != null) {
+          err.requestOptions.headers['Authorization'] = 'Bearer $token';
           final response = await _dio.fetch(err.requestOptions);
-          _isRefreshing = false;
           return handler.resolve(response);
         }
-      } catch (_) {
-        // Refresh échoué → déconnecter l'utilisateur
-        await _storage.deleteAll();
-        _ref.read(authNotifierProvider.notifier).logout();
+      } else {
+        _isRefreshing = true;
+        _refreshTokenCompleter = Completer<String?>();
+        try {
+          final newToken = await _refreshToken();
+          _refreshTokenCompleter?.complete(newToken);
+          _isRefreshing = false;
+
+          if (newToken != null) {
+            err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+            final response = await _dio.fetch(err.requestOptions);
+            return handler.resolve(response);
+          }
+        } catch (_) {
+          _refreshTokenCompleter?.complete(null);
+          _isRefreshing = false;
+          await _storage.deleteAll();
+          _ref.read(authNotifierProvider.notifier).logout();
+        }
       }
-      _isRefreshing = false;
     }
     handler.next(err);
   }

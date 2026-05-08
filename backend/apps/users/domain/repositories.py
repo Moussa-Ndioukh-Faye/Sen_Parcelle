@@ -50,3 +50,8 @@ class IUserRepository(ABC):
     def set_password(self, user_id: str, password: str) -> None:
         """Définit le mot de passe d'un utilisateur."""
         ...
+
+    @abstractmethod
+    def check_password(self, user_id: str, password: str) -> bool:
+        """Vérifie le mot de passe d'un utilisateur."""
+        ...

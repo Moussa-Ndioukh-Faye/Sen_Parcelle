@@ -273,7 +273,8 @@ class SearchParcelsUseCase:
         elif data.region:
             results  = self._parcels.find_by_region(data.region, data.status)
         else:
-            results  = self._parcels.find_by_region("", data.status)
+            # Fallback : retourner toutes les parcelles filtrées par statut
+            results  = self._parcels.find_by_region(None, data.status)
 
         # Filtres prix / surface en mémoire (ou déléguer au repo selon perf)
         if data.min_price:

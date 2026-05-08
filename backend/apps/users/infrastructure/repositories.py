@@ -53,3 +53,15 @@ class DjangoUserRepository(IUserRepository):
 
     def exists_by_phone(self, phone: str) -> bool:
         return User.objects.filter(telephone=phone).exists()
+
+    def set_password(self, user_id: str, password: str) -> None:
+        user = User.objects.get(id=user_id)
+        user.set_password(password)
+        user.save()
+
+    def check_password(self, user_id: str, password: str) -> bool:
+        try:
+            user = User.objects.get(id=user_id)
+            return user.check_password(password)
+        except User.DoesNotExist:
+            return False

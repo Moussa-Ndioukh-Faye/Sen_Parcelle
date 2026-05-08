@@ -61,21 +61,22 @@ class TransactionEntity:
 
     def confirm_payment(self, payment_ref: str) -> "TransactionEntity":
         from dataclasses import replace
-        from django.utils import timezone
+        from datetime import timezone
         return replace(
             self,
             status=TransactionStatus.CONFIRMED,
             payment_ref=payment_ref,
-            confirmed_at=datetime.now(),
+            confirmed_at=datetime.now(timezone.utc),
         )
 
     def complete(self, blockchain_tx: str) -> "TransactionEntity":
         from dataclasses import replace
+        from datetime import timezone
         return replace(
             self,
             status=TransactionStatus.COMPLETED,
             blockchain_tx=blockchain_tx,
-            completed_at=datetime.now(),
+            completed_at=datetime.now(timezone.utc),
         )
 
     def fail(self, reason: str) -> "TransactionEntity":

@@ -13,6 +13,8 @@ class AuthNotifierState {
   final String? userId;
   final String? role;
   final String? error;
+  final String? email;    // Pour 2FA
+  final String? password; // Pour 2FA
 
   const AuthNotifierState({
     this.isLoading       = false,
@@ -21,6 +23,8 @@ class AuthNotifierState {
     this.userId,
     this.role,
     this.error,
+    this.email,
+    this.password,
   });
 
   AuthNotifierState copyWith({
@@ -30,6 +34,8 @@ class AuthNotifierState {
     String? userId,
     String? role,
     String? error,
+    String? email,
+    String? password,
   }) => AuthNotifierState(
     isLoading:       isLoading       ?? this.isLoading,
     isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -37,6 +43,8 @@ class AuthNotifierState {
     userId:          userId          ?? this.userId,
     role:            role            ?? this.role,
     error:           error,
+    email:           email           ?? this.email,
+    password:        password        ?? this.password,
   );
 }
 
@@ -68,6 +76,8 @@ class AuthNotifier extends StateNotifier<AuthNotifierState> {
             isLoading: false,
             requiresOTP: true,
             userId: data['user_id'],
+            email: email,
+            password: password,
           );
         } else {
           state = state.copyWith(
@@ -75,6 +85,8 @@ class AuthNotifier extends StateNotifier<AuthNotifierState> {
             isAuthenticated: true,
             role: data['role'],
             userId: data['user_id'],
+            email: null,
+            password: null,
           );
         }
       },

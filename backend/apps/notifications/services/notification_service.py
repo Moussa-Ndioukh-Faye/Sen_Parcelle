@@ -98,3 +98,27 @@ class NotificationService:
         print(msg)
         if self.sms_adapter:
             self.sms_adapter.send(user.phone_number, "Alerte de sécurité sur votre compte.")
+
+    # ─── Méthodes Génériques ───
+
+    def notify_user(self, user_id: str, event: str, data: dict) -> None:
+        """
+        Méthode générique pour notifier un utilisateur.
+        Délègue aux méthodes spécifiques selon l'événement.
+        """
+        from apps.users.infrastructure.models import User
+        try:
+            user = User.objects.get(id=user_id)
+            msg = f"[NOTIFICATION USER] Event={event} User={user.email} Data={data}"
+            print(msg)
+            # Implémentation réelle : brancher sur Firebase Push / SMS
+        except User.DoesNotExist:
+            print(f"Erreur notification : utilisateur {user_id} introuvable.")
+
+    def notify_admins(self, event: str, data: dict) -> None:
+        """
+        Méthode générique pour notifier les administrateurs.
+        """
+        msg = f"[NOTIFICATION ADMIN] Event={event} Data={data}"
+        print(msg)
+        # Implémentation réelle : envoi email/slack aux admins

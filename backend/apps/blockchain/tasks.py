@@ -70,7 +70,7 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
         from apps.blockchain.infrastructure.adapters.polygon_adapter import PolygonAdapter
         from apps.blockchain.infrastructure.adapters.ipfs_adapter import IPFSAdapter
         from apps.notifications.services.notification_service import NotificationService
-        from apps.audit.models import AuditService
+        from apps.audit.services import AuditService
 
         # ─── Charger la parcelle ───
         parcel_repo = DjangoParcelRepository()
@@ -207,7 +207,7 @@ def transfer_ownership_on_blockchain(
 @shared_task(name="notifications.send_sms")
 def send_sms_async(to: str, message: str):
     """Envoi SMS asynchrone — ne bloque pas la requête HTTP."""
-    from apps.users.application.services.otp_service import get_sms_adapter
+    from apps.users.infrastructure.adapters.sms_adapter import get_sms_adapter
     try:
         adapter = get_sms_adapter()
         adapter.send(to=to, message=message)

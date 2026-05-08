@@ -36,8 +36,10 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
 
   Future<void> _submit() async {
     if (_otpCode.length != 6) return;
+    final authState = ref.read(authNotifierProvider);
     await ref.read(authNotifierProvider.notifier).login(
-      '', '',  // Email/password déjà validés — OTP uniquement
+      authState.email ?? '',
+      authState.password ?? '',
       otp: _otpCode,
     );
   }
