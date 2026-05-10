@@ -40,7 +40,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash',   builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/auth/login',    builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/auth/register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: '/auth/otp',      builder: (c, s)  => OTPScreen(userId: s.extra as String)),
+      GoRoute(path: '/auth/otp',      builder: (c, s)  => OTPScreen(extra: s.extra as Map<String, dynamic>)),
 
       ShellRoute(
         builder: (_, __, child) => MainShell(child: child),

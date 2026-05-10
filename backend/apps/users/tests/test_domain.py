@@ -231,6 +231,7 @@ class TestRegisterUseCase:
         from apps.users.application.use_cases.register import RegisterUseCase
         return RegisterUseCase(mock_user_repo, mock_otp_service, mock_sms_service)
 
+    @pytest.mark.django_db
     def test_inscription_succes(self, mock_user_repo, mock_otp_service, mock_sms_service):
         from apps.users.application.use_cases.register import RegisterInput
         from apps.users.domain.entities import UserEntity, Email, PhoneNumber, UserRole, KYCStatus
@@ -250,7 +251,7 @@ class TestRegisterUseCase:
         uc     = self._make_uc(mock_user_repo, mock_otp_service, mock_sms_service)
         result = uc.execute(RegisterInput(
             nom="Moussa", email="moussa@email.com",
-            telephone="776543210", password="motdepasse123",
+            telephone="776543210", password="Motdepasse123!",
         ))
 
         assert result.user_id  == "new-user-id"

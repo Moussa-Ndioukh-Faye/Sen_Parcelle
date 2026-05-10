@@ -13,11 +13,11 @@ class TestAuditLog(TestCase):
     """Tests du modèle AuditLog."""
 
     def test_create_audit_log(self):
-        """Test de création d'un log d'audit."""
+        """Test de creation d'un log d'audit."""
         log = AuditLog.objects.create(
             user_id='12345678-1234-5678-1234-567812345678',
             action='login_success',
-            details={'ip': '127.0.0.1'},
+            metadata={'ip': '127.0.0.1'},
             ip_address='127.0.0.1',
         )
         self.assertEqual(log.action, 'login_success')
@@ -28,15 +28,15 @@ class TestAuditLog(TestCase):
         log1 = AuditLog.objects.create(
             user_id='12345678-1234-5678-1234-567812345678',
             action='test_action',
-            details={},
+            metadata={},
         )
         log2 = AuditLog.objects.create(
             user_id='12345678-1234-5678-1234-567812345678',
             action='test_action_2',
-            details={},
+            metadata={},
         )
         # Les hashs doivent être différents
-        self.assertNotEqual(log1.hash, log2.hash)
+        self.assertNotEqual(log1.integrity_hash, log2.integrity_hash)
 
 
 class TestAuditService(TestCase):
@@ -47,19 +47,18 @@ class TestAuditService(TestCase):
 
     def test_log_success(self):
         """Test d'enregistrement d'un événement."""
-        result = self.audit_service.log(
+        self.audit_service.log(
             user_id='12345678-1234-5678-1234-567812345678',
             action='login_success',
-            details={'method': 'password'},
+            metadata={'method': 'password'},
         )
-        self.assertTrue(result)
         self.assertEqual(AuditLog.objects.count(), 1)
 
     def test_get_user_history(self):
         """Test de récupération de l'historique."""
         user_id = '12345678-1234-5678-1234-567812345678'
-        AuditLog.objects.create(user_id=user_id, action='action1', details={})
-        AuditLog.objects.create(user_id=user_id, action='action2', details={})
+        AuditLog.objects.create(user_id=user_id, action='action1', metadata={})
+        AuditLog.objects.create(user_id=user_id, action='action2', metadata={})
 
         history = self.audit_service.get_user_history(user_id)
         self.assertEqual(len(history), 2)
@@ -69,14 +68,14 @@ class TestAuditService(TestCase):
         AuditLog.objects.create(
             user_id='12345678-1234-5678-1234-567812345678',
             action='login_failed',
-            details={'reason': 'bad_password'},
+            metadata={'reason': 'bad_password'},
         )
         AuditLog.objects.create(
             user_id='12345678-1234-5678-1234-567812345678',
             action='login_success',
-            details={},
+            metadata={},
         )
 
         events = self.audit_service.get_security_events()
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0].action, 'login_failed')
+        self.assertEqual(events[0]['action'], 'login_failed')

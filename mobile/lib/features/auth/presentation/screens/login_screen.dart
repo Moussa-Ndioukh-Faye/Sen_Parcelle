@@ -42,7 +42,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // Écouter les changements d'état
     ref.listen<AuthNotifierState>(authNotifierProvider, (_, next) {
       if (next.requiresOTP && next.userId != null) {
-        context.push('/auth/otp', extra: next.userId);
+        context.push('/auth/otp', extra: {
+          'userId': next.userId,
+          'email': _emailCtrl.text.trim(),
+          'password': _passwordCtrl.text,
+        });
       } else if (next.isAuthenticated) {
         context.go('/home');
       }

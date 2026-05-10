@@ -10,8 +10,11 @@ import 'package:sen_parcelle/features/auth/presentation/providers/auth_provider.
 import 'package:sen_parcelle/shared/widgets/gradient_button.dart';
 
 class OTPScreen extends ConsumerStatefulWidget {
-  final String userId;
-  const OTPScreen({super.key, required this.userId});
+  final Map<String, dynamic> extra;
+  const OTPScreen({super.key, required this.extra});
+  String get userId => extra['userId'] as String;
+  String get _email => extra['email'] as String;
+  String get _password => extra['password'] as String;
   @override ConsumerState<OTPScreen> createState() => _OTPScreenState();
 }
 
@@ -36,10 +39,9 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
 
   Future<void> _submit() async {
     if (_otpCode.length != 6) return;
-    final authState = ref.read(authNotifierProvider);
     await ref.read(authNotifierProvider.notifier).login(
-      authState.email ?? '',
-      authState.password ?? '',
+      widget._email,
+      widget._password,
       otp: _otpCode,
     );
   }
