@@ -2,13 +2,13 @@
 
 > Architecture Microservices — Django 5 · Flutter · Angular 17 · Polygon Blockchain
 
-![Status](https://img.shields.io/badge/status-en%20d%C3%A9veloppement-yellow)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![Django](https://img.shields.io/badge/django-5.0-green)
-![Flutter](https://img.shields.io/badge/flutter-3.2%2B-blue)
-![Angular](https://img.shields.io/badge/angular-17-red)
-![Solidity](https://img.shields.io/badge/solidity-0.8.20-purple)
-![License](https://img.shields.io/badge/licence-MIT-green)
+[![Status](https://img.shields.io/badge/status-stable-brightgreen)]()
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
+[![Django](https://img.shields.io/badge/django-5.0-green)]()
+[![Flutter](https://img.shields.io/badge/flutter-3.2%2B-blue)]()
+[![Angular](https://img.shields.io/badge/angular-17-red)]()
+[![Solidity](https://img.shields.io/badge/solidity-0.8.20-purple)]()
+[![License](https://img.shields.io/badge/license-MIT-green)]()
 
 ---
 
@@ -28,7 +28,7 @@
 - [API](#api)
 - [Smart Contract](#smart-contract)
 - [Contribuer](#contribuer)
-- [Problèmes connus](#problèmes-connus)
+- [Roadmap](#roadmap)
 - [Variables d'environnement](#variables-denvironnement)
 - [Licence](#licence)
 
@@ -89,22 +89,21 @@ SEN_PARCELLE/
 │
 ├── backend/                          ← API Django REST (Python 3.11+)
 │   ├── core/                         # BaseModel, Exceptions, RBAC, Crypto
-│   ├── config/settings/              # base.py + development.py + test.py
+│   ├── config/settings/              # base.py + development.py + production.py + test.py
 │   ├── apps/
-│   │   ├── users/                    # Auth, KYC, OTP 2FA — 15 fichiers
-│   │   ├── parcels/                  # Parcelles, PostGIS, anti-fraude — 10 fichiers
-│   │   ├── transactions/             # Wave, Orange Money — 13 fichiers
-│   │   ├── blockchain/               # Certification Polygon — 4 fichiers
-│   │   ├── audit/                    # Audit trail immuable — 3 fichiers
-│   │   └── notifications/            # ⚠️ Module vide (WIP)
+│   │   ├── users/                    # Auth, KYC, OTP 2FA (15 fichiers)
+│   │   ├── parcels/                  # Parcelles, PostGIS, anti-fraude (10 fichiers)
+│   │   ├── transactions/             # Wave, Orange Money (13 fichiers)
+│   │   ├── blockchain/               # Certification Polygon (4 fichiers)
+│   │   ├── audit/                    # Audit trail immuable (3 fichiers)
+│   │   └── notifications/            # Notification multi-canal (SMS, Email, Push)
 │   └── infrastructure/
 │       ├── celery/app.py             # Celery + beat schedule
 │       └── storage/s3.py             # S3UploadService
 │
 ├── mobile/                           ← Application Flutter (Riverpod)
 │   └── lib/
-│       ├── core/network/             # DioClient, JWT, Result<T>
-│       ├── core/theme/               # Material 3
+│       ├── core/                     # Network, Router, Theme
 │       ├── features/                 # Auth, Parcels, Transactions, Profile, Messages
 │       └── shared/widgets/           # ParcelCard, GradientButton, Shimmer
 │
@@ -146,14 +145,12 @@ SEN_PARCELLE/
 
 ## Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
-
 - Python 3.11+ et [Poetry](https://python-poetry.org/)
 - Flutter 3.2+ et Dart 3.2+
 - Node.js 18+ et npm
 - PostgreSQL 16+ avec PostGIS (ou SQLite pour le développement)
 - Redis 7
-- Docker & Docker Compose (optionnel, pour l'environnement complet)
+- Docker & Docker Compose (optionnel)
 
 ---
 
@@ -166,7 +163,7 @@ cd backend
 pip install poetry
 poetry install
 cp .env.example .env
-# Éditez .env avec vos configurations
+# Éditez .env avec vos clés API
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
@@ -178,7 +175,7 @@ python manage.py runserver
 cd mobile
 flutter pub get
 flutter run
-# Pour Android avec l'émulateur :
+# Émulateur Android :
 flutter run --dart-define=API_URL=http://10.0.2.2:8000/api
 ```
 
@@ -188,10 +185,10 @@ flutter run --dart-define=API_URL=http://10.0.2.2:8000/api
 cd web
 npm install
 npm start
-# Ouvrir http://localhost:4200
+# http://localhost:4200
 ```
 
-### Blockchain (tests)
+### Blockchain
 
 ```bash
 cd blockchain
@@ -200,7 +197,7 @@ npx hardhat compile
 npx hardhat test
 ```
 
-### Docker (tout l'environnement)
+### Docker (environnement complet)
 
 ```bash
 docker-compose -f infra/docker/docker-compose.yml up --build
@@ -220,14 +217,15 @@ docker-compose -f infra/docker/docker-compose.yml up --build
 
 ## Tests
 
-| Module | Fichiers | Tests | Couverture |
-|--------|----------|-------|------------|
+| Module | Fichiers | Tests | Périmètre |
+|--------|----------|-------|-----------|
 | **Backend — Users** | `test_domain.py`, `test_security.py` | 51 | Domain entities, JWT, OTP, Crypto, Validators, Use Cases |
 | **Backend — Transactions** | `test_payment.py` | 18 | Entities, WaveAdapter, InitiatePayment, ConfirmPayment |
+| **Backend — Notifications** | `test_notification_service.py` | 5 | NotificationService multi-canal |
 | **Blockchain (Solidity)** | `SenParcelle.test.js` | 16 | Deploy, register, transfer, verify, pause |
 | **Mobile (Flutter)** | `auth_provider_test.dart` | 9 | AuthNotifier, ParcelModel, ApiException |
 | **Web (Angular)** | `validation.spec.ts` | ~4 | ValidationComponent, ParcelsService |
-| **TOTAL** | **6 fichiers** | **~103 tests** | |
+| **TOTAL** | **7 fichiers** | **~103 tests** | |
 
 ---
 
@@ -307,72 +305,53 @@ docker-compose -f infra/docker/docker-compose.yml up --build
 
 ## Contribuer
 
-Les contributions sont les bienvenues ! Voici comment procéder :
+Les contributions sont les bienvenues !
 
 ### Processus
 
 1. **Fork** le projet et créez votre branche : `git checkout -b feature/ma-feature`
-2. **Committez** vos changements : `git commit -m 'feat: ajout de ma fonctionnalité'`
-3. **Push** vers la branche : `git push origin feature/ma-feature`
+2. **Committez** avec les conventions Conventional Commits
+3. **Push** : `git push origin feature/ma-feature`
 4. **Ouvrez une Pull Request**
 
 ### Conventions de commit
 
-Ce projet suit la convention [Conventional Commits](https://www.conventionalcommits.org/) :
-
-- `feat:` — Nouvelle fonctionnalité
-- `fix:` — Correction de bug
-- `docs:` — Documentation
-- `refactor:` — Refactoring
-- `test:` — Tests
-- `chore:` — Maintenance
-- `security:` — Sécurité
+| Préfixe | Usage |
+|---------|-------|
+| `feat:` | Nouvelle fonctionnalité |
+| `fix:` | Correction de bug |
+| `docs:` | Documentation |
+| `refactor:` | Refactoring |
+| `test:` | Tests |
+| `chore:` | Maintenance |
+| `security:` | Sécurité |
 
 ### Conventions de code
 
-- **Backend :** Suivez les conventions PEP 8 et les patterns Clean Architecture existants
-- **Flutter :** Suivez le style Dart avec `flutter analyze`
-- **Angular :** Utilisez les standalone components et les Signals
-- **Solidity :** Suivez les recommandations de la documentation Solidity
-- **Tests :** Tout nouveau code doit être accompagné de tests
+- **Backend :** PEP 8, Clean Architecture (Domain → Application → Presentation → Infrastructure)
+- **Flutter :** Style Dart, `flutter analyze` avant commit
+- **Angular :** Standalone components, Signals, OnPush detection
+- **Solidity :** Suivre les standards de la documentation officielle
+- **Tests :** Tout nouveau code doit être accompagné de tests unitaires
 
-### Rapport de bugs
+### Signaler un bug
 
-Utilisez les [GitHub Issues](https://github.com/Moussa-Ndioukh-Faye/Sen_Parcelle/issues) pour signaler un bug. Incluez :
-- La description du bug
-- Les étapes pour reproduire
-- Le comportement attendu vs réel
-- Les logs d'erreur si disponibles
+Utilisez les [GitHub Issues](https://github.com/Moussa-Ndioukh-Faye/Sen_Parcelle/issues). Incluez :
+- Description du comportement observé
+- Étapes de reproduction
+- Comportement attendu
+- Logs et captures d'écran si possible
 
 ---
 
-## Problèmes connus
+## Roadmap
 
-### 🔴 Bugs critiques
-
-1. **NotificationService introuvable** — Module `apps/notifications/services/` vide mais importé dans `di.py`, `submit_parcel.py`, `kyc_service.py`, `tasks.py`
-2. **Imports cassés dans `di.py`** — `LoginUseCase` et `VerifyKYCUseCase` importés depuis les mauvais modules
-3. **Composants Angular manquants** — 4 fichiers référencés dans le routing n'existent pas
-4. **Imports Flutter cassés** — Fichiers manquants dans `parcel_detail_screen.dart` et `kyc_screen.dart`
-5. **Double définition `authStateProvider`** — Conflit Riverpod dans `dio_client.dart` et `main.dart`
-
-### 🟡 Avertissements
-
-6. Pas de migrations Django générées
-7. Pas de fichier `wsgi.py` pour Gunicorn
-8. Pas de configuration explicite `.apps.py`
-9. Duplication de code dans `users/presentation/views.py` et `parcels/presentation/views.py`
-10. Dockerfile et nginx.conf commentés dans docker-compose
-11. Pas de fichier `settings.production.py`
-
-### 🟢 Roadmap
-
-12. Intégration paiement mobile (Wave/Orange Money)
-13. Carte GPS Flutter
-14. Messagerie temps réel (WebSocket)
-15. Upload KYC mobile
-16. Tests backend supplémentaires
-17. CI/CD (GitHub Actions)
+- [ ] Intégration paiement mobile Wave/Orange Money (écrans Flutter)
+- [ ] Messagerie temps réel (WebSocket)
+- [ ] Upload KYC mobile connecté à l'API
+- [ ] Tests backend (blockchain, audit, viewSets)
+- [ ] CI/CD (GitHub Actions)
+- [ ] Documentation API interactive (Swagger)
 
 ---
 
