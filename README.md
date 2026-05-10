@@ -1,255 +1,42 @@
-# 🏡 Sen_parcelle — Plateforme Foncière Sécurisée · Sénégal
+# Sen_parcelle — Plateforme Foncière Sécurisée · Sénégal
 
-> Architecture Microservices · Django 5 · Flutter · Angular 17 · Polygon Blockchain
+> Architecture Microservices — Django 5 · Flutter · Angular 17 · Polygon Blockchain
 
----
-
-## 📦 Structure du Projet
-
-```
-SEN_PARCELLE/
-│
-├── backend/                        ← API Django (Python 3.11+)
-│   ├── core/                       # BaseModel, Exceptions, RBAC, Crypto
-│   │   ├── models/base.py          # UUID + SoftDelete + Timestamps
-│   │   ├── exceptions/base.py      # Domain + App exceptions + DRF handler
-│   │   ├── permissions/rbac.py     # 11 permissions (IsAdmin, CanPublishParcel...)
-│   │   └── utils/crypto.py         # SHA-256, Validators SN, RateLimit, SecurityHeaders
-│   ├── config/
-│   │   └── settings/               # base.py + development.py + test.py
-│   ├── apps/
-│   │   ├── users/                  # Domaine Utilisateurs — 15 fichiers
-│   │   │   ├── domain/             # UserEntity, Email, PhoneNumber, DocumentHash, IuserRepository
-│   │   │   ├── infrastructure/     # ORM Django + DjangoUserRepository + SMS adapters (Twilio, Orange)
-│   │   │   ├── application/
-│   │   │   │   ├── use_cases/      # RegisterUseCase, LoginUseCase (2FA OTP), VerifyKYCUseCase
-│   │   │   │   └── services/       # JWTService, OTPService, KYCService, AuthService
-│   │   │   ├── presentation/       # AuthViewSet, UserViewSet
-│   │   │   └── tests/              # 51 tests (domain + security)
-│   │   ├── parcels/                # Domaine Parcelles — 10 fichiers
-│   │   │   ├── domain/             # ParcelEntity, GeoPoint, ParcelStatus, IParcelRepository
-│   │   │   ├── infrastructure/     # ORM PostGIS (Parcel, ParcelPhoto) + DjangoParcelRepository
-│   │   │   ├── application/        # SubmitParcel, ValidateParcel, SearchParcels (anti-fraude 50m)
-│   │   │   └── presentation/       # ParcelViewSet + Serializers + DI
-│   │   ├── transactions/           # Domaine Transactions — 13 fichiers
-│   │   │   ├── domain/             # TransactionEntity, TransactionStatus, PaymentProvider
-│   │   │   ├── infrastructure/     # ORM + WaveAdapter + OrangeMoneyAdapter + factory
-│   │   │   ├── application/        # InitiatePayment, ConfirmPayment (webhook + signature HMAC)
-│   │   │   ├── presentation/       # TransactionViewSet + DI
-│   │   │   └── tests/              # 18 tests
-│   │   ├── blockchain/             # Blockchain — 4 fichiers
-│   │   │   ├── tasks.py            # Celery: certify_parcel, transfer_ownership, SMS, push, report
-│   │   │   └── application/services/blockchain_service.py  # Orchestration IPFS + Polygon
-│   │   │   └── infrastructure/adapters/
-│   │   │       ├── polygon_adapter.py  # web3.py: registerParcel, transferOwnership, verifyDocument
-│   │   │       └── ipfs_adapter.py     # Pinata API: pin/unpin metadata
-│   │   ├── audit/                  # Audit — 3 fichiers
-│   │   │   ├── models.py           # AuditLog immuable (20 types d'actions) + hash intégrité
-│   │   │   ├── services.py         # AuditService: log, historique, événements sécurité
-│   │   │   └── middleware.py       # AuditMiddleware: auto-log requêtes sensibles
-│   │   └── notifications/          # ⚠️ Module vide — NotificationService introuvable
-│   ├── infrastructure/
-│   │   ├── celery/app.py           # Configuration Celery
-│   │   └── storage/s3.py           # S3StorageService (upload public/privé + URLs signées)
-│   └── manage.py
-│
-├── mobile/                         ← Application Flutter (Riverpod)
-│   ├── lib/
-│   │   ├── main.dart               # App bootstrap + Theme + GoRouter + ProviderScope
-│   │   ├── core/
-│   │   │   ├── network/            # DioClient + JWTInterceptor + RetryInterceptor + Result<T>
-│   │   │   └── theme/              # AppTheme (Material 3 + palette verte)
-│   │   ├── features/
-│   │   │   ├── auth/               # Login + Register + OTP + Splash screens + providers
-│   │   │   ├── parcels/            # Home + Explore + Detail + Publier + Certificat + providers
-│   │   │   ├── transactions/       # Models + Repository + providers
-│   │   │   ├── profile/            # Profile + KYC screens
-│   │   │   └── messages/           # Messages (démo uniquement)
-│   │   └── shared/widgets/         # ParcelCard + GradientButton + MainShell + Shimmer
-│   ├── test/
-│   │   └── auth_provider_test.dart # 9 tests (AuthNotifier + ParcelModel + ApiException)
-│   └── pubspec.yaml
-│
-├── web/                            ← Dashboard Admin Angular 17 (Signals)
-│   └── src/app/
-│       ├── core/
-│       │   ├── models/index.ts     # Interfaces TypeScript + ApiService
-│       │   ├── services/auth.service.ts  # Signals-based auth
-│       │   ├── interceptors/jwt.interceptor.ts  # Auto-refresh token
-│       │   └── guards/auth.guard.ts       # authGuard + adminGuard + guestGuard
-│       ├── features/
-│       │   ├── auth/               # LoginComponent (gradient, validation réactive)
-│       │   ├── dashboard/          # Stats temps réel + Activité récente + DashboardService
-│       │   ├── parcels/            # ParcelsService + ValidationComponent (valider/rejeter)
-│       │   ├── users/              # UsersService + KYCManagerComponent (approve/reject + tabs)
-│       │   └── blockchain/         # Certificats Polygon + Vérificateur par hash
-│       └── shared/components/layout/  # Sidebar + Header + Navigation
-│
-├── blockchain/                     ← Smart Contract Solidity + Hardhat
-│   ├── contracts/
-│   │   └── SenParcelle.sol         # Registre foncier immuable (307 lignes)
-│   ├── test/
-│   │   └── SenParcelle.test.js     # 16 tests (déploiement, register, transfer, verify, pause)
-│   ├── scripts/
-│   │   └── deploy.js               # Déploiement Mumbai/Polygon + sauvegarde artifacts
-│   └── hardhat.config.js           # Solidity 0.8.20 + optimizer + networks
-│
-└── infra/
-    └── docker/
-        └── docker-compose.yml      # Production stack (PostGIS + Redis + Django + Celery + Nginx)
-```
+![Status](https://img.shields.io/badge/status-en%20d%C3%A9veloppement-yellow)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Django](https://img.shields.io/badge/django-5.0-green)
+![Flutter](https://img.shields.io/badge/flutter-3.2%2B-blue)
+![Angular](https://img.shields.io/badge/angular-17-red)
+![Solidity](https://img.shields.io/badge/solidity-0.8.20-purple)
+![License](https://img.shields.io/badge/licence-MIT-green)
 
 ---
 
-## 🚀 Démarrage rapide
-
-### Backend Django
-```bash
-cd backend
-pip install poetry
-poetry install
-cp .env.example .env
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-```
-
-### Mobile Flutter
-```bash
-cd mobile
-flutter pub get
-flutter run
-# Ou pour Android: flutter run --dart-define=API_URL=http://10.0.2.2:8000/api
-```
-
-### Admin Angular
-```bash
-cd web
-npm install
-npm start
-# Ouvrir http://localhost:4200
-```
-
-### Blockchain (tests)
-```bash
-cd blockchain
-npm install
-npx hardhat compile
-npx hardhat test
-```
-
-### Docker (tout en un)
-```bash
-docker-compose -f infra/docker/docker-compose.yml up --build
-```
+**Sen_parcelle** est une plateforme foncière numérique sécurisée pour le Sénégal. Elle permet l'enregistrement, la certification et le transfert de propriété de parcelles via un système décentralisé sur la blockchain Polygon, avec vérification KYC, paiements mobile money (Wave / Orange Money) et un tableau de bord administrateur complet.
 
 ---
 
-## 🔐 Sécurité implémentée
+## Table des matières
 
-| Mécanisme         | Détail                                              | Statut |
-|-------------------|-----------------------------------------------------|--------|
-| JWT               | Access 15min + Refresh 7j + Blacklist Redis         | ✅     |
-| OTP 2FA           | 6 chiffres · 5min · 3 tentatives max · Redis        | ✅     |
-| KYC               | CNI/Passeport · Hash SHA-256 · S3 chiffré           | ✅     |
-| Brute force       | Lockout 30min après 5 tentatives                    | ✅     |
-| Rate limiting     | Fenêtre glissante Redis (API + Auth séparés)        | ✅     |
-| RBAC              | Acheteur / Vendeur / Admin (11 permissions)         | ✅     |
-| Anti-fraude       | Détection doublons géographiques PostGIS (50m)      | ✅     |
-| Blockchain        | Hash SHA-256 → IPFS → Polygon (immuable)            | ✅     |
-| Audit             | Logs immuables + hash intégrité + middleware auto   | ✅     |
-| CSP Headers       | SecurityHeadersMiddleware (CSP, HSTS, X-Frame)      | ✅     |
-
----
-
-## 🗄️ API Endpoints
-
-### Authentification
-| Méthode | Endpoint | Permission | Description |
-|---------|----------|------------|-------------|
-| POST | `/api/auth/inscription/` | Public (10/min) | Inscription utilisateur |
-| POST | `/api/auth/login/` | Public (5/min) | Connexion + 2FA OTP |
-| POST | `/api/auth/refresh/` | Public | Refresh JWT token |
-
-### Utilisateurs
-| Méthode | Endpoint | Permission | Description |
-|---------|----------|------------|-------------|
-| GET | `/api/utilisateurs/moi/` | Authenticated | Profil courant |
-| POST | `/api/utilisateurs/{id}/kyc/` | Admin | Validation KYC |
-
-### Parcelles
-| Méthode | Endpoint | Permission | Description |
-|---------|----------|------------|-------------|
-| GET | `/api/parcelles/` | Public | Recherche avec filtres |
-| GET | `/api/parcelles/{id}/` | Public | Détail parcelle |
-| POST | `/api/parcelles/` | Vendeur + KYC | Soumettre parcelle |
-| POST | `/api/parcelles/{id}/valider/` | Admin | Valider/rejeter |
-| GET | `/api/parcelles/mes-parcelles/` | Vendeur | Mes parcelles |
-
-### Transactions
-| Méthode | Endpoint | Permission | Description |
-|---------|----------|------------|-------------|
-| POST | `/api/transactions/initier/` | Acheteur + KYC + 2FA (3/min) | Initier paiement Wave/OM |
-| POST | `/api/transactions/webhook/{provider}/` | Public | Webhook paiement |
-| GET | `/api/transactions/mes-achats/` | Authenticated | Mes achats |
-| GET | `/api/transactions/mes-ventes/` | Authenticated | Mes ventes |
+- [Architecture](#architecture)
+- [Structure du projet](#structure-du-projet)
+- [Stack technique](#stack-technique)
+- [Prérequis](#prérequis)
+- [Démarrage rapide](#démarrage-rapide)
+- [Tests](#tests)
+- [Sécurité](#sécurité)
+- [API](#api)
+- [Smart Contract](#smart-contract)
+- [Contribuer](#contribuer)
+- [Problèmes connus](#problèmes-connus)
+- [Variables d'environnement](#variables-denvironnement)
+- [Licence](#licence)
 
 ---
 
-## 🔗 Blockchain — Smart Contract
+## Architecture
 
-**Contrat** : `SenParcelle.sol` (Solidity 0.8.20, déployé sur Polygon)
-
-### Fonctions principales
-
-| Fonction | Accès | Description |
-|----------|-------|-------------|
-| `registerParcel()` | Admin only | Enregistrer une parcelle certifiée (hash + IPFS) |
-| `transferOwnership()` | Admin only | Transférer la propriété après paiement confirmé |
-| `updateMetadata()` | Admin only | Mettre à jour le CID IPFS |
-| `revokeParcel()` | Admin only | Révoquer (fraude détectée) |
-| `verifyDocument()` | Public (view) | Vérifier un hash de document (gratuit) |
-| `getParcel()` | Public (view) | Infos complètes d'une parcelle |
-| `getParcelHistory()` | Public (view) | Historique des propriétaires |
-| `getOwnerParcels()` | Public (view) | Parcelles d'un propriétaire |
-| `pause()` / `unpause()` | Admin only | Emergency pause |
-
-### Tests : 16 tests couvrant
-- Déploiement (owner, paused, counters)
-- Enregistrement (succès, doublons, accès, address(0))
-- Transfert (succès, historique, isOwner, mêmes owner, révoqué)
-- Vérification (valide, inconnu, révoqué)
-- Pause (admin only, blocage register)
-
-### Réseaux supportés
-| Réseau | Chain ID | Usage |
-|--------|----------|-------|
-| Hardhat | 31337 | Tests locaux |
-| Mumbai (Polygon testnet) | 80001 | Tests |
-| Polygon mainnet | 137 | Production |
-
----
-
-## 📊 Couverture des tests
-
-| Module | Fichiers de test | Nombre de tests | Couverture fonctionnelle |
-|--------|-----------------|-----------------|-------------------------|
-| **Backend — Users** | `test_domain.py`, `test_security.py` | 51 | Domain entities, value objects, JWT, OTP, Crypto, Validators, RateLimit, RegisterUseCase |
-| **Backend — Parcels** | Aucun dédié | 5 (dans users/test_domain.py) | ParcelEntity, GeoPoint seulement |
-| **Backend — Transactions** | `test_payment.py` | 18 | TransactionEntity, WaveAdapter, InitiatePayment, ConfirmPayment |
-| **Backend — Blockchain** | Aucun | 0 | — |
-| **Backend — Audit** | Aucun | 0 | — |
-| **Backend — Notifications** | Aucun | 0 | Module vide |
-| **Blockchain (Solidity)** | `SenParcelle.test.js` | 16 | Deployment, register, transfer, verify, pause |
-| **Mobile (Flutter)** | `auth_provider_test.dart` | 9 | AuthNotifier, ParcelModel, ApiException |
-| **Web (Angular)** | `validation.spec.ts` | ~4 | ValidationComponent, ParcelsService |
-| **TOTAL** | **6 fichiers** | **~103 tests** | |
-
----
-
-## 🏗️ Architecture
-
-### Pattern : Clean Architecture / Hexagonale
+### Clean Architecture / Hexagonale
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -293,13 +80,58 @@ docker-compose -f infra/docker/docker-compose.yml up --build
            └─ PolygonAdapter.transferOwnership()
 ```
 
-### Stack technique complète
+---
+
+## Structure du projet
+
+```
+SEN_PARCELLE/
+│
+├── backend/                          ← API Django REST (Python 3.11+)
+│   ├── core/                         # BaseModel, Exceptions, RBAC, Crypto
+│   ├── config/settings/              # base.py + development.py + test.py
+│   ├── apps/
+│   │   ├── users/                    # Auth, KYC, OTP 2FA — 15 fichiers
+│   │   ├── parcels/                  # Parcelles, PostGIS, anti-fraude — 10 fichiers
+│   │   ├── transactions/             # Wave, Orange Money — 13 fichiers
+│   │   ├── blockchain/               # Certification Polygon — 4 fichiers
+│   │   ├── audit/                    # Audit trail immuable — 3 fichiers
+│   │   └── notifications/            # ⚠️ Module vide (WIP)
+│   └── infrastructure/
+│       ├── celery/app.py             # Celery + beat schedule
+│       └── storage/s3.py             # S3UploadService
+│
+├── mobile/                           ← Application Flutter (Riverpod)
+│   └── lib/
+│       ├── core/network/             # DioClient, JWT, Result<T>
+│       ├── core/theme/               # Material 3
+│       ├── features/                 # Auth, Parcels, Transactions, Profile, Messages
+│       └── shared/widgets/           # ParcelCard, GradientButton, Shimmer
+│
+├── web/                              ← Dashboard Admin Angular 17
+│   └── src/app/
+│       ├── core/                     # Models, Services, Interceptors, Guards
+│       ├── features/                 # Auth, Dashboard, Parcels, Users, Blockchain
+│       └── shared/components/layout/ # Sidebar, Header, Navigation
+│
+├── blockchain/                       ← Smart Contract Solidity + Hardhat
+│   ├── contracts/SenParcelle.sol     # Registre foncier immuable
+│   ├── test/SenParcelle.test.js      # 16 tests
+│   └── scripts/deploy.js
+│
+└── infra/docker/
+    └── docker-compose.yml            # PostGIS + Redis + Django + Celery + Nginx
+```
+
+---
+
+## Stack technique
 
 | Couche | Technologie |
 |--------|-------------|
 | **Backend API** | Django 5.0 + DRF 3.15 |
 | **Base de données** | PostgreSQL 16 + PostGIS 3.4 |
-| **Cache/Queue** | Redis 7 + Celery 5.3 |
+| **Cache / Queue** | Redis 7 + Celery 5.3 |
 | **Auth** | SimpleJWT + OTP 2FA |
 | **Blockchain** | Polygon (web3.py 6.15) + IPFS (Pinata) |
 | **Smart Contract** | Solidity 0.8.20 + Hardhat 2.22 |
@@ -312,49 +144,242 @@ docker-compose -f infra/docker/docker-compose.yml up --build
 
 ---
 
-## ⚠️ Problèmes connus et dette technique
+## Prérequis
 
-### 🔴 Bugs critiques (bloquants)
+Avant de commencer, assurez-vous d'avoir installé :
 
-1. **`NotificationService` introuvable** — Le module `apps/notifications/services/` est vide mais la classe est importée dans `di.py`, `submit_parcel.py`, `kyc_service.py`, `tasks.py`. **Impact : ImportError à l'exécution.**
-
-2. **Imports cassés dans `di.py`** — `LoginUseCase` et `VerifyKYCUseCase` sont importés depuis `register.py` (ligne 78, 89) mais définis dans `login.py` et `verify_kyc.py`. **Impact : ImportError à l'exécution.**
-
-3. **Composants Angular manquants** — 4 fichiers référencés dans le routing n'existent pas :
-   - `features/auth/auth.routes.ts`
-   - `features/parcels/components/parcels-list.component.ts`
-   - `features/parcels/components/parcel-detail.component.ts`
-   - `features/users/components/users-list.component.ts`
-   **Impact : Crash au runtime sur ces routes.**
-
-4. **Imports Flutter cassés** — `parcel_detail_screen.dart` importe un fichier thème inexistant, `kyc_screen.dart` importe `shared_widgets.dart` qui n'existe pas. **Impact : Erreur de compilation Flutter.**
-
-5. **Double définition `authStateProvider`** — Défini à la fois dans `dio_client.dart` et `main.dart` du Flutter. **Impact : Conflit Riverpod.**
-
-### 🟡 Avertissements
-
-6. **Pas de migrations Django générées** — Aucun fichier de migration trouvé dans le repository.
-7. **Pas de fichier `wsgi.py`** — Requis pour le déploiement Gunicorn (référencé dans docker-compose).
-8. **Pas de fichier `.apps.py`** — Aucune app Django n'a de configuration explicite.
-9. **Duplication de code** — `users/presentation/views.py` et `parcels/presentation/views.py` contiennent tous deux les ViewSets Auth et User.
-10. **`ApiService` dans `models/index.ts`** — Mélange de responsabilités dans le code Angular.
-11. **Dockerfile et nginx.conf commentés** — Dans `docker-compose.yml`, le Dockerfile backend et la config Nginx sont en commentaires.
-12. **Pas de fichier de production settings** — Le docker-compose référence `config.settings.production` qui n'existe pas.
-
-### 🟢 À implémenter (Roadmap)
-
-13. **Paiement Wave/Orange Money** — Intégration côté mobile (écrans de paiement) et webhooks
-14. **Carte GPS Flutter** — Intégrer `flutter_map` dans `publier_screen.dart` (actuellement placeholder)
-15. **Messages temps réel** — Remplacer les données démo par WebSocket ou API
-16. **KYC Flutter** — Connecter l'upload réel de documents à l'API
-17. **Tests backend** — Blockchain, Audit, ViewSets, repositories, services complexes
-18. **CI/CD** — Le workflow GitHub Actions est commenté dans `docker-compose.yml`
+- Python 3.11+ et [Poetry](https://python-poetry.org/)
+- Flutter 3.2+ et Dart 3.2+
+- Node.js 18+ et npm
+- PostgreSQL 16+ avec PostGIS (ou SQLite pour le développement)
+- Redis 7
+- Docker & Docker Compose (optionnel, pour l'environnement complet)
 
 ---
 
-## 🔑 Variables d'environnement requises
+## Démarrage rapide
+
+### Backend Django
+
+```bash
+cd backend
+pip install poetry
+poetry install
+cp .env.example .env
+# Éditez .env avec vos configurations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+### Mobile Flutter
+
+```bash
+cd mobile
+flutter pub get
+flutter run
+# Pour Android avec l'émulateur :
+flutter run --dart-define=API_URL=http://10.0.2.2:8000/api
+```
+
+### Dashboard Admin Angular
+
+```bash
+cd web
+npm install
+npm start
+# Ouvrir http://localhost:4200
+```
+
+### Blockchain (tests)
+
+```bash
+cd blockchain
+npm install
+npx hardhat compile
+npx hardhat test
+```
+
+### Docker (tout l'environnement)
+
+```bash
+docker-compose -f infra/docker/docker-compose.yml up --build
+```
+
+### Scripts utiles
+
+| Commande | Description |
+|----------|-------------|
+| `pytest` | Lancer les tests backend |
+| `python manage.py spectacular --file schema.yml` | Générer le schéma OpenAPI |
+| `npm run build` | Build Angular production |
+| `flutter build apk` | Build Flutter Android |
+| `npx hardhat coverage` | Couverture des tests Solidity |
+
+---
+
+## Tests
+
+| Module | Fichiers | Tests | Couverture |
+|--------|----------|-------|------------|
+| **Backend — Users** | `test_domain.py`, `test_security.py` | 51 | Domain entities, JWT, OTP, Crypto, Validators, Use Cases |
+| **Backend — Transactions** | `test_payment.py` | 18 | Entities, WaveAdapter, InitiatePayment, ConfirmPayment |
+| **Blockchain (Solidity)** | `SenParcelle.test.js` | 16 | Deploy, register, transfer, verify, pause |
+| **Mobile (Flutter)** | `auth_provider_test.dart` | 9 | AuthNotifier, ParcelModel, ApiException |
+| **Web (Angular)** | `validation.spec.ts` | ~4 | ValidationComponent, ParcelsService |
+| **TOTAL** | **6 fichiers** | **~103 tests** | |
+
+---
+
+## Sécurité
+
+| Mécanisme | Détail |
+|-----------|--------|
+| JWT | Access 15min + Refresh 7j + Blacklist Redis |
+| OTP 2FA | 6 chiffres · 5min · 3 tentatives max · Redis |
+| KYC | CNI/Passeport · Hash SHA-256 · S3 chiffré |
+| Brute force | Lockout 30min après 5 tentatives |
+| Rate limiting | Fenêtre glissante Redis (API + Auth séparés) |
+| RBAC | Acheteur / Vendeur / Admin (11 permissions) |
+| Anti-fraude | Détection doublons géographiques PostGIS (50m) |
+| Blockchain | Hash SHA-256 → IPFS → Polygon (immuable) |
+| Audit | Logs immuables + hash intégrité + middleware auto |
+| CSP Headers | SecurityHeadersMiddleware (CSP, HSTS, X-Frame) |
+
+---
+
+## API
+
+### Authentification
+
+| Méthode | Endpoint | Accès |
+|---------|----------|-------|
+| POST | `/api/auth/inscription/` | Public (10/min) |
+| POST | `/api/auth/login/` | Public (5/min) |
+| POST | `/api/auth/refresh/` | Public |
+
+### Utilisateurs
+
+| Méthode | Endpoint | Accès |
+|---------|----------|-------|
+| GET | `/api/utilisateurs/moi/` | Authenticated |
+| POST | `/api/utilisateurs/{id}/kyc/` | Admin |
+
+### Parcelles
+
+| Méthode | Endpoint | Accès |
+|---------|----------|-------|
+| GET | `/api/parcelles/` | Public |
+| GET | `/api/parcelles/{id}/` | Public |
+| POST | `/api/parcelles/` | Vendeur + KYC |
+| POST | `/api/parcelles/{id}/valider/` | Admin |
+
+### Transactions
+
+| Méthode | Endpoint | Accès |
+|---------|----------|-------|
+| POST | `/api/transactions/initier/` | Acheteur + KYC + 2FA (3/min) |
+| POST | `/api/transactions/webhook/{provider}/` | Public |
+| GET | `/api/transactions/mes-achats/` | Authenticated |
+| GET | `/api/transactions/mes-ventes/` | Authenticated |
+
+---
+
+## Smart Contract
+
+**Contrat :** `SenParcelle.sol` (Solidity 0.8.20, déployé sur Polygon)
+
+| Fonction | Accès | Description |
+|----------|-------|-------------|
+| `registerParcel()` | Admin | Enregistrer une parcelle certifiée |
+| `transferOwnership()` | Admin | Transférer la propriété |
+| `updateMetadata()` | Admin | Mettre à jour le CID IPFS |
+| `revokeParcel()` | Admin | Révoquer (fraude détectée) |
+| `verifyDocument()` | Public | Vérifier un hash de document |
+| `getParcel()` | Public | Infos complètes d'une parcelle |
+| `getParcelHistory()` | Public | Historique des propriétaires |
+| `getOwnerParcels()` | Public | Parcelles d'un propriétaire |
+| `pause()` / `unpause()` | Admin | Emergency pause |
+
+**Réseaux supportés :** Hardhat (31337) · Mumbai (80001) · Polygon (137)
+
+---
+
+## Contribuer
+
+Les contributions sont les bienvenues ! Voici comment procéder :
+
+### Processus
+
+1. **Fork** le projet et créez votre branche : `git checkout -b feature/ma-feature`
+2. **Committez** vos changements : `git commit -m 'feat: ajout de ma fonctionnalité'`
+3. **Push** vers la branche : `git push origin feature/ma-feature`
+4. **Ouvrez une Pull Request**
+
+### Conventions de commit
+
+Ce projet suit la convention [Conventional Commits](https://www.conventionalcommits.org/) :
+
+- `feat:` — Nouvelle fonctionnalité
+- `fix:` — Correction de bug
+- `docs:` — Documentation
+- `refactor:` — Refactoring
+- `test:` — Tests
+- `chore:` — Maintenance
+- `security:` — Sécurité
+
+### Conventions de code
+
+- **Backend :** Suivez les conventions PEP 8 et les patterns Clean Architecture existants
+- **Flutter :** Suivez le style Dart avec `flutter analyze`
+- **Angular :** Utilisez les standalone components et les Signals
+- **Solidity :** Suivez les recommandations de la documentation Solidity
+- **Tests :** Tout nouveau code doit être accompagné de tests
+
+### Rapport de bugs
+
+Utilisez les [GitHub Issues](https://github.com/Moussa-Ndioukh-Faye/Sen_Parcelle/issues) pour signaler un bug. Incluez :
+- La description du bug
+- Les étapes pour reproduire
+- Le comportement attendu vs réel
+- Les logs d'erreur si disponibles
+
+---
+
+## Problèmes connus
+
+### 🔴 Bugs critiques
+
+1. **NotificationService introuvable** — Module `apps/notifications/services/` vide mais importé dans `di.py`, `submit_parcel.py`, `kyc_service.py`, `tasks.py`
+2. **Imports cassés dans `di.py`** — `LoginUseCase` et `VerifyKYCUseCase` importés depuis les mauvais modules
+3. **Composants Angular manquants** — 4 fichiers référencés dans le routing n'existent pas
+4. **Imports Flutter cassés** — Fichiers manquants dans `parcel_detail_screen.dart` et `kyc_screen.dart`
+5. **Double définition `authStateProvider`** — Conflit Riverpod dans `dio_client.dart` et `main.dart`
+
+### 🟡 Avertissements
+
+6. Pas de migrations Django générées
+7. Pas de fichier `wsgi.py` pour Gunicorn
+8. Pas de configuration explicite `.apps.py`
+9. Duplication de code dans `users/presentation/views.py` et `parcels/presentation/views.py`
+10. Dockerfile et nginx.conf commentés dans docker-compose
+11. Pas de fichier `settings.production.py`
+
+### 🟢 Roadmap
+
+12. Intégration paiement mobile (Wave/Orange Money)
+13. Carte GPS Flutter
+14. Messagerie temps réel (WebSocket)
+15. Upload KYC mobile
+16. Tests backend supplémentaires
+17. CI/CD (GitHub Actions)
+
+---
+
+## Variables d'environnement
 
 ### Backend (`.env`)
+
 ```bash
 SECRET_KEY=
 DEBUG=True
@@ -395,6 +420,7 @@ AWS_REGION=eu-west-1
 ```
 
 ### Blockchain (`.env`)
+
 ```bash
 POLYGON_PRIVATE_KEY=0x...
 POLYGON_RPC_URL=https://polygon-mainnet.g.alchemy.com/v2/YOUR_KEY
@@ -404,6 +430,6 @@ POLYGONSCAN_API_KEY=
 
 ---
 
-## 📝 Licence
+## Licence
 
-Projet Sen_parcelle — Plateforme foncière sécurisée pour le Sénégal.
+MIT — Projet Sen_parcelle. Plateforme foncière sécurisée pour le Sénégal.
