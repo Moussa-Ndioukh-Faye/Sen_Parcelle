@@ -31,7 +31,8 @@ class PolygonAdapter:
             
             # Conversion hashes -> bytes32
             doc_hash_bytes = self._w3.to_bytes(hexstr=document_hash)
-            ipfs_hash_bytes = self._w3.to_bytes(hexstr=ipfs_hash)
+            # CID IPFS est base58, on l'encode en bytes32
+            ipfs_hash_bytes = self._str_to_bytes32(ipfs_hash)
 
             tx = self._contract.functions.registerParcel(
                 numeric_id,
@@ -45,7 +46,7 @@ class PolygonAdapter:
                 "from":     self._account.address,
                 "nonce":    self._w3.eth.get_transaction_count(self._account.address),
                 "gas":      400_000,
-                "gasPrice": self._w3.to_wei("35", "gwei"),
+                "gasPrice": self._w3.eth.gas_price,
             })
 
             signed  = self._w3.eth.account.sign_transaction(tx, self._account.key)
@@ -66,7 +67,7 @@ class PolygonAdapter:
         try:
             numeric_id = int(parcel_id.replace("-", ""), 16)
             # tx_ref est optionnel, si présent on le convertit en bytes32
-            tx_ref_bytes = self._w3.to_bytes(hexstr=tx_ref.ljust(64, '0')[:64]) if tx_ref else b'\x00'*32
+            tx_ref_bytes = self._str_to_bytes32(tx_ref) if tx_ref else b'\x00'*32
 
             tx = self._contract.functions.transferOwnership(
                 numeric_id,
@@ -76,7 +77,7 @@ class PolygonAdapter:
                 "from":     self._account.address,
                 "nonce":    self._w3.eth.get_transaction_count(self._account.address),
                 "gas":      250_000,
-                "gasPrice": self._w3.to_wei("35", "gwei"),
+                "gasPrice": self._w3.eth.gas_price,
             })
             signed  = self._w3.eth.account.sign_transaction(tx, self._account.key)
             tx_hash = self._w3.eth.send_raw_transaction(signed.rawTransaction)
@@ -97,6 +98,10 @@ class PolygonAdapter:
             "date_enregistrement":  result[3],
         }
 
+    def _str_to_bytes32(self, s: str) -> bytes:
+        encoded = s.encode("utf-8")[:32]
+        return encoded.ljust(32, b'\x00')
+
     def get_owner_address(self, user_id: str) -> str:
         """Retourne l'adresse wallet d'un utilisateur (ou adresse contrat par défaut)."""
         from apps.users.infrastructure.models import User as UserORM
@@ -110,7 +115,19 @@ class PolygonAdapter:
     def _load_abi() -> list:
         """Charge l'ABI depuis le fichier compilé Hardhat."""
         import json
+        from pathlib import Path
         from django.conf import settings
-        abi_path = settings.BASE_DIR / "blockchain" / "artifacts" / "contracts" / "SenParcelle.sol" / "SenParcelle.json"
-        with open(abi_path) as f:
-            return json.load(f)["abi"]
+        # Chercher dans plusieurs emplacements possibles
+        possible_paths = [
+            settings.BASE_DIR / "blockchain" / "artifacts" / "contracts" / "SenParcelle.sol" / "SenParcelle.json",
+            settings.BASE_DIR.parent / "blockchain" / "artifacts" / "contracts" / "SenParcelle.sol" / "SenParcelle.json",
+            Path(settings.BASE_DIR).parent / "blockchain" / "artifacts" / "contracts" / "SenParcelle.sol" / "SenParcelle.json",
+        ]
+        for abi_path in possible_paths:
+            if abi_path.exists():
+                with open(abi_path) as f:
+                    return json.load(f)["abi"]
+        raise FileNotFoundError(
+            f"ABI introuvable. Vérifiez que le contrat est compilé. "
+            f"Cherché dans: {[str(p) for p in possible_paths]}"
+        )

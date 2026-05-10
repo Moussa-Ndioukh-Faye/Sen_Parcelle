@@ -20,7 +20,7 @@ import { AuthService } from '@core/services/auth.service';
         <!-- ─── Left panel ─── -->
         <div class="login-card__left">
           <div class="login-card__brand">
-            <span class="login-card__brand-icon">🏡</span>
+            <span class="login-card__brand-icon material-icons">home</span>
             <div>
               <h1 class="login-card__title">Sen_parcelle</h1>
               <p class="login-card__subtitle">Plateforme foncière sécurisée · Sénégal</p>
@@ -28,10 +28,10 @@ import { AuthService } from '@core/services/auth.service';
           </div>
           <ul class="login-card__features">
             <li *ngFor="let f of features">
-              <span>{{ f.icon }}</span> {{ f.label }}
+              <span class="material-icons">{{ f.icon }}</span> {{ f.label }}
             </li>
           </ul>
-          <div class="login-card__cert">🔗 Certifié sur Blockchain Polygon</div>
+          <div class="login-card__cert"><span class="material-icons" style="font-size:12px;vertical-align:middle">link</span> Certifié sur Blockchain Polygon</div>
         </div>
 
         <!-- ─── Right panel (formulaire) ─── -->
@@ -66,8 +66,8 @@ import { AuthService } from '@core/services/auth.service';
                   placeholder="••••••••"
                 />
                 <button type="button" class="login-form__eye"
-                  (click)="showPassword.update(v => !v)">
-                  {{ showPassword() ? '🙈' : '👁️' }}
+                  (click)="showPassword.set(!showPassword())">
+                  <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
                 </button>
               </div>
               <span class="login-form__error" *ngIf="isInvalid('password')">
@@ -77,7 +77,7 @@ import { AuthService } from '@core/services/auth.service';
 
             <!-- Erreur API -->
             <div class="login-form__alert" *ngIf="auth.error()">
-              ⚠️ {{ auth.error() }}
+              <span class="material-icons" style="font-size:14px;vertical-align:middle">warning</span> {{ auth.error() }}
             </div>
 
             <button
@@ -228,11 +228,11 @@ export class LoginComponent {
   });
 
   features = [
-    { icon: '✅', label: 'Validation des parcelles foncières' },
-    { icon: '🪪', label: 'Vérification KYC des utilisateurs' },
-    { icon: '🔗', label: 'Certification blockchain Polygon' },
-    { icon: '👥', label: 'Gestion complète des utilisateurs' },
-    { icon: '📊', label: 'Statistiques et rapports' },
+    { icon: 'check_circle', label: 'Validation des parcelles foncières' },
+    { icon: 'badge',        label: 'Vérification KYC des utilisateurs' },
+    { icon: 'link',         label: 'Certification blockchain Polygon' },
+    { icon: 'group',        label: 'Gestion complète des utilisateurs' },
+    { icon: 'bar_chart',    label: 'Statistiques et rapports' },
   ];
 
   isInvalid(field: string): boolean {

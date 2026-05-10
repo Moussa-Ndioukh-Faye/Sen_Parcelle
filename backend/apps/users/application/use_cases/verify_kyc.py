@@ -1,5 +1,9 @@
+import logging
+
 from dataclasses import dataclass
 from apps.users.domain.repositories import IUserRepository
+
+logger = logging.getLogger(__name__)
 
 # ══════════════════════════════════════════════════════════════
 # apps/users/application/use_cases/verify_kyc.py
@@ -49,6 +53,10 @@ class VerifyKYCUseCase:
         if data.decision == "approve":
             updated_user = user.verify_kyc()
             sms_msg      = "✅ Votre identité a été vérifiée sur Sen_parcelle. Vous pouvez maintenant publier des parcelles."
+            # Marquer kyc_verified_at
+            from django.utils import timezone
+            from apps.users.infrastructure.models import User as UserORM
+            UserORM.objects.filter(id=data.user_id).update(kyc_verified_at=timezone.now())
         elif data.decision == "reject":
             updated_user = user.reject_kyc()
             reason_msg   = f" Raison : {data.reason}" if data.reason else ""
@@ -61,8 +69,8 @@ class VerifyKYCUseCase:
         # Notification SMS
         try:
             self._sms.send(to=str(user.telephone), message=sms_msg)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Échec envoi SMS KYC user={user.id}: {e}")
 
         # Audit
         self._audit.log(data.admin_id, "kyc_decision", {

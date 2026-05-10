@@ -132,6 +132,11 @@ class IParcelRepository(ABC):
         ...
 
     @abstractmethod
+    def find_nearby_active(self, location: GeoPoint, radius_m: float) -> List[ParcelEntity]:
+        """Parcelles actives (non-rejetées) dans un rayon donné."""
+        ...
+
+    @abstractmethod
     def find_by_region(self, region: str, status: Optional[str] = None) -> List[ParcelEntity]: ...
 
     @abstractmethod

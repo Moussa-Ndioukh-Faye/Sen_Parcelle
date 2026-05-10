@@ -48,7 +48,7 @@ class JWTInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     // Routes publiques → pas de token
-    final publicRoutes = ['/auth/login/', '/auth/inscription/', '/auth/refresh/'];
+    final publicRoutes = ['/auth/login/', '/auth/inscription/', '/auth/token/refresh/'];
     if (publicRoutes.any((r) => options.path.contains(r))) {
       return handler.next(options);
     }
@@ -99,7 +99,7 @@ class JWTInterceptor extends Interceptor {
     final refresh = await _storage.read(key: 'refresh_token');
     if (refresh == null) return null;
 
-    final response = await _dio.post('/auth/refresh/', data: {'refresh': refresh});
+    final response = await _dio.post('/auth/token/refresh/', data: {'refresh': refresh});
     final newAccess = response.data['access'] as String;
     await _storage.write(key: 'access_token', value: newAccess);
     return newAccess;

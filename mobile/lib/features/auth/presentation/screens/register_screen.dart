@@ -86,10 +86,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Text('Je suis un :', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               Row(children: [
-                _RoleChip(label: '👤 Acheteur', value: 'acheteur', selected: _role,
+                _RoleChip(icon: Icons.person, label: ' Acheteur', value: 'acheteur', selected: _role,
                   onTap: () => setState(() => _role = 'acheteur')),
                 const SizedBox(width: 10),
-                _RoleChip(label: '🏠 Vendeur', value: 'vendeur', selected: _role,
+                _RoleChip(icon: Icons.home, label: ' Vendeur', value: 'vendeur', selected: _role,
                   onTap: () => setState(() => _role = 'vendeur')),
               ]),
               const SizedBox(height: 24),
@@ -116,9 +116,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 }
 
 class _RoleChip extends StatelessWidget {
+  final IconData icon;
   final String label, value, selected;
   final VoidCallback onTap;
-  const _RoleChip({required this.label, required this.value,
+  const _RoleChip({required this.icon, required this.label, required this.value,
     required this.selected, required this.onTap});
 
   @override
@@ -138,13 +139,17 @@ class _RoleChip extends StatelessWidget {
               width: 1.5,
             ),
           ),
-          child: Text(label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppTheme.slate,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            )),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: isSelected ? Colors.white : AppTheme.slate),
+              Text(label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppTheme.slate,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                )),
+            ]),
         ),
       ),
     );

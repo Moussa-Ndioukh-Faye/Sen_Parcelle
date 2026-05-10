@@ -102,6 +102,7 @@ class TestOTPService:
         mock_cache.get.side_effect = lambda key, *args, **kwargs: (
             "123456" if "code" in key else 0
         )
+        mock_cache.incr.return_value = 1
         mock_cache.delete = MagicMock()
         result = otp_service.verify("user-123", "123456", "login")
         assert result is True
@@ -112,6 +113,7 @@ class TestOTPService:
         mock_cache.get.side_effect = lambda key, *args, **kwargs: (
             "123456" if "code" in key else 0
         )
+        mock_cache.incr.return_value = 1
         mock_cache.set = MagicMock()
 
         with pytest.raises(InvalidOTPException):
@@ -131,6 +133,7 @@ class TestOTPService:
         mock_cache.get.side_effect = lambda key, *args, **kwargs: (
             "123456" if "code" in key else 5   # 5 tentatives = bloqué
         )
+        mock_cache.incr.return_value = 5
         mock_cache.delete = MagicMock()
 
         with pytest.raises(BusinessRuleViolationException) as exc_info:
@@ -152,6 +155,7 @@ class TestOTPService:
             return 0
 
         mock_cache.get.side_effect = mock_get
+        mock_cache.incr.return_value = 1
         mock_cache.delete          = MagicMock()
         mock_cache.set             = MagicMock()
 

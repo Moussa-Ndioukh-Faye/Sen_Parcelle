@@ -5,7 +5,8 @@
 
 import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 export interface AuthUser {
@@ -88,8 +89,9 @@ export class AuthService {
   }
 
   submitOTP(otpCode: string): Observable<LoginResponse> {
+    const email = this._pendingUserId();
     return this.login({
-      email:    '',     // Le backend identifie par userId en session
+      email: email ?? '',
       password: '',
       otp_code: otpCode,
     });
@@ -113,7 +115,7 @@ export class AuthService {
 
   refreshToken(): Observable<{ access: string }> {
     const refresh = localStorage.getItem('refresh_token');
-    return this.api.post<{ access: string }>('/auth/refresh/', { refresh }, false).pipe(
+    return this.api.post<{ access: string }>('/auth/token/refresh/', { refresh }, false).pipe(
       tap(response => {
         localStorage.setItem('access_token', response.access);
       }),

@@ -32,9 +32,9 @@ class _KYCScreenState extends ConsumerState<KYCScreen> {
   bool     _isLoading   = false;
 
   static const _docTypes = [
-    ('cni',       '🪪 Carte Nationale d\'Identité'),
-    ('passeport', '📘 Passeport'),
-    ('permis',    '🚗 Permis de conduire'),
+    ('cni',       Icons.badge,           'Carte Nationale d\'Identité'),
+    ('passeport', Icons.book,            'Passeport'),
+    ('permis',    Icons.directions_car,  'Permis de conduire'),
   ];
 
   Future<void> _pickDocument() async {
@@ -98,7 +98,7 @@ class _InfoView extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Column(children: [
-          Text('🔐', style: TextStyle(fontSize: 52)),
+          Icon(Icons.lock, size: 52, color: Colors.white),
           SizedBox(height: 12),
           Text('Vérification KYC', textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
@@ -144,7 +144,7 @@ class _UploadView extends StatelessWidget {
   final void Function(String) onDocTypeChanged;
   final VoidCallback onPickFile;
   final VoidCallback onSubmit;
-  final List<(String, String)> docTypes;
+  final List<(String, IconData, String)> docTypes;
 
   const _UploadView({
     required this.docType,     required this.fileName,
@@ -161,7 +161,11 @@ class _UploadView extends StatelessWidget {
       const SizedBox(height: 12),
       ...docTypes.map((t) => RadioListTile<String>(
         value: t.$1, groupValue: docType,
-        title: Text(t.$2),
+        title: Row(children: [
+          Icon(t.$2, size: 20, color: AppTheme.green),
+          const SizedBox(width: 8),
+          Text(t.$3),
+        ]),
         activeColor: AppTheme.green,
         onChanged: (v) => onDocTypeChanged(v!),
         contentPadding: EdgeInsets.zero,
@@ -184,8 +188,8 @@ class _UploadView extends StatelessWidget {
             ),
           ),
           child: Column(children: [
-            Text(fileName != null ? '✅' : '📁',
-              style: const TextStyle(fontSize: 36)),
+            Icon(fileName != null ? Icons.check_circle : Icons.folder_open,
+              size: 36, color: fileName != null ? AppTheme.green : AppTheme.slate),
             const SizedBox(height: 8),
             Text(
               fileName ?? 'Appuyer pour sélectionner',
@@ -212,9 +216,10 @@ class _UploadView extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.amber.shade200),
         ),
-        child: const Row(children: [
-          Text('⚠️ '),
-          Expanded(child: Text(
+        child: Row(children: [
+          const Icon(Icons.warning_amber, color: Colors.amber, size: 20),
+          const SizedBox(width: 8),
+          const Expanded(child: Text(
             'Vos documents sont chiffrés et stockés de façon sécurisée. '
             'Ils ne sont accessibles que par nos administrateurs.',
             style: TextStyle(fontSize: 12, color: AppTheme.slate),
@@ -238,7 +243,7 @@ class _PendingView extends StatelessWidget {
     child: Padding(
       padding: const EdgeInsets.all(32),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Text('⏳', style: TextStyle(fontSize: 72)),
+        const Icon(Icons.hourglass_empty, size: 72, color: AppTheme.amber),
         const SizedBox(height: 20),
         Text('Documents soumis !',
           style: Theme.of(context).textTheme.headlineMedium,

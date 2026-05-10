@@ -28,7 +28,7 @@ interface NavItem {
       <!-- ═══ SIDEBAR ═══ -->
       <aside class="sidebar" [class.collapsed]="sidebarCollapsed()">
         <div class="sidebar__logo">
-          <span class="sidebar__logo-icon">🏡</span>
+          <span class="sidebar__logo-icon material-icons">home</span>
           <span class="sidebar__logo-text" *ngIf="!sidebarCollapsed()">
             Sen<strong>_parcelle</strong>
           </span>
@@ -47,7 +47,7 @@ interface NavItem {
                 class="sidebar__nav-item"
                 [title]="item.label"
               >
-                <span class="sidebar__nav-icon">{{ item.icon }}</span>
+                <span class="sidebar__nav-icon material-icons">{{ item.icon }}</span>
                 <span class="sidebar__nav-label" *ngIf="!sidebarCollapsed()">
                   {{ item.label }}
                 </span>
@@ -84,7 +84,7 @@ interface NavItem {
             </div>
             <div class="header__notif">
               <button class="header__notif-btn">
-                🔔
+                <span class="material-icons">notifications</span>
                 <span class="header__notif-badge" *ngIf="notifCount() > 0">
                   {{ notifCount() }}
                 </span>
@@ -99,7 +99,7 @@ interface NavItem {
             </div>
             <div class="header__user-menu" *ngIf="userMenuOpen()">
               <button class="header__menu-item" (click)="auth.logout()">
-                🚪 Se déconnecter
+                <span class="material-icons">exit_to_app</span> Se déconnecter
               </button>
             </div>
           </div>
@@ -143,7 +143,7 @@ interface NavItem {
       padding: 20px 16px;
       border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .sidebar__logo-icon { font-size: 24px; }
+    .sidebar__logo-icon { font-size: 24px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; }
     .sidebar__logo-text {
       color: #fff;
       font-size: 16px;
@@ -191,7 +191,7 @@ interface NavItem {
       background: #4ADE80;
       border-radius: 0 2px 2px 0;
     }
-    .sidebar__nav-icon { font-size: 18px; width: 22px; text-align: center; flex-shrink: 0; }
+    .sidebar__nav-icon { font-size: 20px; width: 22px; text-align: center; flex-shrink: 0; }
     .sidebar__nav-label { white-space: nowrap; overflow: hidden; }
     .sidebar__nav-badge {
       margin-left: auto;
@@ -338,12 +338,12 @@ export class LayoutComponent {
   pageTitle        = signal('Dashboard');
 
   navItems = signal<NavItem[]>([
-    { path: '/dashboard',    icon: '📊', label: 'Dashboard' },
-    { path: '/parcelles',    icon: '🏡', label: 'Parcelles' },
-    { path: '/validation',   icon: '✅', label: 'Validation', badge: 7, adminOnly: true },
-    { path: '/kyc',          icon: '🪪', label: 'KYC', adminOnly: true },
-    { path: '/utilisateurs', icon: '👥', label: 'Utilisateurs', adminOnly: true },
-    { path: '/blockchain',   icon: '🔗', label: 'Blockchain', adminOnly: true },
+    { path: '/dashboard',    icon: 'bar_chart', label: 'Dashboard' },
+    { path: '/parcelles',    icon: 'home',       label: 'Parcelles' },
+    { path: '/validation',   icon: 'check_circle', label: 'Validation', badge: 7, adminOnly: true },
+    { path: '/kyc',          icon: 'badge',        label: 'KYC', adminOnly: true },
+    { path: '/utilisateurs', icon: 'group',        label: 'Utilisateurs', adminOnly: true },
+    { path: '/blockchain',   icon: 'link',         label: 'Blockchain', adminOnly: true },
   ]);
 
   toggleSidebar()  { this.sidebarCollapsed.update(v => !v); }

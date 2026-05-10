@@ -1,1 +1,0 @@
-{"ast":null,"code":"// src/app/features/auth/auth.routes.ts\n// ══════════════════════════════════════════════════════════════\nexport const authRoutes = [{\n  path: '',\n  loadComponent: () => import('./login.component').then(m => m.LoginComponent),\n  title: 'Connexion — Sen_parcelle Admin'\n}];","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}

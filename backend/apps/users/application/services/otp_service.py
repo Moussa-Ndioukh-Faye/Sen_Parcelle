@@ -50,6 +50,17 @@ class OTPService:
             Le code généré (à envoyer par SMS)
         """
         from django.core.cache import cache
+        from core.utils.crypto import RateLimitService
+
+        # Rate limit : max 3 générations d'OTP par 10 minutes
+        rl = RateLimitService()
+        allowed, _ = rl.check_otp(user_id)
+        if not allowed:
+            from core.exceptions.base import BusinessRuleViolationException
+            raise BusinessRuleViolationException(
+                "Trop de demandes de code. Réessayez dans 10 minutes.",
+                "otp_rate_limited"
+            )
 
         # Générer code cryptographiquement sûr
         code = "".join([str(random.SystemRandom().randint(0, 9)) for _ in range(OTP_LENGTH)])
@@ -97,9 +108,17 @@ class OTPService:
             logger.warning(f"OTP expiré ou inexistant : user={user_id}")
             raise InvalidOTPException()
 
-        # Vérifier le nombre de tentatives
-        attempts = int(cache.get(attempts_key) or 0)
-        if attempts >= OTP_MAX_ATTEMPTS:
+        # Incrément atomique du compteur de tentatives
+        try:
+            attempts = cache.incr(attempts_key, 1)
+        except ValueError:
+            # Key expirée entre-temps — invalider OTP
+            cache.delete(code_key)
+            logger.warning(f"OTP attempts key expiré : user={user_id}")
+            raise BusinessRuleViolationException(
+                "Code expiré. Demandez un nouveau code.", "otp_expired"
+            )
+        if attempts > OTP_MAX_ATTEMPTS:
             # Invalider le code
             cache.delete(code_key)
             cache.delete(attempts_key)
@@ -112,9 +131,7 @@ class OTPService:
         # Vérifier le code (comparaison timing-safe)
         import hmac
         if not hmac.compare_digest(str(stored_code), str(code.strip())):
-            # Incrémenter tentatives
-            cache.set(attempts_key, attempts + 1, timeout=OTP_TTL_SECONDS)
-            remaining = OTP_MAX_ATTEMPTS - attempts - 1
+            remaining = OTP_MAX_ATTEMPTS - attempts
             logger.warning(f"OTP incorrect : user={user_id}, tentatives restantes={remaining}")
             raise InvalidOTPException()
 

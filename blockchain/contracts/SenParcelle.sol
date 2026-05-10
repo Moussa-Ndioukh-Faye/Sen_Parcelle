@@ -194,7 +194,10 @@ contract SenParcelle {
             transactionRef: _txRef
         }));
 
-        // Mise à jour propriétaire
+        // Retirer la parcelle de l'ancien propriétaire
+        _removeFromOwnerList(_parcelId, previousOwner);
+
+        // Ajouter au nouveau propriétaire
         parcel.owner = _newOwner;
         ownerParcels[_newOwner].push(_parcelId);
         totalTransfers++;
@@ -221,8 +224,26 @@ contract SenParcelle {
      */
     function revokeParcel(uint256 _parcelId) external onlyOwner {
         require(parcels[_parcelId].active, "SenParcelle: already revoked");
-        parcels[_parcelId].active = false;
+        Parcel storage parcel = parcels[_parcelId];
+        parcel.active = false;
+        _removeFromOwnerList(_parcelId, parcel.owner);
         emit ParcelRevoked(_parcelId, msg.sender, block.timestamp);
+    }
+
+    /**
+     * @dev Retire un parcelId de la liste ownerParcels[owner]
+     *     en déplaçant le dernier élément à la position supprimée.
+     */
+    function _removeFromOwnerList(uint256 _parcelId, address _owner) internal {
+        uint256[] storage list = ownerParcels[_owner];
+        uint256 len = list.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (list[i] == _parcelId) {
+                list[i] = list[len - 1];
+                list.pop();
+                break;
+            }
+        }
     }
 
     // ═════════════════════════════════════════════

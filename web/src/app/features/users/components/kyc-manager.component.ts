@@ -24,11 +24,11 @@ import { User } from '@core/models';
       <!-- ─── Tabs ─── -->
       <div class="tabs">
         <button class="tab" [class.tab--active]="activeTab() === 'pending'"
-          (click)="setTab('pending')">⏳ En attente ({{ pending().length }})</button>
+          (click)="setTab('pending')"><span class="material-icons" style="font-size:14px;vertical-align:middle">hourglass_empty</span> En attente ({{ pending().length }})</button>
         <button class="tab" [class.tab--active]="activeTab() === 'verified'"
-          (click)="setTab('verified')">✅ Vérifiés</button>
+          (click)="setTab('verified')"><span class="material-icons" style="font-size:14px;vertical-align:middle">check_circle</span> Vérifiés</button>
         <button class="tab" [class.tab--active]="activeTab() === 'rejected'"
-          (click)="setTab('rejected')">❌ Rejetés</button>
+          (click)="setTab('rejected')"><span class="material-icons" style="font-size:14px;vertical-align:middle">close</span> Rejetés</button>
       </div>
 
       <!-- ─── Liste KYC ─── -->
@@ -45,6 +45,7 @@ import { User } from '@core/models';
           </div>
           <div class="kyc-card__status">
             <span class="badge" [ngClass]="getKYCClass(u.kyc_status)">
+              <span class="material-icons" style="font-size:12px;vertical-align:middle">{{ getKYCIcon(u.kyc_status) }}</span>
               {{ getKYCLabel(u.kyc_status) }}
             </span>
             <span class="role-badge">{{ u.role }}</span>
@@ -53,20 +54,21 @@ import { User } from '@core/models';
             <button class="btn btn--sm btn--success"
               [disabled]="processingId() === u.id"
               (click)="approve(u)">
-              {{ processingId() === u.id ? '...' : '✅ Approuver' }}
+              <span *ngIf="processingId() === u.id">...</span>
+              <span *ngIf="processingId() !== u.id"><span class="material-icons" style="font-size:14px;vertical-align:middle">check_circle</span> Approuver</span>
             </button>
             <button class="btn btn--sm btn--danger" (click)="openReject(u)">
-              ❌ Rejeter
+              <span class="material-icons" style="font-size:14px;vertical-align:middle">close</span> Rejeter
             </button>
           </div>
           <div class="kyc-card__actions" *ngIf="u.kyc_status !== 'pending'">
-            <span class="kyc-done" *ngIf="u.kyc_status === 'verified'">✅ Approuvé</span>
-            <span class="kyc-done kyc-done--red" *ngIf="u.kyc_status === 'rejected'">❌ Rejeté</span>
+            <span class="kyc-done" *ngIf="u.kyc_status === 'verified'"><span class="material-icons" style="font-size:14px;vertical-align:middle">check_circle</span> Approuvé</span>
+            <span class="kyc-done kyc-done--red" *ngIf="u.kyc_status === 'rejected'"><span class="material-icons" style="font-size:14px;vertical-align:middle">close</span> Rejeté</span>
           </div>
         </div>
 
         <div class="empty-state" *ngIf="!displayedUsers().length">
-          <span>🔍</span>
+          <span class="material-icons" style="font-size:32px">search</span>
           <p>Aucun utilisateur dans cette catégorie</p>
         </div>
       </div>
@@ -230,7 +232,7 @@ export class KYCManagerComponent implements OnInit {
         this.pending.update(us => us.filter(u => u.id !== user.id));
         this.verified.update(us => [...us, { ...user, kyc_status: 'verified' }]);
         this.processingId.set(null);
-        this.showToast(`✅ KYC de ${user.nom} approuvé. SMS envoyé.`);
+        this.showToast(`KYC de ${user.nom} approuvé. SMS envoyé.`);
       },
       error: () => this.processingId.set(null),
     });
@@ -267,9 +269,15 @@ export class KYCManagerComponent implements OnInit {
     };
     return `badge ${m[status] ?? ''}`;
   }
+  getKYCIcon(status: string): string {
+    const m: Record<string, string> = {
+      pending: 'hourglass_empty', verified: 'check_circle', rejected: 'close',
+    };
+    return m[status] ?? 'help_outline';
+  }
   getKYCLabel(status: string): string {
     const m: Record<string, string> = {
-      pending: '⏳ En attente', verified: '✅ Vérifié', rejected: '❌ Rejeté',
+      pending: 'En attente', verified: 'Vérifié', rejected: 'Rejeté',
     };
     return m[status] ?? status;
   }

@@ -2,7 +2,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap, forkJoin, map } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { ApiService } from '@core/services/api.service';
 import { DashboardStats, AuditLog, Parcel, User } from '@core/models';
 

@@ -107,12 +107,25 @@ class AuthService:
         from django.utils import timezone
         from datetime import timedelta
         from apps.users.infrastructure.models import User as UserORM
+        from django.db.models import F
 
+        # Incrément atomique via F() — pas de race condition
+        updated = UserORM.objects.filter(id=user_id).update(
+            failed_attempts=F("failed_attempts") + 1
+        )
+        if not updated:
+            return
+
+        # Recharger pour vérifier le seuil
         user_orm = UserORM.objects.get(id=user_id)
-        user_orm.failed_attempts += 1
-
         if user_orm.failed_attempts >= self.MAX_FAILED_ATTEMPTS:
-            user_orm.locked_until = timezone.now() + timedelta(minutes=self.LOCKOUT_MINUTES)
+            # Verrouiller (update atomique pour éviter double-lock)
+            UserORM.objects.filter(
+                id=user_id,
+                locked_until__isnull=True
+            ).update(
+                locked_until=timezone.now() + timedelta(minutes=self.LOCKOUT_MINUTES)
+            )
             logger.warning(f"Compte verrouillé : user={user_id}")
             self._audit.log(user_id, "account_locked", {
                 "attempts": user_orm.failed_attempts
@@ -129,8 +142,6 @@ class AuthService:
                 )
             except Exception:
                 pass
-
-        user_orm.save(update_fields=["failed_attempts", "locked_until"])
 
     def is_account_locked(self, user_id: str) -> bool:
         """Vérifie si un compte est verrouillé."""

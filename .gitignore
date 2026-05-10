@@ -59,6 +59,7 @@ typechain/
 # /linux/
 # /macos/
 # /web/      <-- This was ignoring the web directory!
+web/dist/
 /test_data/
 
 # IDEs

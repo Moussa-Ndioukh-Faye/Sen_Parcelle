@@ -7,8 +7,11 @@ Orchestre : validation → création → OTP SMS → retour.
 
 import uuid
 import hashlib
+import logging
 from dataclasses import dataclass
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from apps.users.domain.entities import (
     UserEntity, Email, PhoneNumber, UserRole, KYCStatus,
@@ -84,11 +87,12 @@ class RegisterUseCase:
             is_active=True,
         )
 
-        # ─── 5. Persistance (via repository) ───
-        saved_user = self._users.save(user_entity)
-
-        # On délègue le hachage du mot de passe à l'infrastructure
-        self._users.set_password(user_entity.id, data.password)
+        # ─── 5. Persistance (via repository) avec transaction ───
+        from django.db import transaction
+        with transaction.atomic():
+            saved_user = self._users.save(user_entity)
+            # On délègue le hachage du mot de passe à l'infrastructure
+            self._users.set_password(user_entity.id, data.password)
 
         # ─── 6. Envoi OTP SMS ───
         otp_sent = False
@@ -99,9 +103,8 @@ class RegisterUseCase:
                 message=f"Sen_parcelle : votre code de vérification est {otp_code}. Valable 5 minutes."
             )
             otp_sent = True
-        except Exception:
-            # L'OTP n'est pas bloquant — l'utilisateur peut le redemander
-            pass
+        except Exception as e:
+            logger.warning(f"Échec envoi OTP SMS inscription user={user_entity.id}: {e}")
 
         return RegisterOutput(
             user_id=saved_user.id,

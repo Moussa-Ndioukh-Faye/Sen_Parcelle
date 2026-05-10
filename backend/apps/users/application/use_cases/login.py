@@ -36,12 +36,14 @@ class LoginUseCase:
     """
 
     def __init__(self, user_repository: IUserRepository,
-                 otp_service, jwt_service, audit_service, sms_service):
+                 otp_service, jwt_service, audit_service, sms_service,
+                 auth_service=None):
         self._users  = user_repository
         self._otp    = otp_service
         self._jwt    = jwt_service
         self._audit  = audit_service
         self._sms    = sms_service
+        self._auth   = auth_service
 
     def execute(self, data: LoginInput) -> LoginOutput:
         from core.exceptions.base import (
@@ -52,22 +54,37 @@ class LoginUseCase:
         # ─── 1. Récupérer l'utilisateur ───
         user_entity = self._users.get_by_email(data.email)
         if user_entity is None:
-            raise EntityNotFoundException("Utilisateur", data.email)
+            raise BusinessRuleViolationException(
+                "Email ou mot de passe incorrect.", "invalid_credentials"
+            )
 
-        # ─── 2. Vérifier compte actif ───
+        # ─── 2. Vérifier verrouillage compte ───
+        if self._auth and self._auth.is_account_locked(user_entity.id):
+            raise BusinessRuleViolationException(
+                "Compte temporairement verrouillé. Réessayez dans 30 minutes.",
+                "account_locked"
+            )
+
+        # ─── 3. Vérifier compte actif ───
         if not user_entity.is_active:
             raise BusinessRuleViolationException(
                 "Compte désactivé. Contactez le support.", "account_disabled"
             )
 
-        # ─── 3. Vérifier le mot de passe (via infrastructure) ───
+        # ─── 4. Vérifier le mot de passe (via infrastructure) ───
         if not self._users.check_password(user_entity.id, data.password):
             self._audit.log(user_entity.id, "login_failed", {"reason": "bad_password"})
+            if self._auth:
+                self._auth.handle_failed_login(user_entity.id)
             raise BusinessRuleViolationException(
                 "Email ou mot de passe incorrect.", "invalid_credentials"
             )
 
-        # ─── 4. 2FA : OTP requis ───
+        # ─── 5. Reset failed attempts après succès ───
+        if self._auth:
+            self._auth.reset_failed_attempts(user_entity.id)
+
+        # ─── 6. 2FA : OTP requis ───
         if user_entity.is_2fa_enabled:
             if not data.otp_code:
                 # Envoyer OTP + demander code
@@ -89,10 +106,10 @@ class LoginUseCase:
                 self._audit.log(user_entity.id, "login_failed", {"reason": "bad_otp"})
                 raise InvalidOTPException()
 
-        # ─── 5. Générer tokens JWT ───
+        # ─── 7. Générer tokens JWT ───
         tokens = self._jwt.generate(user_id=user_entity.id, role=user_entity.role.value)
 
-        # ─── 6. Audit ───
+        # ─── 8. Audit ───
         self._audit.log(user_entity.id, "login_success", {})
 
         return LoginOutput(

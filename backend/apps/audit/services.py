@@ -1,3 +1,9 @@
+import logging
+from django.utils import timezone
+from .models import AuditLog
+
+logger = logging.getLogger(__name__)
+
 # ══════════════════════════════════════════════════════════════
 # SERVICE AUDIT
 # ══════════════════════════════════════════════════════════════

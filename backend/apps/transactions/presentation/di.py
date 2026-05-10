@@ -17,8 +17,8 @@ def get_transaction_repository():
 
 
 def get_payment_factory():
-    from apps.transactions.infrastructure.adapters.factory import payment_factory
-    return payment_factory
+    from apps.transactions.infrastructure.adapters.factory import get_payment_adapter
+    return get_payment_adapter
 
 
 def get_initiate_payment_uc():

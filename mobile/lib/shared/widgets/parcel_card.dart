@@ -104,18 +104,18 @@ class ParcelCard extends StatelessWidget {
 class _ImagePlaceholder extends StatelessWidget {
   final String type;
   const _ImagePlaceholder({required this.type});
-  static const _emojis = {
-    'residentiel': '🏠',
-    'commercial': '🏢',
-    'agricole': '🌾',
-    'industriel': '🏭',
+  static const _icons = {
+    'residentiel': Icons.home,
+    'commercial':  Icons.business,
+    'agricole':    Icons.agriculture,
+    'industriel':  Icons.factory,
   };
   @override
   Widget build(BuildContext context) => Container(
         color: AppTheme.greenLight,
         child: Center(
-            child: Text(_emojis[type] ?? '🌿',
-                style: const TextStyle(fontSize: 50))),
+            child: Icon(_icons[type] ?? Icons.landscape,
+                size: 50, color: AppTheme.green)),
       );
 }
 
@@ -129,11 +129,20 @@ class _CertificationBadge extends StatelessWidget {
           color: isCertified ? AppTheme.green : AppTheme.amber,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          isCertified ? '✓ Certifiée' : '⏳ En vérification',
-          style: const TextStyle(
-              color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isCertified ? Icons.verified : Icons.hourglass_empty,
+              size: 10, color: Colors.white,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              isCertified ? 'Certifiée' : 'En vérification',
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+          ]),
       );
 }
 

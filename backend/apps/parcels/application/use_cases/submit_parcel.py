@@ -60,6 +60,7 @@ class SubmitParcelUseCase:
     """
 
     FRAUD_RADIUS_METERS = 50.0
+    MAX_FILE_SIZE_MB = 20
 
     def __init__(self, parcel_repo: IParcelRepository, user_repo: IUserRepository,
                  storage_service, notification_service, audit_service):
@@ -85,23 +86,31 @@ class SubmitParcelUseCase:
             raise BusinessRuleViolationException(str(e), "invalid_location")
 
         # ─── 3. Anti-fraude : doublon géographique ───
-        if self._parcels.exists_near(location, self.FRAUD_RADIUS_METERS):
-            nearby = self._parcels.find_nearby(location, self.FRAUD_RADIUS_METERS)
-            if nearby:
-                dist = location.distance_to_meters(nearby[0].location)
-                raise ParcelFraudSuspectedException(dist)
+        nearby = self._parcels.find_nearby_active(location, self.FRAUD_RADIUS_METERS)
+        if nearby:
+            dist = location.distance_to_meters(nearby[0].location)
+            raise ParcelFraudSuspectedException(dist)
 
-        # ─── 4. Hash SHA-256 du document ───
+        # ─── 4. Vérifier taille du fichier ───
+        if len(data.document_bytes) > self.MAX_FILE_SIZE_MB * 1024 * 1024:
+            raise BusinessRuleViolationException(
+                f"Le document dépasse la taille maximale de {self.MAX_FILE_SIZE_MB} Mo.",
+                "file_too_large"
+            )
+
+        # ─── 5. Hash SHA-256 du document ───
         document_hash = hashlib.sha256(data.document_bytes).hexdigest()
 
-        # ─── 5. Upload S3 (async en production → Celery) ───
-        s3_key = self._storage.upload(
+        # ─── 6. Upload S3 (async en production → Celery) ───
+        import os
+        safe_filename = os.path.basename(data.document_name)
+        self._storage.upload(
             content=data.document_bytes,
-            filename=f"parcels/{data.owner_id}/{document_hash}/{data.document_name}",
+            filename=f"parcels/{data.owner_id}/{document_hash}/{safe_filename}",
             content_type="application/pdf",
         )
 
-        # ─── 6. Créer l'entité ───
+        # ─── 7. Créer l'entité ───
         import uuid
         parcel = ParcelEntity(
             id=str(uuid.uuid4()),
@@ -118,13 +127,13 @@ class SubmitParcelUseCase:
 
         saved = self._parcels.save(parcel)
 
-        # ─── 7. Notifier les admins ───
+        # ─── 8. Notifier les admins ───
         self._notifications.notify_admins(
             event="new_parcel_pending",
             data={"parcel_id": saved.id, "titre": data.titre, "region": data.region}
         )
 
-        # ─── 8. Audit ───
+        # ─── 9. Audit ───
         self._audit.log(data.owner_id, "parcel_submitted", {"parcel_id": saved.id})
 
         return SubmitParcelOutput(

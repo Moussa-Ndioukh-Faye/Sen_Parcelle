@@ -2,7 +2,6 @@
 
 from django.conf import settings
 from django.db import migrations, models
-import django.contrib.gis.db.models.fields
 import django.db.models.deletion
 import uuid
 
@@ -29,7 +28,7 @@ class Migration(migrations.Migration):
                 ('surface', models.FloatField(help_text='Superficie en m²')),
                 ('price', models.DecimalField(decimal_places=2, help_text='Prix en FCFA', max_digits=14)),
                 ('status', models.CharField(choices=[('pending', 'En attente'), ('validated', 'Validée'), ('certified', 'Certifiée'), ('rejected', 'Rejetée'), ('sold', 'Vendue')], db_index=True, default='pending', max_length=20)),
-                ('location', django.contrib.gis.db.models.fields.PointField(blank=True, geography=True, help_text='Point GPS (longitude, latitude)', null=True, srid=4326)),
+                ('location', models.JSONField(blank=True, help_text='Point GPS {lng,lat} (JSONField fallback sans GDAL)', null=True)),
                 ('document_hash', models.CharField(blank=True, db_index=True, max_length=64)),
                 ('ipfs_hash', models.CharField(blank=True, max_length=100)),
                 ('blockchain_tx_hash', models.CharField(blank=True, db_index=True, max_length=100)),

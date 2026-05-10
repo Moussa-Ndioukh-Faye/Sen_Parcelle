@@ -3,6 +3,8 @@
 # apps/parcels/presentation/serializers.py
 # ══════════════════════════════════════════════════════════════
 
+from decimal import Decimal
+
 from rest_framework import serializers
 
 
@@ -17,7 +19,7 @@ class ParcelCreateSerializer(serializers.Serializer):
     latitude    = serializers.FloatField(min_value=-90, max_value=90)
     longitude   = serializers.FloatField(min_value=-180, max_value=180)
     surface     = serializers.FloatField(min_value=1)
-    price       = serializers.FloatField(min_value=1)
+    price       = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=Decimal('1'))
 
 
 class ParcelListSerializer(serializers.Serializer):
@@ -25,7 +27,7 @@ class ParcelListSerializer(serializers.Serializer):
     titre    = serializers.CharField()
     region   = serializers.CharField()
     surface  = serializers.FloatField()
-    price    = serializers.FloatField()
+    price    = serializers.DecimalField(max_digits=14, decimal_places=2)
     status   = serializers.CharField()
     owner_id = serializers.CharField()
 

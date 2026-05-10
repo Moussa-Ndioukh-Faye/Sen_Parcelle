@@ -3,6 +3,10 @@
 # apps/audit/middleware.py
 # ══════════════════════════════════════════════════════════════
 
+import time
+
+from apps.audit.services import AuditService
+
 SENSITIVE_PATHS = {
     "/api/auth/login/",
     "/api/auth/inscription/",

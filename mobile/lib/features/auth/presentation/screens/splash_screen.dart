@@ -64,7 +64,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(28),
                   ),
-                  child: const Text('🏡', style: TextStyle(fontSize: 64)),
+                  child: const Icon(Icons.home, size: 64, color: Colors.white),
                 ),
                 const SizedBox(height: 24),
                 const Text('Sen_parcelle',

@@ -44,8 +44,13 @@ class ProfileScreen extends ConsumerWidget {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text('👤 Acheteur',
-                          style: TextStyle(color: Colors.white, fontSize: 12)),
+                      child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.person, size: 14, color: Colors.white),
+                            Text(' Acheteur',
+                                style: TextStyle(color: Colors.white, fontSize: 12)),
+                          ]),
                     ),
                   ],
                 ),

@@ -82,6 +82,7 @@ def get_login_uc():
         jwt_service=get_jwt_service(),
         audit_service=get_audit_service(),
         sms_service=get_sms_service(),
+        auth_service=get_auth_service(),
     )
 
 

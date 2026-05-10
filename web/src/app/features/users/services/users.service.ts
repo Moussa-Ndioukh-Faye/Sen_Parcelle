@@ -2,7 +2,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { ApiService } from '@core/services/api.service';
 import {
   User, UserDetail, PaginatedResponse, KYCStatus, AuditLog
@@ -64,7 +65,7 @@ export class UsersService {
   // ──────────────────────────────────────────────
 
   approveKYC(userId: string): Observable<{ kyc_status: string; message: string }> {
-    return this.api.post(`/utilisateurs/${userId}/kyc/`, {
+    return this.api.post<{ kyc_status: string; message: string }>(`/utilisateurs/${userId}/kyc/`, {
       decision: 'approve',
     }).pipe(
       tap(() => this._updateUserKYC(userId, 'verified')),
@@ -72,7 +73,7 @@ export class UsersService {
   }
 
   rejectKYC(userId: string, reason: string): Observable<{ kyc_status: string; message: string }> {
-    return this.api.post(`/utilisateurs/${userId}/kyc/`, {
+    return this.api.post<{ kyc_status: string; message: string }>(`/utilisateurs/${userId}/kyc/`, {
       decision: 'reject',
       reason,
     }).pipe(
@@ -85,13 +86,13 @@ export class UsersService {
   // ──────────────────────────────────────────────
 
   suspendUser(userId: string): Observable<{ message: string }> {
-    return this.api.patch(`/utilisateurs/${userId}/`, { is_active: false }).pipe(
+    return this.api.patch<{ message: string }>(`/utilisateurs/${userId}/`, { is_active: false }).pipe(
       tap(() => this._updateUserActive(userId, false)),
     );
   }
 
   activateUser(userId: string): Observable<{ message: string }> {
-    return this.api.patch(`/utilisateurs/${userId}/`, { is_active: true }).pipe(
+    return this.api.patch<{ message: string }>(`/utilisateurs/${userId}/`, { is_active: true }).pipe(
       tap(() => this._updateUserActive(userId, true)),
     );
   }

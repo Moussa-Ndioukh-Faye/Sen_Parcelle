@@ -95,7 +95,8 @@ class IPFSAdapter:
 
     def get_gateway_url(self, cid: str) -> str:
         """Retourne l'URL publique d'accès aux métadonnées."""
-        return f"{self._gateway}/{cid}"
+        base = self._gateway.rstrip("/")
+        return f"{base}/{cid}"
 
     def unpin(self, cid: str) -> bool:
         """Supprime un pin IPFS (en cas de révocation)."""

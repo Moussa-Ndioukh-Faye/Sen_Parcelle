@@ -28,7 +28,7 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
       <div class="stats-grid" *ngIf="stats()">
         <div class="stat-card stat-card--amber">
           <div class="stat-card__header">
-            <span class="stat-card__icon">⏳</span>
+            <span class="stat-card__icon material-icons">hourglass_empty</span>
             <span class="stat-card__trend">↑</span>
           </div>
           <div class="stat-card__value">{{ stats()!.parcels.pending }}</div>
@@ -38,7 +38,7 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
 
         <div class="stat-card stat-card--green">
           <div class="stat-card__header">
-            <span class="stat-card__icon">✅</span>
+            <span class="stat-card__icon material-icons">check_circle</span>
           </div>
           <div class="stat-card__value">{{ stats()!.parcels.certified }}</div>
           <div class="stat-card__label">Parcelles certifiées</div>
@@ -47,7 +47,7 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
 
         <div class="stat-card stat-card--blue">
           <div class="stat-card__header">
-            <span class="stat-card__icon">👤</span>
+            <span class="stat-card__icon material-icons">person</span>
           </div>
           <div class="stat-card__value">{{ stats()!.users.total }}</div>
           <div class="stat-card__label">Utilisateurs inscrits</div>
@@ -56,7 +56,7 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
 
         <div class="stat-card stat-card--purple">
           <div class="stat-card__header">
-            <span class="stat-card__icon">🔗</span>
+            <span class="stat-card__icon material-icons">link</span>
           </div>
           <div class="stat-card__value">{{ stats()!.blockchain.total_tx }}</div>
           <div class="stat-card__label">Transactions blockchain</div>
@@ -86,6 +86,7 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
               </div>
               <div class="parcel-item__right">
                 <span class="badge" [ngClass]="getStatusClass(p.status)">
+                  <span class="material-icons" style="font-size:12px;vertical-align:middle">{{ getStatusIcon(p.status) }}</span>
                   {{ getStatusLabel(p.status) }}
                 </span>
                 <span class="parcel-item__price">{{ formatPrice(p.price) }}</span>
@@ -110,7 +111,10 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
                 [class.activity-item__dot--amber]="log.action.includes('pending') || log.action.includes('submitted')">
               </div>
               <div class="activity-item__content">
-                <span class="activity-item__action">{{ formatAction(log.action) }}</span>
+                <span class="activity-item__action">
+                  <span class="material-icons" style="font-size:13px;vertical-align:middle">{{ getActionIcon(log.action) }}</span>
+                  {{ getActionLabel(log.action) }}
+                </span>
                 <span class="activity-item__time">{{ formatTime(log.created_at) }}</span>
               </div>
             </div>
@@ -275,10 +279,17 @@ export class DashboardComponent implements OnInit {
     return `badge ${map[status] ?? 'badge--pending'}`;
   }
 
+  getStatusIcon(status: string): string {
+    const map: Record<string, string> = {
+      pending: 'hourglass_empty', validated: 'check_circle',
+      certified: 'verified', rejected: 'close', sold: 'paid',
+    };
+    return map[status] ?? 'help_outline';
+  }
   getStatusLabel(status: string): string {
     const map: Record<string, string> = {
-      pending: '⏳ En attente', validated: '✓ Validée',
-      certified: '✓ Certifiée', rejected: '✗ Rejetée', sold: '💰 Vendue',
+      pending: 'En attente', validated: 'Validée',
+      certified: 'Certifiée', rejected: 'Rejetée', sold: 'Vendue',
     };
     return map[status] ?? status;
   }
@@ -289,15 +300,27 @@ export class DashboardComponent implements OnInit {
     return `${price.toLocaleString()} FCFA`;
   }
 
-  formatAction(action: string): string {
+  getActionIcon(action: string): string {
     const map: Record<string, string> = {
-      login_success:    '✅ Connexion réussie',
-      login_failed:     '❌ Échec de connexion',
-      parcel_submitted: '📋 Nouvelle parcelle soumise',
-      parcel_certified: '🔗 Parcelle certifiée blockchain',
-      parcel_rejected:  '✗ Parcelle rejetée',
-      kyc_submitted:    '🪪 KYC soumis',
-      kyc_approved:     '✅ KYC approuvé',
+      login_success:    'login',
+      login_failed:     'cancel',
+      parcel_submitted: 'note_add',
+      parcel_certified: 'link',
+      parcel_rejected:  'close',
+      kyc_submitted:    'badge',
+      kyc_approved:     'check_circle',
+    };
+    return map[action] ?? 'help_outline';
+  }
+  getActionLabel(action: string): string {
+    const map: Record<string, string> = {
+      login_success:    'Connexion réussie',
+      login_failed:     'Échec de connexion',
+      parcel_submitted: 'Nouvelle parcelle soumise',
+      parcel_certified: 'Parcelle certifiée blockchain',
+      parcel_rejected:  'Parcelle rejetée',
+      kyc_submitted:    'KYC soumis',
+      kyc_approved:     'KYC approuvé',
     };
     return map[action] ?? action.replace(/_/g, ' ');
   }

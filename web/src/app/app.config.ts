@@ -2,7 +2,7 @@
 // src/app/app.config.ts — Bootstrap Angular 17 standalone
 // ═══════════════════════════════════════════════════════════════
 
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 import {
   provideHttpClient,
@@ -15,7 +15,6 @@ import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes,
       withComponentInputBinding(),
       withViewTransitions(),

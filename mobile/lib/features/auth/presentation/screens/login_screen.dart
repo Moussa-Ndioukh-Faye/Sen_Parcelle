@@ -63,7 +63,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('🏡', style: TextStyle(fontSize: 52)),
+                      const Icon(Icons.home, size: 52, color: Colors.white),
                       const SizedBox(height: 12),
                       Text('Sen_parcelle',
                         style: Theme.of(context).textTheme.headlineLarge?.copyWith(

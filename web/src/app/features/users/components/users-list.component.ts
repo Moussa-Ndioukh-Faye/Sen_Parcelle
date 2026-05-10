@@ -3,6 +3,7 @@
 
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { map } from 'rxjs/operators';
 import { UsersService } from '../services/users.service';
 
 @Component({
@@ -50,7 +51,7 @@ import { UsersService } from '../services/users.service';
 })
 export class UsersListComponent implements OnInit {
   private usersService = inject(UsersService);
-  users$ = this.usersService.getUsers();
+  users$ = this.usersService.fetchUsers().pipe(map(res => res.results));
 
   ngOnInit() {}
 }

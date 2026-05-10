@@ -31,6 +31,12 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "django_ratelimit",
     "celery",
+    "django_celery_beat",
+    "drf_spectacular",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
     "storages",                        # django-storages (S3)
 ]
 
@@ -59,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.audit.middleware.AuditMiddleware",        # Log toutes les requêtes
+    "core.utils.crypto.SecurityHeadersMiddleware",   # Headers sécurité HTTP
 ]
 
 ROOT_URLCONF = "config.urls"

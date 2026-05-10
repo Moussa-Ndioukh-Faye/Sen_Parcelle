@@ -25,22 +25,22 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
       <!-- ─── Stats blockchain ─── -->
       <div class="bc-stats">
         <div class="bc-stat">
-          <div class="bc-stat__icon">🔗</div>
+          <div class="bc-stat__icon material-icons">link</div>
           <div class="bc-stat__value">{{ certifiedCount() }}</div>
           <div class="bc-stat__label">Certificats émis</div>
         </div>
         <div class="bc-stat">
-          <div class="bc-stat__icon">⛽</div>
+          <div class="bc-stat__icon material-icons">local_gas_station</div>
           <div class="bc-stat__value">~0.01 MATIC</div>
           <div class="bc-stat__label">Coût moyen / TX</div>
         </div>
         <div class="bc-stat">
-          <div class="bc-stat__icon">⚡</div>
+          <div class="bc-stat__icon material-icons">bolt</div>
           <div class="bc-stat__value">~3s</div>
           <div class="bc-stat__label">Temps confirmation</div>
         </div>
         <div class="bc-stat">
-          <div class="bc-stat__icon">🛡️</div>
+          <div class="bc-stat__icon material-icons">shield</div>
           <div class="bc-stat__value">SHA-256</div>
           <div class="bc-stat__label">Algorithme de hash</div>
         </div>
@@ -48,7 +48,7 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
 
       <!-- ─── Vérificateur de certificat ─── -->
       <div class="verifier-card">
-        <h2 class="verifier-card__title">🔍 Vérifier un certificat</h2>
+        <h2 class="verifier-card__title"><span class="material-icons" style="font-size:18px;vertical-align:middle">search</span> Vérifier un certificat</h2>
         <p class="verifier-card__sub">
           Entrez le hash SHA-256 d'un document pour vérifier son authenticité sur Polygon.
         </p>
@@ -64,7 +64,7 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
         </div>
         <div class="verifier-result verifier-result--valid"
           *ngIf="verifyResult() && verifyResult()!.valide">
-          <span>✅</span>
+          <span class="material-icons" style="font-size:24px">check_circle</span>
           <div>
             <strong>Certificat valide</strong>
             <p>Parcelle : {{ verifyResult()!.parcelle }}</p>
@@ -73,7 +73,7 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
         </div>
         <div class="verifier-result verifier-result--invalid"
           *ngIf="verifyResult() && !verifyResult()!.valide">
-          <span>❌</span>
+          <span class="material-icons" style="font-size:24px">cancel</span>
           <div><strong>Certificat introuvable</strong><p>Ce hash n'est pas enregistré.</p></div>
         </div>
       </div>
@@ -107,7 +107,7 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
                 <a [href]="getExplorerUrl(p.blockchain_tx_hash)"
                   target="_blank" class="explorer-link"
                   *ngIf="p.blockchain_tx_hash">
-                  🔗 Voir
+                  <span class="material-icons" style="font-size:12px;vertical-align:middle">link</span> Voir
                 </a>
               </td>
             </tr>

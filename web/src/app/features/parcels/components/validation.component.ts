@@ -33,7 +33,7 @@ import { Parcel } from '@core/models';
 
       <!-- ─── Empty ─── -->
       <div class="empty-state" *ngIf="!parcelsService.isLoading() && !pending().length">
-        <span class="empty-state__icon">✅</span>
+        <span class="empty-state__icon material-icons">check_circle</span>
         <h3>Aucune parcelle en attente</h3>
         <p>Toutes les parcelles ont été traitées.</p>
       </div>
@@ -74,16 +74,17 @@ import { Parcel } from '@core/models';
               <td>
                 <div class="actions">
                   <button class="btn btn--sm btn--outline"
-                    (click)="openDetail(p)">👁️</button>
+                    (click)="openDetail(p)"><span class="material-icons" style="font-size:16px;vertical-align:middle">visibility</span></button>
                   <button class="btn btn--sm btn--success"
                     [disabled]="processingId() === p.id"
                     (click)="validate(p.id)">
-                    {{ processingId() === p.id ? '...' : '✅ Valider' }}
+                    <span *ngIf="processingId() === p.id">...</span>
+                    <span *ngIf="processingId() !== p.id"><span class="material-icons" style="font-size:14px;vertical-align:middle">check_circle</span> Valider</span>
                   </button>
                   <button class="btn btn--sm btn--danger"
                     [disabled]="processingId() === p.id"
                     (click)="openRejectModal(p)">
-                    ❌ Rejeter
+                    <span class="material-icons" style="font-size:14px;vertical-align:middle">close</span> Rejeter
                   </button>
                 </div>
               </td>
@@ -125,10 +126,10 @@ import { Parcel } from '@core/models';
           </div>
           <div class="modal__footer">
             <button class="btn btn--danger" (click)="openRejectModal(detailParcel()!); closeDetail()">
-              ❌ Rejeter
+              <span class="material-icons" style="font-size:14px;vertical-align:middle">close</span> Rejeter
             </button>
             <button class="btn btn--success" (click)="validate(detailParcel()!.id); closeDetail()">
-              ✅ Valider & Certifier
+              <span class="material-icons" style="font-size:14px;vertical-align:middle">check_circle</span> Valider & Certifier
             </button>
           </div>
         </div>
@@ -323,7 +324,7 @@ export class ValidationComponent implements OnInit {
       next: res => {
         this.pending.update(ps => ps.filter(p => p.id !== id));
         this.processingId.set(null);
-        this.showToast(`✅ Parcelle validée ! Certification blockchain en cours…`);
+        this.showToast(`Parcelle validée ! Certification blockchain en cours…`);
       },
       error: () => this.processingId.set(null),
     });

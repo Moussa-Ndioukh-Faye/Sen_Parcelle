@@ -185,12 +185,13 @@ class BlockchainService:
             uid = uuid.UUID(parcel_id_str)
             return uid.int
         except ValueError:
-            return abs(hash(parcel_id_str))
+            raise ValueError(f"ID invalide (UUID attendu) : {parcel_id_str}")
 
     def _str_to_bytes32(self, s: str) -> bytes:
-        """Convertit une chaîne en bytes32 pour Solidity."""
-        encoded = s.encode("utf-8")[:32]
-        return encoded.ljust(32, b'\x00')
+        """Convertit une chaîne en bytes32 pour Solidity.
+        Hash SHA-256 de la chaîne pour garantir unicité."""
+        import hashlib
+        return hashlib.sha256(s.encode("utf-8")).digest()
 
     def _get_or_create_wallet(self, user_id: str) -> str:
         """

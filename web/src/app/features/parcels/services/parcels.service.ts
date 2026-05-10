@@ -3,7 +3,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { ApiService } from '@core/services/api.service';
 import {
   Parcel, ParcelDetail, PaginatedResponse, ValidationDecision
@@ -76,7 +77,9 @@ export class ParcelsService {
   validate(id: string, decision: ValidationDecision): Observable<{
     status: string; blockchain_hash?: string; message: string;
   }> {
-    return this.api.post(`/parcelles/${id}/valider/`, decision).pipe(
+    return this.api.post<{
+      status: string; blockchain_hash?: string; message: string;
+    }>(`/parcelles/${id}/valider/`, decision).pipe(
       tap(() => {
         // Mettre à jour le signal localement (optimistic update)
         this._parcels.update(parcels =>

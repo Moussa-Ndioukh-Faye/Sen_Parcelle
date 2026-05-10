@@ -17,4 +17,7 @@ class RegisterSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     email    = serializers.EmailField()
     password = serializers.CharField(write_only=True)
-    otp_code = serializers.CharField(max_length=6, required=False, allow_blank=True)
+    otp_code = serializers.RegexField(
+        regex=r'^\d{6}$', max_length=6, required=False, allow_blank=True,
+        error_messages={'invalid': 'Le code OTP doit contenir exactement 6 chiffres.'}
+    )

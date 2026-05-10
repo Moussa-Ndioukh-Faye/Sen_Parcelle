@@ -13,36 +13,14 @@ from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
 
 
+
 # ══════════════════════════════════════════════════════════════
 # CELERY APP CONFIG
 # infrastructure/celery/app.py
 # ══════════════════════════════════════════════════════════════
 
 """
-import os
-from celery import Celery
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
-
-app = Celery("sen_parcelle")
-app.config_from_object("django.conf:settings", namespace="CELERY")
-app.autodiscover_tasks()
-
-# Tâches planifiées (Celery Beat)
-app.conf.beat_schedule = {
-    "verifier-transactions-en-attente": {
-        "task":     "transactions.check_pending",
-        "schedule": 300.0,    # Toutes les 5 minutes
-    },
-    "cleanup-otp-expires": {
-        "task":     "users.cleanup_expired_otp",
-        "schedule": 600.0,    # Toutes les 10 minutes
-    },
-    "rapport-quotidien-admin": {
-        "task":     "notifications.daily_report",
-        "schedule": 86400.0,  # Une fois par jour
-    },
-}
+Le beat schedule est défini dans infrastructure/celery/app.py
 """
 
 
@@ -152,7 +130,12 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
         raise self.retry(exc=exc)
 
 
-@shared_task(name="blockchain.transfer_ownership")
+@shared_task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+    name="blockchain.transfer_ownership"
+)
 def transfer_ownership_on_blockchain(
     parcel_id: str, seller_id: str, buyer_id: str, transaction_id: str
 ):
@@ -197,7 +180,7 @@ def transfer_ownership_on_blockchain(
 
     except Exception as exc:
         logger.error(f"Erreur transfert ownership : {exc}")
-        raise
+        raise self.retry(exc=exc)
 
 
 # ══════════════════════════════════════════════════════════════
