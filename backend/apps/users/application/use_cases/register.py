@@ -72,8 +72,17 @@ class RegisterUseCase:
             raise DuplicateEntityException("Utilisateur", "téléphone")
 
         # ─── 3. Validation mot de passe ───
-        if len(data.password) < 8:
-            raise ValidationException({"password": "Minimum 8 caractères requis."})
+        import re
+        if len(data.password) < 12:
+            raise ValidationException({"password": "Minimum 12 caractères requis."})
+        if not re.search(r"[A-Z]", data.password):
+            raise ValidationException({"password": "Doit contenir au moins une majuscule."})
+        if not re.search(r"[a-z]", data.password):
+            raise ValidationException({"password": "Doit contenir au moins une minuscule."})
+        if not re.search(r"\d", data.password):
+            raise ValidationException({"password": "Doit contenir au moins un chiffre."})
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", data.password):
+            raise ValidationException({"password": "Doit contenir au moins un caractère spécial."})
 
         # ─── 4. Création entité ───
         user_entity = UserEntity(

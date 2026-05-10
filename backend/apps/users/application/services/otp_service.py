@@ -8,7 +8,7 @@ Service OTP (One-Time Password) pour le 2FA Sen_parcelle.
 - Stockage Redis (pas en base → plus rapide, auto-expiration)
 """
 
-import random
+import secrets
 import logging
 from datetime import timedelta
 
@@ -62,8 +62,8 @@ class OTPService:
                 "otp_rate_limited"
             )
 
-        # Générer code cryptographiquement sûr
-        code = "".join([str(random.SystemRandom().randint(0, 9)) for _ in range(OTP_LENGTH)])
+        # Générer code cryptographiquement sûr via secrets
+        code = "".join([str(secrets.randbelow(10)) for _ in range(OTP_LENGTH)])
 
         # Stocker dans Redis avec TTL
         cache.set(

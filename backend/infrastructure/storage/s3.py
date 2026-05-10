@@ -18,13 +18,14 @@ class S3StorageService:
         self._bucket = settings.AWS_STORAGE_BUCKET_NAME
 
     def upload(self, content: bytes, filename: str, content_type: str) -> str:
-        """Upload public (photos de parcelles)."""
+        """Upload privé par défaut, accès via URL signée."""
         self._client.put_object(
             Bucket=self._bucket,
             Key=filename,
             Body=content,
             ContentType=content_type,
-            ACL="public-read",
+            ACL="private",
+            ServerSideEncryption="AES256",
         )
         return filename
 

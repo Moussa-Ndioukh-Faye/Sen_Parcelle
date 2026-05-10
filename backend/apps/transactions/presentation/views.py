@@ -38,18 +38,36 @@ class TransactionViewSet(viewsets.ViewSet):
         POST /api/transactions/webhook/{provider}/
         Webhook de confirmation de paiement.
         """
-        # Note : En production, extraire la signature des headers (spécifique au provider)
-        signature = request.headers.get("X-Wave-Signature") or request.headers.get("X-OM-Signature", "")
-        
+        if provider not in ("wave", "orange_money"):
+            return Response(
+                {"error": "Fournisseur inconnu"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        signature_header = "X-Wave-Signature" if provider == "wave" else "X-OM-Signature"
+        signature = request.headers.get(signature_header, "")
+
         if not signature:
             return Response(
                 {"error": "Signature manquante"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        
+
+        payment_ref = (
+            request.data.get("id") or
+            request.data.get("notif_token") or
+            request.data.get("data", {}).get("id", "")
+        )
+
+        if not payment_ref:
+            return Response(
+                {"error": "Référence de paiement manquante"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         uc = get_confirm_payment_uc()
         result = uc.execute(ConfirmPaymentInput(
-            payment_ref=request.data.get("id") or request.data.get("notif_token", ""),
+            payment_ref=payment_ref,
             provider=provider,
             webhook_payload=request.data,
             signature=signature,

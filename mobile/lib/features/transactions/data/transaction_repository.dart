@@ -57,5 +57,5 @@ class TransactionRepository {
 }
 
 final transactionRepositoryProvider = Provider<TransactionRepository>(
-  (ref) => TransactionRepository(ref.watch(dioProvider as ProviderListenable<Dio>)),
+  (ref) => TransactionRepository(ref.watch(dioProvider)),
 );

@@ -41,11 +41,8 @@ class CryptoService:
         Vérifie un mot de passe bcrypt.
         Délégué à Django (set_password / check_password).
         """
-        import bcrypt
-        return bcrypt.checkpw(
-            password.encode("utf-8"),
-            hashed.encode("utf-8")
-        )
+        from django.contrib.auth.hashers import check_password
+        return check_password(password, hashed)
 
     @staticmethod
     def generate_secure_token(length: int = 32) -> str:

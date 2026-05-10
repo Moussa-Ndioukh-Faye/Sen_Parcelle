@@ -23,7 +23,7 @@ class DjangoUserRepository(IUserRepository):
 
     def get_by_email(self, email: str) -> Optional[UserEntity]:
         try:
-            return User.objects.get(email=email.lower()).to_domain()
+            return User.objects.get(email__iexact=email).to_domain()
         except User.DoesNotExist:
             return None
 
@@ -49,7 +49,7 @@ class DjangoUserRepository(IUserRepository):
         return user.to_domain()
 
     def exists_by_email(self, email: str) -> bool:
-        return User.objects.filter(email=email.lower()).exists()
+        return User.objects.filter(email__iexact=email).exists()
 
     def exists_by_phone(self, phone: str) -> bool:
         return User.objects.filter(telephone=phone).exists()

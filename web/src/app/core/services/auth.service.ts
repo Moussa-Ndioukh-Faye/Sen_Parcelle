@@ -102,11 +102,18 @@ export class AuthService {
   // ──────────────────────────────────────────────
 
   logout(): void {
-    localStorage.clear();
+    this._clearTokens();
     this._user.set(null);
     this._requiresOTP.set(false);
     this._error.set(null);
     this.router.navigate(['/auth/login']);
+  }
+
+  private _clearTokens(): void {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_role');
   }
 
   // ──────────────────────────────────────────────
@@ -115,6 +122,7 @@ export class AuthService {
 
   refreshToken(): Observable<{ access: string }> {
     const refresh = localStorage.getItem('refresh_token');
+    if (!refresh) return throwError(() => new Error('No refresh token'));
     return this.api.post<{ access: string }>('/auth/token/refresh/', { refresh }, false).pipe(
       tap(response => {
         localStorage.setItem('access_token', response.access);

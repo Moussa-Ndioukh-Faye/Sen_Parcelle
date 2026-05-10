@@ -60,6 +60,7 @@ typechain/
 # /macos/
 # /web/      <-- This was ignoring the web directory!
 web/dist/
+web/.angular/
 /test_data/
 
 # IDEs

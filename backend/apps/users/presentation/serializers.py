@@ -10,7 +10,7 @@ class RegisterSerializer(serializers.Serializer):
     nom       = serializers.CharField(max_length=150)
     email     = serializers.EmailField()
     telephone = serializers.CharField(max_length=20)
-    password  = serializers.CharField(min_length=8, write_only=True)
+    password  = serializers.CharField(min_length=12, write_only=True)
     role      = serializers.ChoiceField(choices=["acheteur", "vendeur"], default="acheteur")
 
 

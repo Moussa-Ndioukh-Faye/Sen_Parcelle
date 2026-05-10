@@ -63,8 +63,9 @@ class AuditLog(models.Model):
     metadata    = models.JSONField(default=dict)       # Données contextuelles
     created_at  = models.DateTimeField(default=timezone.now, db_index=True)
 
-    # Hash d'intégrité : garantit que le log n'a pas été altéré
+    # Hash d'intégrité : garantit que le log n'a pas été altéré (chaîne avec hash précédent)
     integrity_hash = models.CharField(max_length=64, blank=True)
+    previous_hash  = models.CharField(max_length=64, blank=True)
 
     class Meta:
         db_table  = "audit_logs"
@@ -77,17 +78,17 @@ class AuditLog(models.Model):
         permissions = [("view_audit_log", "Peut consulter les logs d'audit")]
 
     def save(self, *args, **kwargs):
-        """Calcule le hash d'intégrité avant sauvegarde."""
+        """Calcule le hash d'intégrité (chaîné au log précédent) avant sauvegarde."""
         if not self.integrity_hash:
             self.integrity_hash = self._compute_hash()
-        # Bloquer les modifications (immutabilité)
         if self.pk and AuditLog.objects.filter(pk=self.pk).exists():
             raise PermissionError("Les logs d'audit sont immuables.")
         super().save(*args, **kwargs)
 
     def _compute_hash(self) -> str:
         import hashlib
-        content = f"{self.user_id}:{self.action}:{self.created_at}:{json.dumps(self.metadata, sort_keys=True)}"
+        previous = AuditLog.objects.order_by("-created_at").values_list("integrity_hash", flat=True).first() or ""
+        content = f"{previous}:{self.user_id}:{self.action}:{self.created_at}:{json.dumps(self.metadata, sort_keys=True)}"
         return hashlib.sha256(content.encode()).hexdigest()
 
     def verify_integrity(self) -> bool:

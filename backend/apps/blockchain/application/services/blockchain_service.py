@@ -196,7 +196,7 @@ class BlockchainService:
     def _get_or_create_wallet(self, user_id: str) -> str:
         """
         Retourne l'adresse wallet d'un utilisateur.
-        Si l'utilisateur n'a pas de wallet, utilise l'adresse admin du contrat.
+        Si l'utilisateur n'a pas de wallet, lève une exception explicite.
         En V2 : générer un wallet déterministe par user_id.
         """
         from apps.users.infrastructure.models import User as UserORM
@@ -208,9 +208,9 @@ class BlockchainService:
         except UserORM.DoesNotExist:
             pass
 
-        # Fallback : adresse admin (propriétaire du contrat)
-        from django.conf import settings
-        from web3 import Web3
-        w3      = Web3(Web3.HTTPProvider(settings.POLYGON_RPC_URL))
-        account = w3.eth.account.from_key(settings.POLYGON_PRIVATE_KEY)
-        return account.address
+        from core.exceptions.base import BusinessRuleViolationException
+        raise BusinessRuleViolationException(
+            "Aucune adresse wallet configurée pour cet utilisateur. "
+            "Veuillez configurer votre wallet avant la certification.",
+            "wallet_not_configured"
+        )

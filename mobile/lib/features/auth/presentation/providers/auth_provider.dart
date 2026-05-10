@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sen_parcelle/features/auth/data/auth_repository.dart';
 import 'package:sen_parcelle/core/network/result.dart';
 
-// ─── État ───
+// ─── État (NE JAMAIS stocker le mot de passe en mémoire) ───
 class AuthNotifierState {
   final bool    isLoading;
   final bool    isAuthenticated;
@@ -13,8 +13,7 @@ class AuthNotifierState {
   final String? userId;
   final String? role;
   final String? error;
-  final String? email;    // Pour 2FA
-  final String? password; // Pour 2FA
+  final String? email;
 
   const AuthNotifierState({
     this.isLoading       = false,
@@ -24,7 +23,6 @@ class AuthNotifierState {
     this.role,
     this.error,
     this.email,
-    this.password,
   });
 
   AuthNotifierState copyWith({
@@ -35,7 +33,6 @@ class AuthNotifierState {
     String? role,
     String? error,
     String? email,
-    String? password,
   }) => AuthNotifierState(
     isLoading:       isLoading       ?? this.isLoading,
     isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -44,7 +41,6 @@ class AuthNotifierState {
     role:            role            ?? this.role,
     error:           error,
     email:           email           ?? this.email,
-    password:        password        ?? this.password,
   );
 }
 
@@ -77,7 +73,6 @@ class AuthNotifier extends StateNotifier<AuthNotifierState> {
             requiresOTP: true,
             userId: data['user_id'],
             email: email,
-            password: password,
           );
         } else {
           state = state.copyWith(
@@ -86,7 +81,6 @@ class AuthNotifier extends StateNotifier<AuthNotifierState> {
             role: data['role'],
             userId: data['user_id'],
             email: null,
-            password: null,
           );
         }
       },

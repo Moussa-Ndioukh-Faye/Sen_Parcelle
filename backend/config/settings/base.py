@@ -8,7 +8,9 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY must be set via environment variable")
 DEBUG      = False
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
@@ -153,12 +155,26 @@ AWS_SECRET_ACCESS_KEY   = os.environ.get("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_BUCKET", "sen-parcelle-media")
 AWS_S3_REGION_NAME      = os.environ.get("AWS_REGION", "eu-west-1")
 AWS_S3_CUSTOM_DOMAIN    = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+AWS_S3_OBJECT_PARAMETERS = {"ServerSideEncryption": "AES256"}
+AWS_DEFAULT_ACL         = "private"
 DEFAULT_FILE_STORAGE    = "storages.backends.s3boto3.S3Boto3Storage"
 
 # ─── Sécurité HTTP ───
 SECURE_BROWSER_XSS_FILTER     = True
 X_FRAME_OPTIONS                = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF   = True
+SECURE_SSL_REDIRECT            = bool(int(os.environ.get("SECURE_SSL_REDIRECT", "1")))
+SESSION_COOKIE_SECURE          = bool(int(os.environ.get("SESSION_COOKIE_SECURE", "1")))
+CSRF_COOKIE_SECURE             = bool(int(os.environ.get("CSRF_COOKIE_SECURE", "1")))
+SESSION_COOKIE_HTTPONLY        = True
+CSRF_COOKIE_HTTPONLY           = True
+SESSION_COOKIE_SAMESITE        = "Lax"
+CSRF_COOKIE_SAMESITE           = "Lax"
+SECURE_HSTS_SECONDS            = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD            = True
+DATA_UPLOAD_MAX_MEMORY_SIZE    = 20 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE    = 20 * 1024 * 1024
 
 # ─── Internationalisation ───
 LANGUAGE_CODE = "fr-SN"

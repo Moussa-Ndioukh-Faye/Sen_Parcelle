@@ -27,7 +27,7 @@ class AuthViewSet(viewsets.ViewSet):
     """
     permission_classes = [AllowAny]
 
-    @method_decorator(ratelimit(key="ip", rate="10/m", method="POST", block=True))
+    @method_decorator(ratelimit(key="ip", rate="3/m", method="POST", block=True))
     @action(detail=False, methods=["post"], url_path="inscription")
     def register(self, request):
         """

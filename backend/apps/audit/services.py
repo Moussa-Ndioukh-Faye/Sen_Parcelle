@@ -56,9 +56,16 @@ class AuditService:
             "login_failed", "account_locked",
             "password_changed", "2fa_disabled"
         ]
-        return list(
-            AuditLog.objects.filter(
-                action__in=security_actions,
-                created_at__gte=since,
-            ).values("user_id", "action", "ip_address", "created_at", "metadata")
-        )
+        logs = AuditLog.objects.filter(
+            action__in=security_actions,
+            created_at__gte=since,
+        ).values("user_id", "action", "ip_address", "created_at", "metadata")
+
+        # Masquer les IPs partielles pour RGPD
+        result = list(logs)
+        for entry in result:
+            ip = entry.get("ip_address", "")
+            if ip and "." in ip:
+                parts = ip.split(".")
+                entry["ip_address"] = ".".join(parts[:-1]) + ".0"
+        return result

@@ -4,6 +4,7 @@
 # ══════════════════════════════════════════════════════════════
 
 import logging
+import re
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
@@ -38,8 +39,16 @@ class AuthService:
                 "Mot de passe actuel incorrect.", "wrong_password"
             )
 
-        if len(new_password) < 8:
-            raise ValidationException({"new_password": "Minimum 8 caractères."})
+        if len(new_password) < 12:
+            raise ValidationException({"new_password": "Minimum 12 caractères."})
+        if not re.search(r"[A-Z]", new_password):
+            raise ValidationException({"new_password": "Doit contenir une majuscule."})
+        if not re.search(r"[a-z]", new_password):
+            raise ValidationException({"new_password": "Doit contenir une minuscule."})
+        if not re.search(r"\d", new_password):
+            raise ValidationException({"new_password": "Doit contenir un chiffre."})
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", new_password):
+            raise ValidationException({"new_password": "Doit contenir un caractère spécial."})
 
         if old_password == new_password:
             raise ValidationException({"new_password": "Le nouveau mot de passe doit être différent."})

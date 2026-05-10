@@ -51,9 +51,11 @@ class LoginUseCase:
             BusinessRuleViolationException
         )
 
-        # ─── 1. Récupérer l'utilisateur ───
+        # ─── 1. Récupérer l'utilisateur (message générique anti-énumération) ───
         user_entity = self._users.get_by_email(data.email)
         if user_entity is None:
+            await_sleep = __import__("time").sleep
+            await_sleep(0.5)
             raise BusinessRuleViolationException(
                 "Email ou mot de passe incorrect.", "invalid_credentials"
             )

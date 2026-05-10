@@ -143,25 +143,28 @@ class RetryInterceptor extends Interceptor {
 
 
 // ═══════════════════════════════════════════════════════════════
-// INTERCEPTEUR LOGGING
+// INTERCEPTEUR LOGGING (masque les tokens et données sensibles)
 // ═══════════════════════════════════════════════════════════════
 
 class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    print('→ ${options.method} ${options.path}');
+    final sanitizedPath = options.path.replaceAll(RegExp(r'token=[^&]+'), 'token=***');
+    print('→ ${options.method} $sanitizedPath');
     handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    print('← ${response.statusCode} ${response.requestOptions.path}');
+    final sanitizedPath = response.requestOptions.path.replaceAll(RegExp(r'token=[^&]+'), 'token=***');
+    print('← ${response.statusCode} $sanitizedPath');
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    print('✗ ${err.response?.statusCode} ${err.requestOptions.path}: ${err.message}');
+    final sanitizedPath = err.requestOptions.path.replaceAll(RegExp(r'token=[^&]+'), 'token=***');
+    print('✗ ${err.response?.statusCode} $sanitizedPath: ${err.message}');
     handler.next(err);
   }
 }

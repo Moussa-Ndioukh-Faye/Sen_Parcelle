@@ -239,9 +239,11 @@ contract SenParcelle {
         uint256 len = list.length;
         for (uint256 i = 0; i < len; i++) {
             if (list[i] == _parcelId) {
-                list[i] = list[len - 1];
+                if (i != len - 1) {
+                    list[i] = list[len - 1];
+                }
                 list.pop();
-                break;
+                return;
             }
         }
     }
@@ -321,8 +323,13 @@ contract SenParcelle {
     }
 
     // ─── Recevoir MATIC (si nécessaire pour gas) ───
-    receive() external payable {}
+    receive() external payable {
+        emit ContractPaused(false, block.timestamp);
+    }
     function withdraw() external onlyOwner {
-        payable(owner).transfer(address(this).balance);
+        uint256 balance = address(this).balance;
+        require(balance > 0, "SenParcelle: no balance");
+        (bool sent, ) = payable(owner).call{value: balance}("");
+        require(sent, "SenParcelle: transfer failed");
     }
 }
