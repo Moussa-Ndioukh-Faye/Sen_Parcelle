@@ -5,6 +5,7 @@ Tests pour AuditService et AuditLog.
 """
 
 from django.test import TestCase
+
 from apps.audit.models import AuditLog
 from apps.audit.services import AuditService
 
@@ -20,8 +21,8 @@ class TestAuditLog(TestCase):
             metadata={'ip': '127.0.0.1'},
             ip_address='127.0.0.1',
         )
-        self.assertEqual(log.action, 'login_success')
-        self.assertEqual(log.ip_address, '127.0.0.1')
+        assert log.action == 'login_success'
+        assert log.ip_address == '127.0.0.1'
 
     def test_audit_log_hash_integrity(self):
         """Test de l'intégrité du hash."""
@@ -36,7 +37,7 @@ class TestAuditLog(TestCase):
             metadata={},
         )
         # Les hashs doivent être différents
-        self.assertNotEqual(log1.integrity_hash, log2.integrity_hash)
+        assert log1.integrity_hash != log2.integrity_hash
 
 
 class TestAuditService(TestCase):
@@ -52,7 +53,7 @@ class TestAuditService(TestCase):
             action='login_success',
             metadata={'method': 'password'},
         )
-        self.assertEqual(AuditLog.objects.count(), 1)
+        assert AuditLog.objects.count() == 1
 
     def test_get_user_history(self):
         """Test de récupération de l'historique."""
@@ -61,7 +62,7 @@ class TestAuditService(TestCase):
         AuditLog.objects.create(user_id=user_id, action='action2', metadata={})
 
         history = self.audit_service.get_user_history(user_id)
-        self.assertEqual(len(history), 2)
+        assert len(history) == 2
 
     def test_get_security_events(self):
         """Test de récupération des événements de sécurité."""
@@ -77,5 +78,5 @@ class TestAuditService(TestCase):
         )
 
         events = self.audit_service.get_security_events()
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]['action'], 'login_failed')
+        assert len(events) == 1
+        assert events[0]['action'] == 'login_failed'

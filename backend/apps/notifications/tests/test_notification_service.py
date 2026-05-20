@@ -4,8 +4,10 @@ apps/notifications/tests/test_notification_service.py
 Tests pour NotificationService.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
 from django.test import TestCase
+
 from apps.notifications.services.notification_service import NotificationService
 
 
@@ -20,7 +22,7 @@ class TestNotificationService(TestCase):
         """Test de notification de soumission."""
         user = Mock()
         user.email = 'test@example.com'
-        user.phone_number = '+221123456789'
+        user.telephone = '+221123456789'
 
         parcel = Mock()
         parcel.id = '12345678-1234-5678-1234-567812345678'
@@ -30,13 +32,13 @@ class TestNotificationService(TestCase):
         # Vérifie que le SMS a été envoyé
         self.mock_sms_adapter.send.assert_called_once()
         call_args = self.mock_sms_adapter.send.call_args
-        self.assertIn('+221123456789', call_args[0])
+        assert '+221123456789' in call_args[0]
 
     def test_notify_payment_confirmed(self):
         """Test de notification de paiement confirmé."""
         user = Mock()
         user.email = 'test@example.com'
-        user.phone_number = '+221123456789'
+        user.telephone = '+221123456789'
 
         transaction = Mock()
         transaction.id = 'tx-123'
@@ -50,25 +52,25 @@ class TestNotificationService(TestCase):
         """Test de notification KYC approuvé."""
         user = Mock()
         user.email = 'test@example.com'
-        user.phone_number = '+221123456789'
+        user.telephone = '+221123456789'
 
         self.service.notify_kyc_approved(user)
 
         self.mock_sms_adapter.send.assert_called_once()
         call_args = self.mock_sms_adapter.send.call_args
-        self.assertIn('approuvé', call_args[0][1])
+        assert 'approuvé' in call_args[0][1]
 
     def test_notify_kyc_rejected(self):
         """Test de notification KYC rejeté."""
         user = Mock()
         user.email = 'test@example.com'
-        user.phone_number = '+221123456789'
+        user.telephone = '+221123456789'
 
         self.service.notify_kyc_rejected(user, 'Documents illisibles')
 
         self.mock_sms_adapter.send.assert_called_once()
         call_args = self.mock_sms_adapter.send.call_args
-        self.assertIn('rejeté', call_args[0][1])
+        assert 'rejeté' in call_args[0][1]
 
     def test_without_sms_adapter(self):
         """Test sans adaptateur SMS (notifications simulées)."""
@@ -76,7 +78,7 @@ class TestNotificationService(TestCase):
 
         user = Mock()
         user.email = 'test@example.com'
-        user.phone_number = '+221123456789'
+        user.telephone = '+221123456789'
 
         parcel = Mock()
         parcel.id = '123'

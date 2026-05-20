@@ -6,24 +6,21 @@ Entités pures du domaine Users.
 Testables sans base de données.
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import Optional
-import uuid
-
+from enum import StrEnum
 
 # ══════════════════════════════════════════════════════════════
 # ENUMS
 # ══════════════════════════════════════════════════════════════
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     ACHETEUR = "acheteur"
     VENDEUR  = "vendeur"
     ADMIN    = "admin"
 
 
-class KYCStatus(str, Enum):
+class KYCStatus(StrEnum):
     PENDING  = "pending"    # En attente de vérification
     VERIFIED = "verified"   # Validé
     REJECTED = "rejected"   # Rejeté
@@ -119,7 +116,7 @@ class UserEntity:
     kyc_status:     KYCStatus      = KYCStatus.PENDING
     is_2fa_enabled: bool           = False
     is_active:      bool           = True
-    created_at:     Optional[datetime] = None
+    created_at:     datetime | None = None
 
     # ─── Règles métier ───
 

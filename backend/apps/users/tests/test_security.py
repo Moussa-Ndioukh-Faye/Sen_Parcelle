@@ -4,10 +4,9 @@ tests/test_security.py
 Tests unitaires pour tous les composants de sécurité.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
-from datetime import timedelta
 
+import pytest
 
 # ══════════════════════════════════════════════════════════════
 # TESTS JWT
@@ -23,7 +22,7 @@ class TestJWTService:
 
     @pytest.fixture(autouse=True)
     def mock_django_settings(self, settings):
-        settings.SECRET_KEY = "test-secret-key-pour-les-tests"
+        settings.SECRET_KEY = "test-secret-key-pour-les-tests-32chars!!"
 
     def test_generate_retourne_access_et_refresh(self, jwt_service):
         tokens = jwt_service.generate("user-123", "acheteur", "verified")
@@ -47,8 +46,9 @@ class TestJWTService:
         assert payload is None
 
     def test_token_expire(self, jwt_service):
-        import jwt
         import time
+
+        import jwt
         # Créer un token déjà expiré
         payload = {
             "sub": "user-123", "type": "access",
@@ -56,7 +56,7 @@ class TestJWTService:
             "iat": time.time() - 100,
             "exp": time.time() - 10,  # Expiré il y a 10s
         }
-        expired_token = jwt.encode(payload, "test-secret-key-pour-les-tests", algorithm="HS256")
+        expired_token = jwt.encode(payload, "test-secret-key-pour-les-tests-32chars!!", algorithm="HS256")
         result = jwt_service.validate_access(expired_token)
         assert result is None
 
@@ -74,7 +74,7 @@ class TestJWTService:
             "sub": "user-123", "type": "access",
             "jti": "test-jti", "role": "acheteur",
         }
-        bad_token = jwt.encode(payload, "mauvaise-cle", algorithm="HS256")
+        bad_token = jwt.encode(payload, "mauvaise-cle-de-32-caracteres-pour-test", algorithm="HS256")
         result = jwt_service.validate_access(bad_token)
         assert result is None
 
@@ -228,7 +228,7 @@ class TestSenegalValidators:
 
     def test_phone_valide_avec_indicatif(self):
         from core.utils.crypto import SenegalValidators
-        ok, normalized = SenegalValidators.validate_phone("+221776543210")
+        ok, _normalized = SenegalValidators.validate_phone("+221776543210")
         assert ok is True
 
     def test_phone_invalide_mauvais_prefixe(self):
@@ -238,12 +238,12 @@ class TestSenegalValidators:
 
     def test_price_valide(self):
         from core.utils.crypto import SenegalValidators
-        ok, _ = SenegalValidators.validate_price(25_000_000)
+        ok, _ = SenegalValidators.validate_prix(25_000_000)
         assert ok is True
 
     def test_price_trop_basse(self):
         from core.utils.crypto import SenegalValidators
-        ok, msg = SenegalValidators.validate_price(50_000)
+        ok, msg = SenegalValidators.validate_prix(50_000)
         assert ok is False
         assert "100 000" in msg
 
@@ -272,6 +272,7 @@ class TestRateLimitService:
     @patch("django.core.cache.cache")
     def test_limite_atteinte_bloque(self, mock_cache):
         import time
+
         from core.utils.crypto import RateLimitService
         # Simuler 5 requêtes récentes
         now = time.time()

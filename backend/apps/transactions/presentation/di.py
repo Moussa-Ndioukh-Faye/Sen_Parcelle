@@ -4,9 +4,12 @@
 # ════════════════════════════════════════════════════════════════
 
 from functools import lru_cache
+
 from apps.parcels.presentation.di import (
-    get_user_repository, get_parcel_repository,
-    get_notification_service, get_audit_service
+    get_audit_service,
+    get_notification_service,
+    get_parcel_repository,
+    get_user_repository,
 )
 
 
@@ -34,8 +37,9 @@ def get_initiate_payment_uc():
 
 
 def get_confirm_payment_uc():
-    from apps.transactions.application.use_cases.payment import ConfirmPaymentUseCase
     from celery import current_app as celery_app
+
+    from apps.transactions.application.use_cases.payment import ConfirmPaymentUseCase
     return ConfirmPaymentUseCase(
         tx_repo=get_transaction_repository(),
         payment_factory=get_payment_factory(),

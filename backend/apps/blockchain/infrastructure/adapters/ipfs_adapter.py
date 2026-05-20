@@ -4,10 +4,11 @@ apps/blockchain/infrastructure/adapters/ipfs_adapter.py
 Upload de métadonnées de parcelles sur IPFS via Pinata.
 """
 
-import json
 import logging
+
 import requests
 from django.conf import settings
+
 from core.exceptions.base import ExternalServiceException
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,8 @@ class IPFSAdapter:
             "document_hash": "sha256hex...",
             "titre":         "Terrain Almadies",
             "region":        "Dakar",
-            "surface":       500,
+            "superficie":    500,
+            "prix":          25000000,
             "owner_id":      "user-123",
             "certified_at":  "2024-01-15T10:00:00Z"
         }

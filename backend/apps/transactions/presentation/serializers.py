@@ -5,6 +5,7 @@
 
 from rest_framework import serializers
 
+
 class InitiatePaymentSerializer(serializers.Serializer):
     parcel_id = serializers.UUIDField()
     provider  = serializers.ChoiceField(choices=["wave", "orange_money"])

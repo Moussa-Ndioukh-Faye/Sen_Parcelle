@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "updates": [
+    {
+      "package-ecosystem": "pip",
+      "directory": "/backend",
+      "schedule": { "interval": "weekly", "day": "monday" },
+      "labels": ["dependencies", "python"],
+      "open-pull-requests-limit": 10
+    },
+    {
+      "package-ecosystem": "npm",
+      "directory": "/web",
+      "schedule": { "interval": "weekly", "day": "monday" },
+      "labels": ["dependencies", "web"],
+      "open-pull-requests-limit": 10
+    },
+    {
+      "package-ecosystem": "npm",
+      "directory": "/blockchain",
+      "schedule": { "interval": "weekly", "day": "monday" },
+      "labels": ["dependencies", "blockchain"],
+      "open-pull-requests-limit": 5
+    },
+    {
+      "package-ecosystem": "docker",
+      "directory": "/backend",
+      "schedule": { "interval": "weekly", "day": "monday" },
+      "labels": ["dependencies", "docker"]
+    },
+    {
+      "package-ecosystem": "github-actions",
+      "directory": "/",
+      "schedule": { "interval": "monthly" },
+      "labels": ["ci", "github-actions"]
+    }
+  ]
+}

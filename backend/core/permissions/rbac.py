@@ -8,7 +8,6 @@ tout est ici, réutilisable et testable.
 
 from rest_framework.permissions import BasePermission
 
-
 # ══════════════════════════════════════════════════════════════
 # PERMISSIONS DE BASE PAR RÔLE
 # ══════════════════════════════════════════════════════════════

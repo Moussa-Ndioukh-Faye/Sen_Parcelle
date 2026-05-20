@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'package:sen_parcelle/core/theme/app_theme.dart';
+import 'package:sen_parcelle/core/theme/app_theme.dart';
 
 class ShimmerCard extends StatelessWidget {
   final double height;
@@ -13,7 +13,7 @@ class ShimmerCard extends StatelessWidget {
       height: height,
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[300],
+        color: AppTheme.bgLight,
         borderRadius: BorderRadius.circular(12),
       ),
     );

@@ -40,6 +40,8 @@ class SenParcelleApp extends ConsumerWidget {
       title:            'Sen_parcelle',
       debugShowCheckedModeBanner: false,
       theme:            AppTheme.lightTheme,
+      darkTheme:        AppTheme.darkTheme,
+      themeMode:        ThemeMode.system,
       routerConfig:     router,
       builder:          (context, child) => _AppWrapper(child: child!),
     );
@@ -53,8 +55,11 @@ class _AppWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final textScaler = MediaQuery.textScalerOf(context);
     return MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      data: MediaQuery.of(context).copyWith(
+        textScaler: textScaler.clamp(maxScaleFactor: 1.4),
+      ),
       child: child,
     );
   }

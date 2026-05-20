@@ -3,9 +3,10 @@
 # apps/users/infrastructure/repositories.py
 # ══════════════════════════════════════════════════════════════
 
-from typing import Optional, List
+
 from apps.users.domain.entities import UserEntity
 from apps.users.domain.repositories import IUserRepository
+
 from .models import User
 
 
@@ -15,21 +16,21 @@ class DjangoUserRepository(IUserRepository):
     Isole complètement l'ORM du domaine.
     """
 
-    def get_by_id(self, user_id: str) -> Optional[UserEntity]:
+    def get_by_id(self, user_id: str) -> UserEntity | None:
         try:
-            return User.objects.get(id=user_id).to_domain()
+            return User.objects.select_related('kyc_verified_by').get(id=user_id).to_domain()
         except User.DoesNotExist:
             return None
 
-    def get_by_email(self, email: str) -> Optional[UserEntity]:
+    def get_by_email(self, email: str) -> UserEntity | None:
         try:
-            return User.objects.get(email__iexact=email).to_domain()
+            return User.objects.select_related('kyc_verified_by').get(email__iexact=email).to_domain()
         except User.DoesNotExist:
             return None
 
-    def get_by_phone(self, phone: str) -> Optional[UserEntity]:
+    def get_by_phone(self, phone: str) -> UserEntity | None:
         try:
-            return User.objects.get(telephone=phone).to_domain()
+            return User.objects.select_related('kyc_verified_by').get(telephone=phone).to_domain()
         except User.DoesNotExist:
             return None
 

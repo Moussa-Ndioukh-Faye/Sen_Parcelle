@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+
 from apps.users.domain.repositories import IUserRepository
 
 # ══════════════════════════════════════════════════════════════
@@ -11,7 +11,7 @@ from apps.users.domain.repositories import IUserRepository
 class LoginInput:
     email:    str
     password: str
-    otp_code: Optional[str] = None    # Requis si is_2fa_enabled
+    otp_code: str | None = None    # Requis si is_2fa_enabled
 
 
 @dataclass
@@ -46,10 +46,7 @@ class LoginUseCase:
         self._auth   = auth_service
 
     def execute(self, data: LoginInput) -> LoginOutput:
-        from core.exceptions.base import (
-            EntityNotFoundException, InvalidOTPException,
-            BusinessRuleViolationException
-        )
+        from core.exceptions.base import BusinessRuleViolationException, InvalidOTPException
 
         # ─── 1. Récupérer l'utilisateur (message générique anti-énumération) ───
         user_entity = self._users.get_by_email(data.email)

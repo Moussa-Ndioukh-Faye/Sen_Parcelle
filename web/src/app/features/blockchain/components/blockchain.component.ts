@@ -121,14 +121,14 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
   `,
   styles: [`
     .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-    .page-title  { margin: 0; font-size: 22px; font-weight: 800; color: #1E293B; }
+    .page-title  { margin: 0; font-size: 22px; font-weight: 800; color: var(--slate-900); }
     .page-header__network {
       display: flex; align-items: center; gap: 8px;
-      background: #F0FDF4; color: #16A34A;
+      background: var(--green-50); color: var(--green-600);
       padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
     }
     .network-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: #16A34A;
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green-600);
       animation: pulse 1.5s infinite;
     }
     @keyframes pulse {
@@ -141,29 +141,29 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
     }
     @media (max-width: 900px) { .bc-stats { grid-template-columns: repeat(2,1fr); } }
     .bc-stat {
-      background: #fff; border-radius: 14px; padding: 18px;
+      background: var(--white); border-radius: 14px; padding: 18px;
       text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.05);
     }
     .bc-stat__icon  { font-size: 28px; margin-bottom: 8px; }
     .bc-stat__value {
-      font-size: 22px; font-weight: 900; color: #1E293B;
+      font-size: 22px; font-weight: 900; color: var(--slate-900);
       font-family: monospace; margin-bottom: 4px;
     }
-    .bc-stat__label { font-size: 12px; color: #64748B; font-weight: 600; }
+    .bc-stat__label { font-size: 12px; color: var(--slate-500); font-weight: 600; }
 
     .verifier-card {
-      background: #fff; border-radius: 16px; padding: 24px;
+      background: var(--white); border-radius: 16px; padding: 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 24px;
     }
-    .verifier-card__title { font-size: 17px; font-weight: 700; color: #1E293B; margin: 0 0 6px; }
-    .verifier-card__sub   { font-size: 13px; color: #64748B; margin: 0 0 18px; }
+    .verifier-card__title { font-size: 17px; font-weight: 700; color: var(--slate-900); margin: 0 0 6px; }
+    .verifier-card__sub   { font-size: 13px; color: var(--slate-500); margin: 0 0 18px; }
     .verifier-card__form  { display: flex; gap: 10px; }
     .verifier-card__input {
-      flex: 1; padding: 12px 16px; border: 1.5px solid #E2E8F0;
+      flex: 1; padding: 12px 16px; border: 1.5px solid var(--slate-200);
       border-radius: 12px; font-size: 13px; font-family: monospace;
       outline: none;
     }
-    .verifier-card__input:focus { border-color: #16A34A; }
+    .verifier-card__input:focus { border-color: var(--green-600); }
 
     .verifier-result {
       display: flex; align-items: flex-start; gap: 12px;
@@ -171,40 +171,40 @@ import { ParcelsService } from '../../parcels/services/parcels.service';
       font-size: 14px;
     }
     .verifier-result span { font-size: 24px; }
-    .verifier-result p    { margin: 4px 0 0; font-size: 12px; color: #64748B; }
-    .verifier-result--valid   { background: #F0FDF4; border: 1px solid #BBF7D0; }
-    .verifier-result--invalid { background: #FEF2F2; border: 1px solid #FECACA; }
+    .verifier-result p    { margin: 4px 0 0; font-size: 12px; color: var(--slate-500); }
+    .verifier-result--valid   { background: var(--green-50); border: 1px solid var(--green-200); }
+    .verifier-result--invalid { background: var(--red-50); border: 1px solid var(--red-200); }
 
     .table-card {
-      background: #fff; border-radius: 16px;
+      background: var(--white); border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: auto;
     }
     .table-card__header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px; border-bottom: 1px solid #F1F5F9;
+      padding: 16px 20px; border-bottom: 1px solid var(--slate-100);
     }
     .table-card__header h2 { margin: 0; font-size: 15px; font-weight: 700; }
     .table { width: 100%; border-collapse: collapse; min-width: 700px; }
     .table th {
       padding: 12px 16px; text-align: left;
-      font-size: 11px; font-weight: 700; color: #64748B;
+      font-size: 11px; font-weight: 700; color: var(--slate-500);
       text-transform: uppercase; letter-spacing: .5px;
-      background: #F8FAFC;
+      background: var(--slate-50);
     }
-    .table td { padding: 14px 16px; border-bottom: 1px solid #F8FAFC; font-size: 13px; }
-    .cell-main { font-weight: 600; color: #1E293B; }
-    .cell-sub  { font-size: 11px; color: #64748B; }
-    .hash { font-family: monospace; font-size: 11px; background: #F1F5F9;
-      padding: 3px 8px; border-radius: 4px; color: #2563EB; }
-    .date { color: #64748B; font-size: 12px; }
-    .explorer-link { color: #16A34A; font-weight: 600; text-decoration: none; font-size: 12px; }
+    .table td { padding: 14px 16px; border-bottom: 1px solid var(--slate-50); font-size: 13px; }
+    .cell-main { font-weight: 600; color: var(--slate-900); }
+    .cell-sub  { font-size: 11px; color: var(--slate-500); }
+    .hash { font-family: monospace; font-size: 11px; background: var(--slate-100);
+      padding: 3px 8px; border-radius: 4px; color: var(--blue-600); }
+    .date { color: var(--slate-500); font-size: 12px; }
+    .explorer-link { color: var(--green-600); font-weight: 600; text-decoration: none; font-size: 12px; }
     .explorer-link:hover { text-decoration: underline; }
-    .empty-state { text-align: center; padding: 32px; color: #94A3B8; font-size: 13px; }
+    .empty-state { text-align: center; padding: 32px; color: var(--slate-400); font-size: 13px; }
 
     .btn { padding: 10px 20px; border-radius: 10px; border: none;
       font-size: 14px; font-weight: 600; cursor: pointer; transition: .15s; }
-    .btn--primary { background: #16A34A; color: #fff; }
-    .btn--primary:hover { background: #14532D; }
+    .btn--primary { background: var(--green-600); color: var(--white); }
+    .btn--primary:hover { background: var(--green-800); }
   `],
 })
 export class BlockchainComponent implements OnInit {

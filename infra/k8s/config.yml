@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sen-parcelle-config
+  namespace: sen-parcelle
+data:
+  DJANGO_ENV: "production"
+  ALLOWED_HOSTS: "api.sen-parcelle.sn,admin.sen-parcelle.sn"
+  CORS_ORIGINS: "https://admin.sen-parcelle.sn"
+  REDIS_URL: "redis://redis-svc:6379/0"
+  DB_HOST: "postgis-svc"
+  DB_PORT: "5432"
+  DB_NAME: "sen_parcelle_db"
+  DB_USER: "sen_parcelle"
+  SENTRY_TRACE_RATE: "0.1"
+  POLYGON_CHAIN_ID: "137"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sen-parcelle-secrets
+  namespace: sen-parcelle
+type: Opaque
+stringData:
+  SECRET_KEY: ""  # À remplir via kubectl apply -f - ou un gestionnaire de secrets
+  DB_PASSWORD: ""
+  POLYGON_PRIVATE_KEY: ""
+  POLYGON_RPC_URL: ""
+  POLYGON_CONTRACT_ADDRESS: ""
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+  TWILIO_ACCOUNT_SID: ""
+  TWILIO_AUTH_TOKEN: ""
+  SENTRY_DSN: ""

@@ -6,8 +6,6 @@ Centralise l'envoi d'emails, SMS et notifications push.
 """
 
 import logging
-from typing import Optional
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +52,14 @@ class NotificationService:
         msg = f"[PAYMENT INITIATED] Transaction {transaction.id} par {user.email}"
         logger.info(msg)
         if self.sms_adapter:
-            self.sms_adapter.send(user.telephone, f"Paiement de {transaction.amount} initié.")
+            self.sms_adapter.send(user.telephone, f"Paiement de {transaction.amount_fcfa} initié.")
 
     def notify_payment_confirmed(self, user, transaction) -> None:
         """Notification de confirmation de paiement."""
         msg = f"[PAYMENT CONFIRMED] Transaction {transaction.id} confirmée"
         logger.info(msg)
         if self.sms_adapter:
-            self.sms_adapter.send(user.telephone, f"Paiement de {transaction.amount} confirmé !")
+            self.sms_adapter.send(user.telephone, f"Paiement de {transaction.amount_fcfa} confirmé !")
 
     def notify_payment_failed(self, user, transaction, reason: str) -> None:
         """Notification d'échec de paiement."""
@@ -109,14 +107,29 @@ class NotificationService:
         Méthode générique pour notifier un utilisateur.
         Délègue aux méthodes spécifiques selon l'événement.
         """
+        from apps.notifications.models import NotificationLog
         from apps.users.infrastructure.models import User
         try:
             user = User.objects.get(id=user_id)
+
+            # Log en base de données
+            NotificationLog.objects.create(
+                user=user,
+                event=event,
+                channel="sms", # Par défaut pour le moment
+                message=str(data.get("message", f"Nouvel événement: {event}")),
+                metadata=data
+            )
+
             msg = f"[NOTIFICATION USER] Event={event} User={user.email} Data={data}"
             logger.info(msg)
-            # Implémentation réelle : brancher sur Firebase Push / SMS
+
+            # Envoi SMS réel si adapter présent
+            if self.sms_adapter and hasattr(user, 'telephone'):
+                self.sms_adapter.send(user.telephone, str(data.get("message", event)))
+
         except User.DoesNotExist:
-            print(f"Erreur notification : utilisateur {user_id} introuvable.")
+            logger.warning(f"Erreur notification : utilisateur {user_id} introuvable.")
 
     def notify_admins(self, event: str, data: dict) -> None:
         """

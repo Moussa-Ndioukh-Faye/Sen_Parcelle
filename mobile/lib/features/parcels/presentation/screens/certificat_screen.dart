@@ -1,11 +1,7 @@
-// lib/features/parcels/presentation/screens/certificat_screen.dart
-// ═════════════════════════════════════════════
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sen_parcelle/core/theme/app_theme.dart';
 import 'package:sen_parcelle/features/parcels/presentation/providers/parcel_providers.dart';
-// import 'package:sen_parcelle/features/parcels/domain/parcel_model.dart';
 
 class CertificatScreen extends ConsumerWidget {
   final String parcelId;
@@ -77,22 +73,23 @@ class CertificatScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A),
-                  borderRadius: BorderRadius.circular(14),
+                  color: AppTheme.surfaceDark,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   const Text('HASH BLOCKCHAIN',
                     style: TextStyle(color: Colors.white38, fontSize: 10,
                       fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: AppTheme.space8),
                   Text(cert.hashBlockchain,
                     style: const TextStyle(
                       fontFamily: 'monospace',
-                      color: Color(0xFF4ADE80),
+                      color: AppTheme.green400,
                       fontSize: 12,
                       height: 1.6,
                     )),
-                ]),
+              ],
+              ),
               ),
               const SizedBox(height: 16),
 

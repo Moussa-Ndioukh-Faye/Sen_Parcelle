@@ -8,18 +8,24 @@ Domaine Parcelles : entité pure + modèle PostGIS + repository.
 # DOMAIN : entities.py
 # ══════════════════════════════════════════════════════════════
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional
+from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 
 
-class ParcelStatus(str, Enum):
+class ParcelStatus(StrEnum):
     PENDING   = "pending"     # Soumise, en attente admin
     VALIDATED = "validated"   # Validée, pas encore blockchain
     CERTIFIED = "certified"   # Enregistrée sur blockchain
     REJECTED  = "rejected"    # Rejetée par admin
     SOLD      = "sold"        # Vendue
+
+
+class ParcelType(StrEnum):
+    RESIDENTIEL = "residentiel"
+    COMMERCIAL  = "commercial"
+    AGRICOLE    = "agricole"
+    INDUSTRIEL  = "industriel"
 
 
 @dataclass(frozen=True)
@@ -57,14 +63,16 @@ class ParcelEntity:
     titre:               str
     description:         str
     location:            GeoPoint
+    localisation:        str
     region:              str
-    surface:             float        # m²
-    price:               float        # FCFA
+    superficie:          float        # m²
+    prix:                float        # FCFA
+    type_terrain:        ParcelType   = ParcelType.RESIDENTIEL
     status:              ParcelStatus = ParcelStatus.PENDING
-    document_hash:       Optional[str] = None   # SHA-256 du titre foncier
-    ipfs_hash:           Optional[str] = None   # Hash IPFS
-    blockchain_tx_hash:  Optional[str] = None   # TX Polygon
-    created_at:          Optional[datetime] = None
+    document_hash:       str | None = None   # SHA-256 du titre foncier
+    ipfs_hash:           str | None = None   # Hash IPFS
+    blockchain_tx_hash:  str | None = None   # TX Polygon
+    created_at:          datetime | None = None
 
     # ─── Règles métier ───
 
@@ -115,32 +123,31 @@ class ParcelEntity:
 # ──────────────────────────────────────────────────────────────
 
 from abc import ABC, abstractmethod
-from typing import List
 
 
 class IParcelRepository(ABC):
 
     @abstractmethod
-    def get_by_id(self, parcel_id: str) -> Optional[ParcelEntity]: ...
+    def get_by_id(self, parcel_id: str) -> ParcelEntity | None: ...
 
     @abstractmethod
     def save(self, parcel: ParcelEntity) -> ParcelEntity: ...
 
     @abstractmethod
-    def find_nearby(self, location: GeoPoint, radius_m: float) -> List[ParcelEntity]:
+    def find_nearby(self, location: GeoPoint, radius_m: float) -> list[ParcelEntity]:
         """Parcelles dans un rayon donné (PostGIS)."""
         ...
 
     @abstractmethod
-    def find_nearby_active(self, location: GeoPoint, radius_m: float) -> List[ParcelEntity]:
+    def find_nearby_active(self, location: GeoPoint, radius_m: float) -> list[ParcelEntity]:
         """Parcelles actives (non-rejetées) dans un rayon donné."""
         ...
 
     @abstractmethod
-    def find_by_region(self, region: str, status: Optional[str] = None) -> List[ParcelEntity]: ...
+    def find_by_region(self, region: str, status: str | None = None) -> list[ParcelEntity]: ...
 
     @abstractmethod
-    def find_by_owner(self, owner_id: str) -> List[ParcelEntity]: ...
+    def find_by_owner(self, owner_id: str) -> list[ParcelEntity]: ...
 
     @abstractmethod
     def exists_near(self, location: GeoPoint, radius_m: float = 50.0) -> bool:

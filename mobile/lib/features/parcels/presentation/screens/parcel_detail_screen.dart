@@ -279,7 +279,7 @@ class _ParcelDetailView extends ConsumerWidget {
       launchUrl(Uri.parse(state.paymentResponse!.paymentUrl), mode: LaunchMode.externalApplication);
     } else if (state.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : ${state.error}'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Erreur : ${state.error}'), backgroundColor: AppTheme.red),
       );
     }
   }

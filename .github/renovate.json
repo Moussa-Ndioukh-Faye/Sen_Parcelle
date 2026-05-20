@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "labels": ["dependencies"],
+  "schedule": ["before 9am on monday"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "matchPackageNames": ["django", "celery"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["major-update", "backend"]
+    },
+    {
+      "matchPackageNames": ["@angular/core", "@angular/cli"],
+      "groupName": "Angular core"
+    }
+  ]
+}

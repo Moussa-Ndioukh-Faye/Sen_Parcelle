@@ -7,18 +7,21 @@ Tous les use cases délèguent aux services et repositories.
 
 import hashlib
 from dataclasses import dataclass
-from typing import Optional, List
 
 from apps.parcels.domain.entities import (
-    ParcelEntity, GeoPoint, ParcelStatus, IParcelRepository
+    GeoPoint,
+    IParcelRepository,
+    ParcelEntity,
+    ParcelStatus,
+    ParcelType,
 )
 from apps.users.domain.repositories import IUserRepository
 from core.exceptions.base import (
-    EntityNotFoundException, BusinessRuleViolationException,
-    InvalidKYCStatusException, ParcelFraudSuspectedException,
-    ParcelAlreadyCertifiedException
+    BusinessRuleViolationException,
+    EntityNotFoundException,
+    InvalidKYCStatusException,
+    ParcelFraudSuspectedException,
 )
-
 
 # ══════════════════════════════════════════════════════════════
 # UC: Soumettre une parcelle
@@ -29,11 +32,13 @@ class SubmitParcelInput:
     owner_id:       str
     titre:          str
     description:    str
+    localisation:   str
     region:         str
     latitude:       float
     longitude:      float
-    surface:        float
-    price:          float
+    superficie:     float
+    prix:           float
+    type_terrain:   str         # Enum value
     document_bytes: bytes       # Contenu du document (PDF/image)
     document_name:  str
 
@@ -117,10 +122,12 @@ class SubmitParcelUseCase:
             owner_id=data.owner_id,
             titre=data.titre,
             description=data.description,
+            localisation=data.localisation,
             location=location,
             region=data.region,
-            surface=data.surface,
-            price=data.price,
+            superficie=data.superficie,
+            prix=data.prix,
+            type_terrain=ParcelType(data.type_terrain),
             status=ParcelStatus.PENDING,
             document_hash=document_hash,
         )
@@ -160,7 +167,7 @@ class ValidateParcelInput:
 class ValidateParcelOutput:
     parcel_id:       str
     status:          str
-    blockchain_hash: Optional[str]
+    blockchain_hash: str | None
     message:         str
 
 
@@ -245,21 +252,22 @@ class ValidateParcelUseCase:
 
 @dataclass
 class SearchParcelsInput:
-    region:      Optional[str]   = None
-    min_price:   Optional[float] = None
-    max_price:   Optional[float] = None
-    min_surface: Optional[float] = None
-    latitude:    Optional[float] = None
-    longitude:   Optional[float] = None
-    radius_km:   Optional[float] = None     # Recherche géographique
-    status:      str             = "certified"
-    page:        int             = 1
-    page_size:   int             = 20
+    region:         str | None   = None
+    min_prix:       float | None = None
+    max_prix:       float | None = None
+    min_superficie: float | None = None
+    type_terrain:   str | None   = None
+    latitude:       float | None = None
+    longitude:      float | None = None
+    radius_km:      float | None = None     # Recherche géographique
+    status:         str             = "certified"
+    page:           int             = 1
+    page_size:      int             = 20
 
 
 @dataclass
 class SearchParcelsOutput:
-    parcels:    List[ParcelEntity]
+    parcels:    list[ParcelEntity]
     total:      int
     page:       int
     page_size:  int
@@ -285,13 +293,15 @@ class SearchParcelsUseCase:
             # Fallback : retourner toutes les parcelles filtrées par statut
             results  = self._parcels.find_by_region(None, data.status)
 
-        # Filtres prix / surface en mémoire (ou déléguer au repo selon perf)
-        if data.min_price:
-            results = [p for p in results if p.price >= data.min_price]
-        if data.max_price:
-            results = [p for p in results if p.price <= data.max_price]
-        if data.min_surface:
-            results = [p for p in results if p.surface >= data.min_surface]
+        # Filtres prix / superficie en mémoire (ou déléguer au repo selon perf)
+        if data.min_prix:
+            results = [p for p in results if p.prix >= data.min_prix]
+        if data.max_prix:
+            results = [p for p in results if p.prix <= data.max_prix]
+        if data.min_superficie:
+            results = [p for p in results if p.superficie >= data.min_superficie]
+        if data.type_terrain:
+            results = [p for p in results if p.type_terrain == data.type_terrain]
 
         # Pagination
         total  = len(results)

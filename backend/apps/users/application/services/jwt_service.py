@@ -2,17 +2,17 @@
 apps/users/application/services/jwt_service.py
 -----------------------------------------------
 Service JWT complet pour Sen_parcelle.
-- Access token (15 min) + Refresh token (7 jours)
+- Access token (15 min) + Refresh token (7 jours) via SimpleJWT
 - Blacklist des tokens révoqués (Redis)
 - Payload enrichi (role, kyc_status)
 """
 
-import uuid
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import timedelta, timezone
 
-import jwt
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -20,24 +20,15 @@ logger = logging.getLogger(__name__)
 
 class JWTService:
     """
-    Gestion des tokens JWT.
+    Gestion des tokens JWT via rest_framework_simplejwt.
     Utilise Redis pour la blacklist (révocation).
     """
 
     ACCESS_EXPIRE  = timedelta(minutes=15)
     REFRESH_EXPIRE = timedelta(days=7)
-    ALGORITHM      = "HS256"
 
     def __init__(self, cache_backend=None):
-        """
-        cache_backend : instance Django cache (Redis).
-        Si None, utilise le cache Django par défaut.
-        """
         self._cache = cache_backend
-
-    @property
-    def _secret(self) -> str:
-        return settings.SECRET_KEY
 
     # ──────────────────────────────────────────────
     # GÉNÉRATION
@@ -45,48 +36,22 @@ class JWTService:
 
     def generate(self, user_id: str, role: str, kyc_status: str = "pending") -> dict:
         """
-        Génère un couple access + refresh token.
-
-        Payload access token :
-        {
-            "sub":        user_id,
-            "role":       role,
-            "kyc_status": kyc_status,
-            "type":       "access",
-            "jti":        uuid unique (pour blacklist),
-            "iat":        issued at,
-            "exp":        expiration,
-        }
+        Génère un couple access + refresh token via SimpleJWT.
+        Compatible avec rest_framework_simplejwt.authentication.JWTAuthentication.
         """
-        now = datetime.now(tz=timezone.utc)
+        access = AccessToken()
+        access["sub"] = user_id
+        access["role"] = role
+        access["kyc_status"] = kyc_status
 
-        # ─── Access token ───
-        access_jti = str(uuid.uuid4())
-        access_payload = {
-            "sub":        user_id,
-            "role":       role,
-            "kyc_status": kyc_status,
-            "type":       "access",
-            "jti":        access_jti,
-            "iat":        now,
-            "exp":        now + self.ACCESS_EXPIRE,
-        }
-
-        # ─── Refresh token ───
-        refresh_jti = str(uuid.uuid4())
-        refresh_payload = {
-            "sub":  user_id,
-            "type": "refresh",
-            "jti":  refresh_jti,
-            "iat":  now,
-            "exp":  now + self.REFRESH_EXPIRE,
-        }
+        refresh = RefreshToken()
+        refresh["sub"] = user_id
 
         return {
-            "access":      jwt.encode(access_payload,  self._secret, algorithm=self.ALGORITHM),
-            "refresh":     jwt.encode(refresh_payload, self._secret, algorithm=self.ALGORITHM),
-            "access_jti":  access_jti,
-            "refresh_jti": refresh_jti,
+            "access":      str(access),
+            "refresh":     str(refresh),
+            "access_jti":  str(access["jti"]),
+            "refresh_jti": str(refresh["jti"]),
             "expires_in":  int(self.ACCESS_EXPIRE.total_seconds()),
         }
 
@@ -94,47 +59,41 @@ class JWTService:
     # VALIDATION
     # ──────────────────────────────────────────────
 
-    def validate_access(self, token: str) -> Optional[dict]:
+    def validate_access(self, token: str) -> dict | None:
         """
-        Valide un access token.
+        Valide un access token via SimpleJWT + blacklist Redis.
         Retourne le payload ou None si invalide/expiré/blacklisté.
         """
         try:
-            payload = jwt.decode(token, self._secret, algorithms=[self.ALGORITHM])
+            access_token = AccessToken(token)
+            payload = {k: access_token[k] for k in access_token.payload}
+            if "token_type" in payload:
+                payload["type"] = payload.pop("token_type")
 
-            if payload.get("type") != "access":
-                return None
-
-            # Vérifier blacklist Redis
             if self._is_blacklisted(payload["jti"]):
                 logger.warning(f"Token blacklisté utilisé : jti={payload['jti']}")
                 return None
 
             return payload
 
-        except jwt.ExpiredSignatureError:
-            return None
-        except jwt.InvalidTokenError as e:
-            logger.warning(f"Token invalide : {e}")
+        except TokenError:
             return None
 
-    def validate_refresh(self, token: str) -> Optional[dict]:
-        """Valide un refresh token."""
+    def validate_refresh(self, token: str) -> dict | None:
+        """Valide un refresh token via SimpleJWT + blacklist Redis."""
         try:
-            payload = jwt.decode(token, self._secret, algorithms=[self.ALGORITHM])
-
-            if payload.get("type") != "refresh":
-                return None
+            refresh_token = RefreshToken(token)
+            payload = {k: refresh_token[k] for k in refresh_token.payload}
 
             if self._is_blacklisted(payload["jti"]):
                 return None
 
             return payload
 
-        except jwt.InvalidTokenError:
+        except TokenError:
             return None
 
-    def refresh(self, refresh_token: str) -> Optional[dict]:
+    def refresh(self, refresh_token: str) -> dict | None:
         """
         Échange un refresh token contre un nouveau couple access/refresh.
         Rotation : l'ancien refresh est blacklisté.
@@ -163,7 +122,7 @@ class JWTService:
     # RÉVOCATION (blacklist Redis)
     # ──────────────────────────────────────────────
 
-    def revoke(self, jti: str, ttl: int = None):
+    def revoke(self, jti: str, ttl: int | None = None):
         """
         Ajoute un JTI en blacklist Redis.
         TTL = durée de vie restante du token (inutile de garder plus longtemps).
@@ -179,6 +138,7 @@ class JWTService:
         Utilisé lors d'une déconnexion forcée (compte compromis, changement mdp).
         """
         from django.core.cache import cache
+        from datetime import datetime
         # Stocker un timestamp "tous les tokens avant X sont invalides"
         cache.set(
             f"jwt:user_revoked:{user_id}",
@@ -190,41 +150,3 @@ class JWTService:
         from django.core.cache import cache
         return cache.get(f"jwt:blacklist:{jti}") is not None
 
-
-# ══════════════════════════════════════════════════════════════
-# MIDDLEWARE JWT — Injecte l'utilisateur dans request
-# apps/users/infrastructure/jwt_middleware.py
-# ══════════════════════════════════════════════════════════════
-
-class JWTAuthenticationMiddleware:
-    """
-    Middleware alternatif pour injecter request.user depuis JWT.
-    Complément de la classe DRF JWTAuthentication.
-    """
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-        self._jwt_service = JWTService()
-
-    def __call__(self, request):
-        token = self._extract_token(request)
-        if token:
-            payload = self._jwt_service.validate_access(token)
-            if payload:
-                self._attach_user(request, payload)
-        return self.get_response(request)
-
-    @staticmethod
-    def _extract_token(request) -> Optional[str]:
-        auth_header = request.META.get("HTTP_AUTHORIZATION", "")
-        if auth_header.startswith("Bearer "):
-            return auth_header[7:]
-        return None
-
-    @staticmethod
-    def _attach_user(request, payload: dict):
-        from apps.users.infrastructure.models import User
-        try:
-            request.user = User.objects.get(id=payload["sub"])
-        except User.DoesNotExist:
-            pass

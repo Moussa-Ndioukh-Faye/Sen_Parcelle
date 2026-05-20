@@ -6,7 +6,6 @@
 import hashlib
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +24,9 @@ class CertificationResult:
 class VerificationResult:
     """Résultat d'une vérification de certificat."""
     is_valid:       bool
-    parcel_id:      Optional[int]
-    owner_address:  Optional[str]
-    registered_at:  Optional[int]   # timestamp
+    parcel_id:      int | None
+    owner_address:  str | None
+    registered_at:  int | None   # timestamp
     message:        str
 
 
@@ -71,7 +70,8 @@ class BlockchainService:
             "document_hash": document_hash_hex,
             "titre":         parcel.titre,
             "region":        parcel.region,
-            "surface":       parcel.surface,
+            "superficie":    parcel.superficie,
+            "prix":          parcel.prix,
             "owner_id":      parcel.owner_id,
             "certified_at":  timezone.now().isoformat(),
             "platform":      "Sen_parcelle · Sénégal",
@@ -89,8 +89,8 @@ class BlockchainService:
             ipfs_hash=ipfs_hash_bytes32,
             owner_address=owner_address,
             localisation=f"{parcel.region}, Sénégal",
-            superficie=int(parcel.surface),
-            prix=int(parcel.price) if parcel.price else 0,
+            superficie=int(parcel.superficie),
+            prix=int(parcel.prix) if parcel.prix else 0,
         )
 
         logger.info(
@@ -140,7 +140,7 @@ class BlockchainService:
                 parcel_id=None,
                 owner_address=None,
                 registered_at=None,
-                message=f"Erreur de vérification : {str(e)}",
+                message=f"Erreur de vérification : {e!s}",
             )
 
     def transfer_ownership(
@@ -172,7 +172,7 @@ class BlockchainService:
 
     def _compute_parcel_hash(self, parcel) -> str:
         """Génère un hash SHA-256 à partir des données de la parcelle."""
-        data = f"{parcel.id}-{parcel.titre}-{parcel.owner_id}-{parcel.surface}"
+        data = f"{parcel.id}-{parcel.titre}-{parcel.owner_id}-{parcel.superficie}"
         return hashlib.sha256(data.encode()).hexdigest()
 
     def _parcel_id_to_uint(self, parcel_id_str: str) -> int:

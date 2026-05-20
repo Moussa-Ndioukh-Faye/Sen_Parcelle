@@ -4,10 +4,9 @@ apps/transactions/application/use_cases/
 UC: InitiatePayment, ConfirmPayment, HandleWebhook, TransferOwnership
 """
 
-import uuid
 import logging
+import uuid
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +53,15 @@ class InitiatePaymentUseCase:
         self._audit         = audit_service
 
     def execute(self, data: InitiatePaymentInput) -> InitiatePaymentOutput:
-        from core.exceptions.base import (
-            EntityNotFoundException, BusinessRuleViolationException, InvalidKYCStatusException
-        )
         from apps.transactions.domain.entities import (
-            TransactionEntity, PaymentProvider, TransactionStatus
+            PaymentProvider,
+            TransactionEntity,
+            TransactionStatus,
+        )
+        from core.exceptions.base import (
+            BusinessRuleViolationException,
+            EntityNotFoundException,
+            InvalidKYCStatusException,
         )
 
         # ─── Vérifier l'acheteur ───
@@ -93,7 +96,7 @@ class InitiatePaymentUseCase:
             parcel_id=data.parcel_id,
             buyer_id=data.buyer_id,
             seller_id=parcel.owner_id,
-            amount_fcfa=parcel.price,
+            amount_fcfa=parcel.prix,
             provider=PaymentProvider(data.provider),
             status=TransactionStatus.INITIATED,
         )
@@ -101,9 +104,8 @@ class InitiatePaymentUseCase:
 
         # ─── Initier le paiement ───
         adapter  = self._payment(data.provider)
-        seller   = self._users.get_by_id(parcel.owner_id)
         pay_result = adapter.initiate_payment(
-            amount=parcel.price,
+            amount=parcel.prix,
             phone=str(buyer.telephone),
             reference=reference,
             description=f"Sen_parcelle : {parcel.titre} · {parcel.region}",
@@ -124,7 +126,7 @@ class InitiatePaymentUseCase:
         self._audit.log(data.buyer_id, "transaction_initiated", {
             "transaction_id": tx.id,
             "parcel_id":      data.parcel_id,
-            "amount":         parcel.price,
+            "amount":         parcel.prix,
             "provider":       data.provider,
         })
 
@@ -132,7 +134,7 @@ class InitiatePaymentUseCase:
             transaction_id=tx.id,
             payment_url=pay_result["payment_url"],
             payment_ref=pay_result["payment_ref"],
-            amount_fcfa=parcel.price,
+            amount_fcfa=parcel.prix,
             provider=data.provider,
             message=f"Paiement {data.provider} initié. Complétez sur l'URL fournie.",
         )

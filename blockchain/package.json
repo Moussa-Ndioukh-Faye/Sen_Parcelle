@@ -1,17 +1,21 @@
 {
   "name": "sen-parcelle-blockchain",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "compile":        "hardhat compile",
-    "test":           "hardhat test",
-    "coverage":       "hardhat coverage",
-    "deploy:mumbai":  "hardhat run scripts/deploy.js --network mumbai",
+    "compile": "hardhat compile",
+    "lint": "solhint 'contracts/**/*.sol'",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
+    "deploy:mumbai": "hardhat run scripts/deploy.js --network mumbai",
     "deploy:polygon": "hardhat run scripts/deploy.js --network polygon"
   },
   "devDependencies": {
-    "hardhat": "^2.22.0",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "chai": "^4.5.0",
-    "dotenv": "^16.4.0"
+    "dotenv": "^16.4.0",
+    "hardhat": "^2.22.0",
+    "ndjson": "^2.0.0",
+    "viem": "^2.0.0"
   }
 }

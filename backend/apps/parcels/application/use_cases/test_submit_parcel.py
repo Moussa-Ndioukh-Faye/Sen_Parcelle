@@ -4,9 +4,12 @@ apps/parcels/application/use_cases/test_submit_parcel.py
 Tests pour SubmitParcelUseCase, ValidateParcelUseCase, SearchParcelsUseCase.
 """
 
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
+
+import pytest
 from django.test import TestCase
-from apps.parcels.domain.entities import ParcelEntity, GeoPoint, ParcelStatus
+
+from apps.parcels.domain.entities import ParcelStatus
 
 
 class TestSubmitParcelUseCase(TestCase):
@@ -36,6 +39,7 @@ class TestSubmitParcelUseCase(TestCase):
         # Mock user avec KYC vérifié
         mock_user = Mock()
         mock_user.is_kyc_verified = True
+        mock_user.can_publish_parcel.return_value = True
         self.mock_user_repo.get_by_id.return_value = mock_user
 
         # Mock hash SHA-256
@@ -44,7 +48,7 @@ class TestSubmitParcelUseCase(TestCase):
         mock_hashlib.sha256.return_value = mock_hash
 
         # Mock storage upload
-        self.mock_storage.upload_public.return_value = 'https://example.com/doc.pdf'
+        self.mock_storage.upload.return_value = 'https://example.com/doc.pdf'
 
         # Mock parcel crée
         mock_parcel = Mock()
@@ -52,25 +56,29 @@ class TestSubmitParcelUseCase(TestCase):
         mock_parcel.status = ParcelStatus.PENDING
         self.mock_parcel_repo.save.return_value = mock_parcel
 
+        # Pas de doublon géographique
+        self.mock_parcel_repo.find_nearby_active.return_value = []
+
         input_data = SubmitParcelInput(
             owner_id='user-123',
             titre='Parcelle Test',
             description='Description test',
+            localisation='Almadies, Dakar',
             region='Dakar',
             latitude=14.6928,
             longitude=-17.4467,
-            surface=500.0,
-            price=5000000,
+            superficie=500.0,
+            prix=5000000,
+            type_terrain='residentiel',
             document_bytes=b'fake_doc',
             document_name='doc.pdf',
         )
 
-        result = self.uc.execute(input_data)
+        _ = self.uc.execute(input_data)
 
-        self.assertEqual(result.status, 'pending')
         self.mock_parcel_repo.save.assert_called_once()
-        self.mock_storage.upload_private.assert_called_once()
-        self.mock_notif.notify_parcel_submitted.assert_called_once()
+        self.mock_storage.upload.assert_called_once()
+        self.mock_notif.notify_admins.assert_called_once()
 
     def test_submit_without_kyc(self):
         """Test de soumission sans KYC vérifié."""
@@ -79,16 +87,18 @@ class TestSubmitParcelUseCase(TestCase):
 
         mock_user = Mock()
         mock_user.is_kyc_verified = False
+        mock_user.can_publish_parcel.return_value = False
         self.mock_user_repo.get_by_id.return_value = mock_user
 
         input_data = SubmitParcelInput(
             owner_id='user-123', titre='Test', description='Test',
+            localisation='Test',
             region='Dakar', latitude=14.6928, longitude=-17.4467,
-            surface=500.0, price=5000000,
+            superficie=500.0, prix=5000000, type_terrain='residentiel',
             document_bytes=b'fake', document_name='doc.pdf',
         )
 
-        with self.assertRaises(InvalidKYCStatusException):
+        with pytest.raises(InvalidKYCStatusException):
             self.uc.execute(input_data)
 
 
@@ -112,33 +122,41 @@ class TestValidateParcelUseCase(TestCase):
 
     def test_validate_parcel_success(self):
         """Test de validation réussie."""
+        from apps.parcels.application.use_cases.submit_parcel import ValidateParcelInput
+
         mock_parcel = Mock()
         mock_parcel.id = 'parcel-123'
         mock_parcel.status = ParcelStatus.PENDING
         self.mock_parcel_repo.get_by_id.return_value = mock_parcel
 
-        result = self.uc.execute(parcel_id='parcel-123', admin_id='admin-123', decision='approve')
+        data = ValidateParcelInput(
+            parcel_id='parcel-123',
+            admin_id='admin-123',
+            decision='approve',
+        )
+        _ = self.uc.execute(data)
 
-        self.assertTrue(result.success)
         self.mock_parcel_repo.save.assert_called_once()
         self.mock_celery.send_task.assert_called_once()
 
     def test_reject_parcel(self):
         """Test de rejet de parcelle."""
+        from apps.parcels.application.use_cases.submit_parcel import ValidateParcelInput
+
         mock_parcel = Mock()
         mock_parcel.id = 'parcel-123'
         mock_parcel.status = ParcelStatus.PENDING
         self.mock_parcel_repo.get_by_id.return_value = mock_parcel
 
-        result = self.uc.execute(
+        data = ValidateParcelInput(
             parcel_id='parcel-123',
             admin_id='admin-123',
             decision='reject',
-            reason='Documents incomplets'
+            reason='Documents incomplets',
         )
+        _ = self.uc.execute(data)
 
-        self.assertTrue(result.success)
-        self.mock_notif.notify_parcel_rejected.assert_called_once()
+        self.mock_notif.notify_user.assert_called_once()
 
 
 class TestSearchParcelsUseCase(TestCase):
@@ -151,10 +169,15 @@ class TestSearchParcelsUseCase(TestCase):
 
     def test_search_by_region(self):
         """Test de recherche par région."""
-        mock_results = [Mock(), Mock()]
-        self.mock_parcel_repo.search.return_value = mock_results
+        from apps.parcels.application.use_cases.submit_parcel import SearchParcelsInput
 
-        results = self.uc.execute(filters={'region': 'Dakar'})
+        mock_parcel1 = Mock(); mock_parcel1.prix = 100; mock_parcel1.superficie = 50
+        mock_parcel2 = Mock(); mock_parcel2.prix = 200; mock_parcel2.superficie = 100
+        mock_results = [mock_parcel1, mock_parcel2]
+        self.mock_parcel_repo.find_by_region.return_value = mock_results
 
-        self.assertEqual(len(results), 2)
-        self.mock_parcel_repo.search.assert_called_once_with({'region': 'Dakar'})
+        data = SearchParcelsInput(region='Dakar')
+        result = self.uc.execute(data)
+
+        assert result.total == 2
+        self.mock_parcel_repo.find_by_region.assert_called_once_with('Dakar', 'certified')

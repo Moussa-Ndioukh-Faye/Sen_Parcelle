@@ -104,8 +104,12 @@ def get_sms_adapter() -> ISMSAdapter:
     provider = getattr(settings, "SMS_PROVIDER", "twilio")
 
     if provider == "twilio":
+        twilio_sid = getattr(settings, "TWILIO_ACCOUNT_SID", None)
+        if not twilio_sid:
+            logger.warning("TWILIO_ACCOUNT_SID non configuré — fallback ConsoleSMSAdapter")
+            return ConsoleSMSAdapter()
         return TwilioSMSAdapter(
-            account_sid=settings.TWILIO_ACCOUNT_SID,
+            account_sid=twilio_sid,
             auth_token=settings.TWILIO_AUTH_TOKEN,
             from_number=settings.TWILIO_FROM_NUMBER,
         )

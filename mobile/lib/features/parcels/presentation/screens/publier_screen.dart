@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:sen_parcelle/core/theme/app_theme.dart';
 
 class PublierScreen extends ConsumerStatefulWidget {
   const PublierScreen({super.key});
@@ -19,7 +20,8 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titreController = TextEditingController();
   final _descController = TextEditingController();
-  final _surfaceController = TextEditingController();
+  final _localisationController = TextEditingController();
+  final _superficieController = TextEditingController();
   final _prixController = TextEditingController();
 
   LatLng? _selectedLocation;
@@ -32,6 +34,11 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
     'Kédougou', 'Sédhiou',
   ];
   String _selectedRegion = 'Dakar';
+
+  final List<String> _types = [
+    'residentiel', 'commercial', 'agricole', 'industriel',
+  ];
+  String _selectedType = 'residentiel';
 
   @override
   void initState() {
@@ -59,7 +66,8 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Publier une parcelle')),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
@@ -81,6 +89,15 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
               ),
               const SizedBox(height: 12),
               TextFormField(
+                controller: _localisationController,
+                decoration: const InputDecoration(
+                  labelText: 'Adresse / Localisation précise',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v!.isEmpty ? 'Requis' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: _descController,
                 decoration: const InputDecoration(
                   labelText: 'Description',
@@ -93,7 +110,7 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _surfaceController,
+                      controller: _superficieController,
                       decoration: const InputDecoration(
                         labelText: 'Surface (m²)',
                         border: OutlineInputBorder(),
@@ -117,16 +134,36 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedRegion,
-                decoration: const InputDecoration(
-                  labelText: 'Région',
-                  border: OutlineInputBorder(),
-                ),
-                items: _regions
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedRegion = v!),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedRegion,
+                      decoration: const InputDecoration(
+                        labelText: 'Région',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _regions
+                          .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _selectedRegion = v!),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedType,
+                      decoration: const InputDecoration(
+                        labelText: 'Type de terrain',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _types
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _selectedType = v!),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -145,6 +182,7 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -180,7 +218,7 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
                     height: 40,
                     child: const Icon(
                       Icons.location_on,
-                      color: Colors.red,
+                      color: AppTheme.red,
                       size: 40,
                     ),
                   ),
@@ -213,7 +251,7 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Parcelle publiée avec succès !'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.green,
         ),
       );
       Navigator.pop(context);
@@ -224,7 +262,8 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
   void dispose() {
     _titreController.dispose();
     _descController.dispose();
-    _surfaceController.dispose();
+    _localisationController.dispose();
+    _superficieController.dispose();
     _prixController.dispose();
     super.dispose();
   }

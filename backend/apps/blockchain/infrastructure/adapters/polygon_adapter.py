@@ -9,8 +9,8 @@ class PolygonAdapter:
     """
 
     def __init__(self):
-        from web3 import Web3
         from django.conf import settings
+        from web3 import Web3
 
         self._w3 = Web3(Web3.HTTPProvider(settings.POLYGON_RPC_URL))
         self._account = self._w3.eth.account.from_key(settings.POLYGON_PRIVATE_KEY)
@@ -22,13 +22,13 @@ class PolygonAdapter:
         )
 
     def register_parcel(self, parcel_id: str, document_hash: str,
-                        ipfs_hash: str, owner_address: str, 
-                        localisation: str, surface: int, prix: int) -> dict:
+                        ipfs_hash: str, owner_address: str,
+                        localisation: str, superficie: int, prix: int) -> dict:
         """Appelle registerParcel() sur le smart contract."""
         try:
             # Conversion UUID -> uint256
             numeric_id = int(parcel_id.replace("-", ""), 16)
-            
+
             # Conversion hashes -> bytes32
             doc_hash_bytes = self._w3.to_bytes(hexstr=document_hash)
             # CID IPFS est base58, on l'encode en bytes32
@@ -40,7 +40,7 @@ class PolygonAdapter:
                 ipfs_hash_bytes,
                 owner_address,
                 localisation,
-                surface,
+                superficie,
                 prix,
             ).build_transaction({
                 "from":     self._account.address,
@@ -116,12 +116,14 @@ class PolygonAdapter:
         """Charge l'ABI depuis le fichier compilé Hardhat."""
         import json
         from pathlib import Path
+
         from django.conf import settings
         # Chercher dans plusieurs emplacements possibles
+        abi_rel = "blockchain/artifacts/contracts/SenParcelle.sol/SenParcelle.json"
         possible_paths = [
-            settings.BASE_DIR / "blockchain" / "artifacts" / "contracts" / "SenParcelle.sol" / "SenParcelle.json",
-            settings.BASE_DIR.parent / "blockchain" / "artifacts" / "contracts" / "SenParcelle.sol" / "SenParcelle.json",
-            Path(settings.BASE_DIR).parent / "blockchain" / "artifacts" / "contracts" / "SenParcelle.sol" / "SenParcelle.json",
+            settings.BASE_DIR / abi_rel,
+            settings.BASE_DIR.parent / abi_rel,
+            Path(settings.BASE_DIR).parent / abi_rel,
         ]
         for abi_path in possible_paths:
             if abi_path.exists():

@@ -4,8 +4,10 @@
 # ════════════════════════════════════════════════════════════════
 
 from apps.transactions.domain.entities import IPaymentAdapter
-from .wave_adapter import WaveAdapter
+
 from .orange_adapter import OrangeMoneyAdapter
+from .wave_adapter import WaveAdapter
+
 
 def get_payment_adapter(provider: str) -> IPaymentAdapter:
     """Factory : retourne l'adapter selon le provider."""

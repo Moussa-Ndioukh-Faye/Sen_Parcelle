@@ -4,7 +4,7 @@
 # ════════════════════════════════════════════════════════════════
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+
 from .entities import TransactionEntity
 
 
@@ -12,12 +12,12 @@ class ITransactionRepository(ABC):
     """Interface du repository Transaction."""
 
     @abstractmethod
-    def get_by_id(self, tx_id: str) -> Optional[TransactionEntity]:
+    def get_by_id(self, tx_id: str) -> TransactionEntity | None:
         """Retourne une transaction par ID."""
         ...
 
     @abstractmethod
-    def get_by_payment_ref(self, payment_ref: str) -> Optional[TransactionEntity]:
+    def get_by_payment_ref(self, payment_ref: str) -> TransactionEntity | None:
         """Retourne une transaction par sa référence de paiement (Wave/OM)."""
         ...
 
@@ -27,16 +27,16 @@ class ITransactionRepository(ABC):
         ...
 
     @abstractmethod
-    def find_by_buyer(self, buyer_id: str) -> List[TransactionEntity]:
+    def find_by_buyer(self, buyer_id: str) -> list[TransactionEntity]:
         """Liste les transactions d'un acheteur."""
         ...
 
     @abstractmethod
-    def find_by_seller(self, seller_id: str) -> List[TransactionEntity]:
+    def find_by_seller(self, seller_id: str) -> list[TransactionEntity]:
         """Liste les transactions d'un vendeur."""
         ...
 
     @abstractmethod
-    def find_by_parcel(self, parcel_id: str) -> List[TransactionEntity]:
+    def find_by_parcel(self, parcel_id: str) -> list[TransactionEntity]:
         """Liste les transactions liées à une parcelle."""
         ...

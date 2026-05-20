@@ -1,24 +1,18 @@
-import os
-from pathlib import Path
-
 import sys
 from unittest.mock import MagicMock
 
-# ─── Mock GDAL/GIS for environments without it (like CI or local Windows) ───
+# ─── Mock GDAL/GIS for environments without GIS (CI / local Windows) ───
 try:
-    from django.contrib.gis.gdal import libgdal
-except (ImportError, Exception):
-    # Mocking necessary modules to prevent ImproperlyConfigured
-    from unittest.mock import MagicMock
-    
+    import django.contrib.gis.gdal  # noqa: F401 — probe GDAL availability
+except Exception:
     from django.db import models
+
     class MockPointField(models.JSONField):
         def __init__(self, *args, **kwargs):
-            kwargs.pop('geography', None)
-            kwargs.pop('srid', None)
+            kwargs.pop("geography", None)
+            kwargs.pop("srid", None)
             super().__init__(*args, **kwargs)
 
-    # Create a hierarchy of mocks
     mock_gis = MagicMock()
     mock_gis.db.models.fields.PointField = MockPointField
     mock_gis.db.models.PointField = MockPointField
@@ -37,11 +31,16 @@ except (ImportError, Exception):
     sys.modules["django.contrib.gis.gdal"] = mock_gis.gdal
 
 
+from .base import *  # noqa: F403
 
-# Base settings
-from .base import *  # noqa
+# ─── Use ConsoleSMSAdapter in tests (avoid Twilio credentials) ───
+DEBUG = True
 
-# ─── Override DATABASES for tests (SQLite) ───
+# ─── SMS provider settings for tests ───
+TWILIO_ACCOUNT_SID = "test"
+TWILIO_AUTH_TOKEN = "test"
+TWILIO_FROM_NUMBER = "+1234567890"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -49,11 +48,16 @@ DATABASES = {
     }
 }
 
-# ─── Remove PostGIS / GIS apps for tests ───
 INSTALLED_APPS = [
-    app for app in INSTALLED_APPS
+    app for app in INSTALLED_APPS  # noqa: F405
     if app not in ("django.contrib.gis",)
 ]
+
+# ─── Disable SSL redirect for tests ───
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_SECONDS = 0
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 # ─── Use simple file storage ───
 DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"

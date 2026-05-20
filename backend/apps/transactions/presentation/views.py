@@ -3,20 +3,22 @@
 # apps/transactions/presentation/views.py
 # ════════════════════════════════════════════════════════════════
 
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django_ratelimit.decorators import ratelimit
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
-from core.permissions.rbac import IsAuthenticated, CanInitiateTransaction
 from apps.transactions.application.use_cases.payment import (
-    InitiatePaymentInput, ConfirmPaymentInput
+    ConfirmPaymentInput,
+    InitiatePaymentInput,
 )
+from core.permissions.rbac import CanInitiateTransaction, IsAuthenticated
+
+from .di import get_confirm_payment_uc, get_initiate_payment_uc, get_transaction_repository
 from .serializers import InitiatePaymentSerializer, TransactionSerializer
-from .di import get_initiate_payment_uc, get_confirm_payment_uc, get_transaction_repository
 
 
 class TransactionViewSet(viewsets.ViewSet):
@@ -30,6 +32,24 @@ class TransactionViewSet(viewsets.ViewSet):
         if self.action == "webhook":
             return [AllowAny()]
         return [IsAuthenticated()]
+
+    def list(self, request):
+        """
+        GET /api/transactions/
+        Liste paginée des transactions (admin).
+        """
+        from apps.transactions.infrastructure.models import Transaction as TxORM
+        qs = TxORM.objects.all().order_by("-created_at")
+        page = int(request.query_params.get("page", 1))
+        limit = 20
+        start = (page - 1) * limit
+        transactions = [t.to_domain() for t in qs[start:start+limit]]
+        serializer = TransactionSerializer(transactions, many=True)
+        return Response({
+            "count": qs.count(),
+            "page": page,
+            "results": serializer.data,
+        })
 
     @method_decorator(csrf_exempt)
     @action(detail=False, methods=["post"], url_path="webhook/(?P<provider>[^/.]+)")

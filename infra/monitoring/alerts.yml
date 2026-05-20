@@ -1,0 +1,38 @@
+groups:
+  - name: sen-parcelle
+    rules:
+      - alert: BackendDown
+        expr: probe_success{job="sen-parcelle-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend Sen_Parcelle injoignable"
+          description: "Le backend API ne répond plus depuis plus d'une minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreur élevé (>5%)"
+          description: "Le taux d'erreur HTTP 5xx est de {{ $value | humanizePercentage }}."
+
+      - alert: CeleryQueueGrowing
+        expr: celery_queue_length > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "File Celery en croissance"
+          description: "La file d'attente Celery dépasse 100 tâches."
+
+      - alert: BlockchainTxPending
+        expr: blockchain_pending_tx > 10
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Transactions blockchain en attente"
+          description: "{{ $value }} transactions blockchain en attente depuis 30min."

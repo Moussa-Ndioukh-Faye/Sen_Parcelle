@@ -10,10 +10,10 @@ Système d'audit complet pour Sen_parcelle.
 
 import json
 import logging
-import time
+import uuid
+
 from django.db import models
 from django.utils import timezone
-import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,8 @@ class AuditLog(models.Model):
     def _compute_hash(self) -> str:
         import hashlib
         previous = AuditLog.objects.order_by("-created_at").values_list("integrity_hash", flat=True).first() or ""
-        content = f"{previous}:{self.user_id}:{self.action}:{self.created_at}:{json.dumps(self.metadata, sort_keys=True)}"
+        meta_json = json.dumps(self.metadata, sort_keys=True)
+        content = f"{previous}:{self.user_id}:{self.action}:{self.created_at}:{meta_json}"
         return hashlib.sha256(content.encode()).hexdigest()
 
     def verify_integrity(self) -> bool:

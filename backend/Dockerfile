@@ -7,20 +7,18 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Install system dependencies for GDAL/PostGIS
-RUN apt-get update && apt-get install -y \
+# Install system build dependencies for GDAL/PostGIS
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev gcc gdal-bin libgdal-dev python3-gdal \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
 COPY pyproject.toml poetry.lock ./
 
-# Install Poetry and export requirements
+# Install Poetry and install dependencies globally (no virtualenv)
 RUN pip install poetry && \
-    poetry export -f requirements.txt --output requirements.txt --without dev
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+    poetry config virtualenvs.create false && \
+    poetry install --without dev --no-root
 
 # ─── Stage 2: Production ───
 FROM python:3.11-slim AS production
@@ -28,8 +26,8 @@ FROM python:3.11-slim AS production
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libpq5 gdal-bin libgdal-dev curl \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 gdal-bin curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages from builder
@@ -39,7 +37,10 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY . .
 
-# Create non-root user
+# Create static/media directories before switching user
+RUN mkdir -p /app/staticfiles /app/media
+
+# Create non-root user and ensure write access to static/media
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 

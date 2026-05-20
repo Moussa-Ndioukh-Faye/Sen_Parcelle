@@ -5,12 +5,13 @@ Modèle ORM Django — couche infrastructure.
 Ce fichier connaît Django mais le domaine ne le connaît pas.
 """
 
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from core.models.base import TimeStampedModel, SoftDeleteModel
-from apps.users.domain.entities import UserEntity, Email, PhoneNumber, UserRole, KYCStatus
 import uuid
 
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
+
+from apps.users.domain.entities import Email, KYCStatus, PhoneNumber, UserEntity, UserRole
+from core.models.base import SoftDeleteModel, TimeStampedModel
 
 # ══════════════════════════════════════════════════════════════
 # MANAGER PERSONNALISÉ

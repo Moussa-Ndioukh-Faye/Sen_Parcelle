@@ -5,13 +5,12 @@ Entités pures du domaine Transaction.
 Supporte Wave Sénégal et Orange Money.
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import StrEnum
 
 
-class TransactionStatus(str, Enum):
+class TransactionStatus(StrEnum):
     INITIATED   = "initiated"
     PENDING     = "pending"       # Paiement initié, en attente
     CONFIRMED   = "confirmed"     # Paiement confirmé par provider
@@ -21,7 +20,7 @@ class TransactionStatus(str, Enum):
     REFUNDED    = "refunded"
 
 
-class PaymentProvider(str, Enum):
+class PaymentProvider(StrEnum):
     WAVE         = "wave"
     ORANGE_MONEY = "orange_money"
 
@@ -36,12 +35,12 @@ class TransactionEntity:
     amount_fcfa:      float
     provider:         PaymentProvider
     status:           TransactionStatus   = TransactionStatus.INITIATED
-    payment_ref:      Optional[str]       = None   # Ref. Wave/OM
-    blockchain_tx:    Optional[str]       = None   # TX Polygon
-    created_at:       Optional[datetime]  = None
-    confirmed_at:     Optional[datetime]  = None
-    completed_at:     Optional[datetime]  = None
-    failure_reason:   Optional[str]       = None
+    payment_ref:      str | None       = None   # Ref. Wave/OM
+    blockchain_tx:    str | None       = None   # TX Polygon
+    created_at:       datetime | None  = None
+    confirmed_at:     datetime | None  = None
+    completed_at:     datetime | None  = None
+    failure_reason:   str | None       = None
 
     # ─── Règles métier ───
 
@@ -61,22 +60,20 @@ class TransactionEntity:
 
     def confirm_payment(self, payment_ref: str) -> "TransactionEntity":
         from dataclasses import replace
-        from datetime import timezone
         return replace(
             self,
             status=TransactionStatus.CONFIRMED,
             payment_ref=payment_ref,
-            confirmed_at=datetime.now(timezone.utc),
+            confirmed_at=datetime.now(UTC),
         )
 
     def complete(self, blockchain_tx: str) -> "TransactionEntity":
         from dataclasses import replace
-        from datetime import timezone
         return replace(
             self,
             status=TransactionStatus.COMPLETED,
             blockchain_tx=blockchain_tx,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(UTC),
         )
 
     def fail(self, reason: str) -> "TransactionEntity":

@@ -2,9 +2,9 @@
 # config/settings/base.py — Configuration commune
 # ══════════════════════════════════════════════════════════════
 
-from pathlib import Path
-from datetime import timedelta
 import os
+from datetime import timedelta
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -23,7 +23,7 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # "django.contrib.gis",              # PostGIS - Désactivé pour le check sans GDAL
+    "django.contrib.gis",              # PostGIS
 ]
 
 THIRD_PARTY_APPS = [
@@ -36,7 +36,6 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "drf_spectacular",
     "health_check",
-    "health_check.db",
     "health_check.cache",
     "health_check.storage",
     "storages",                        # django-storages (S3)
@@ -50,6 +49,7 @@ LOCAL_APPS = [
     "apps.blockchain",
     "apps.notifications",
     "apps.audit",
+    "apps.dashboard",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -113,6 +113,7 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT  = ["json"]
 CELERY_TIMEZONE        = "Africa/Dakar"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # ─── JWT ───
 SIMPLE_JWT = {
@@ -127,7 +128,7 @@ SIMPLE_JWT = {
 # ─── DRF ───
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "core.authentication.jwt_auth.JWTServiceAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
@@ -143,10 +144,31 @@ REST_FRAMEWORK = {
         "anon": "100/hour",
         "user": "1000/hour",
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# ─── drf-spectacular (Swagger/OpenAPI) ───
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Sen_Parcelle API",
+    "DESCRIPTION": "Plateforme foncière sécurisée — Sénégal",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "CONTACT": {
+        "email": "contact@sen-parcelle.sn",
+    },
+    "LICENSE": {
+        "name": "MIT",
+    },
+    "SCHEMA_PATH_PREFIX": "/api/",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayOperationId": True,
+    },
 }
 
 # ─── CORS (Flutter + Angular) ───
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:4200").split(",")
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:4200").split(",")
 CORS_ALLOW_CREDENTIALS = True
 
 # ─── AWS S3 ───
@@ -186,6 +208,32 @@ STATIC_URL  = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL   = "/media/"
 MEDIA_ROOT  = BASE_DIR / "media"
+
+# ─── Blockchain Polygon ───
+POLYGON_RPC_URL         = os.environ.get("POLYGON_RPC_URL", "http://localhost:8545")
+POLYGON_PRIVATE_KEY     = os.environ.get("POLYGON_PRIVATE_KEY", "")
+POLYGON_CONTRACT_ADDRESS = os.environ.get("POLYGON_CONTRACT_ADDRESS", "")
+POLYGON_CHAIN_ID        = int(os.environ.get("POLYGON_CHAIN_ID", "80001"))
+
+# ─── Sentry (Observabilité / Error Tracking) ───
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+            CeleryIntegration(),
+            RedisIntegration(),
+        ],
+        traces_sample_rate=float(os.environ.get("SENTRY_TRACE_RATE", "0.1")),
+        send_default_pii=False,
+        environment=os.environ.get("DJANGO_ENV", "production"),
+    )
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -4,11 +4,11 @@ core/security/
 Sécurité avancée : rate limiting, validators, crypto helpers.
 """
 
+import contextlib
 import hashlib
 import hmac
 import logging
 import re
-from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class SenegalValidators:
     VALID_PHONE_PREFIXES = ("70", "75", "76", "77", "78")
 
     @classmethod
-    def validate_phone(cls, phone: str) -> Tuple[bool, str]:
+    def validate_phone(cls, phone: str) -> tuple[bool, str]:
         """
         Valide un numéro sénégalais.
         Retourne (is_valid, normalized_number).
@@ -109,21 +109,22 @@ class SenegalValidators:
         return bool(re.match(pattern, cni.strip().upper()))
 
     @staticmethod
-    def validate_price(price: float) -> Tuple[bool, str]:
+    def validate_prix(prix: float) -> tuple[bool, str]:
         """Prix en FCFA : entre 100 000 et 10 milliards."""
-        if price < 100_000:
+        if prix < 100_000:
             return False, "Prix minimum : 100 000 FCFA"
-        if price > 10_000_000_000:
+        if prix > 10_000_000_000:
             return False, "Prix maximum : 10 milliards FCFA"
         return True, ""
 
     @staticmethod
-    def validate_surface(surface_m2: float) -> Tuple[bool, str]:
-        """Surface en m² : entre 10 et 100 000 m²."""
-        if surface_m2 < 10:
-            return False, "Surface minimum : 10 m²"
-        if surface_m2 > 100_000:
-            return False, "Surface maximum : 100 000 m²"
+    def validate_superficie(superficie_m2: float) -> tuple[bool, str]:
+        """Superficie en m² : entre 10 et 100 000 m²."""
+        if superficie_m2 < 10:
+            return False, "Superficie minimum : 10 m²"
+        if superficie_m2 > 100_000:
+            return False, "Superficie maximum : 100 000 m²"
+
         return True, ""
 
     SENEGAL_REGIONS = {
@@ -171,9 +172,9 @@ class SecurityHeadersMiddleware:
         )
 
         # ─── Supprimer les headers qui révèlent la stack ───
-        response.pop("Server",          None)
-        response.pop("X-Powered-By",    None)
-        response.pop("X-Django-Version",None)
+        for header in ("Server", "X-Powered-By", "X-Django-Version"):
+            with contextlib.suppress(KeyError, AttributeError):
+                del response[header]
 
         return response
 
@@ -193,7 +194,7 @@ class RateLimitService:
         from django.core.cache import cache
         self._cache = cache
 
-    def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> Tuple[bool, int]:
+    def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> tuple[bool, int]:
         """
         Vérifie si une action est autorisée.
         Retourne (allowed, remaining_requests).
@@ -220,14 +221,14 @@ class RateLimitService:
 
         return True, max_requests - len(timestamps)
 
-    def check_login(self, ip: str) -> Tuple[bool, int]:
+    def check_login(self, ip: str) -> tuple[bool, int]:
         """5 tentatives de connexion par IP par 15 minutes."""
         return self.is_allowed(f"login:{ip}", max_requests=5, window_seconds=900)
 
-    def check_otp(self, user_id: str) -> Tuple[bool, int]:
+    def check_otp(self, user_id: str) -> tuple[bool, int]:
         """3 demandes OTP par utilisateur par 10 minutes."""
         return self.is_allowed(f"otp:{user_id}", max_requests=3, window_seconds=600)
 
-    def check_api(self, user_id: str) -> Tuple[bool, int]:
+    def check_api(self, user_id: str) -> tuple[bool, int]:
         """1000 requêtes API par utilisateur par heure."""
         return self.is_allowed(f"api:{user_id}", max_requests=1000, window_seconds=3600)

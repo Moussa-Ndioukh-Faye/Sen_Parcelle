@@ -1,6 +1,6 @@
 import logging
-
 from dataclasses import dataclass
+
 from apps.users.domain.repositories import IUserRepository
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class VerifyKYCUseCase:
         self._audit  = audit_service
 
     def execute(self, data: VerifyKYCInput) -> VerifyKYCOutput:
-        from core.exceptions.base import EntityNotFoundException, BusinessRuleViolationException
+        from core.exceptions.base import BusinessRuleViolationException, EntityNotFoundException
 
         user = self._users.get_by_id(data.user_id)
         if user is None:
@@ -52,9 +52,13 @@ class VerifyKYCUseCase:
         # Appliquer la décision
         if data.decision == "approve":
             updated_user = user.verify_kyc()
-            sms_msg      = "✅ Votre identité a été vérifiée sur Sen_parcelle. Vous pouvez maintenant publier des parcelles."
+            sms_msg = (
+                "✅ Votre identité a été vérifiée sur Sen_parcelle."
+                " Vous pouvez maintenant publier des parcelles."
+            )
             # Marquer kyc_verified_at
             from django.utils import timezone
+
             from apps.users.infrastructure.models import User as UserORM
             UserORM.objects.filter(id=data.user_id).update(kyc_verified_at=timezone.now())
         elif data.decision == "reject":

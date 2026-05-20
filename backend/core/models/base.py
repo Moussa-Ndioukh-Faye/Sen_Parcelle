@@ -8,6 +8,7 @@ BaseModel partagé par toutes les entités Django de Sen_parcelle.
 """
 
 import uuid
+
 from django.db import models
 from django.utils import timezone
 

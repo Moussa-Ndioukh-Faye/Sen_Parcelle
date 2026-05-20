@@ -1,79 +1,119 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// ═══════════════════════════════════════════════════════════════
-// SenParcelle.sol
-// Registre foncier numérique immuable sur Polygon
-// ─────────────────────────────────────────────────────────────
-// Fonctions :
-//   registerParcel()       → Enregistrer une parcelle certifiée
-//   transferOwnership()    → Transférer la propriété
-//   revokeParcel()         → Révoquer (fraude détectée)
-//   verifyDocument()       → Vérifier un hash document
-//   getParcelHistory()     → Historique complet
-// ═══════════════════════════════════════════════════════════════
-
 contract SenParcelle {
 
-    // ─── OWNER (admin Polygon) ───
-    address public owner;
-    bool    public paused;
+    // ═════════════════════════════════════════════
+    // ACCESS CONTROL (inline — minimal OpenZeppelin pattern)
+    // ═════════════════════════════════════════════
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "SenParcelle: admin only");
+    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+    bytes32 public constant VALIDATOR_ROLE  = keccak256("VALIDATOR_ROLE");
+    bytes32 public constant EMERGENCY_ROLE  = keccak256("EMERGENCY_ROLE");
+
+    mapping(bytes32 => mapping(address => bool)) private _roles;
+
+    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
+    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+
+    modifier onlyRole(bytes32 role) {
+        require(_roles[role][msg.sender], "SenParcelle: unauthorized");
         _;
     }
+
+    function _grantRole(bytes32 role, address account) internal {
+        if (!_roles[role][account]) {
+            _roles[role][account] = true;
+            emit RoleGranted(role, account, msg.sender);
+        }
+    }
+
+    function _revokeRole(bytes32 role, address account) internal {
+        if (_roles[role][account]) {
+            _roles[role][account] = false;
+            emit RoleRevoked(role, account, msg.sender);
+        }
+    }
+
+    function grantRole(bytes32 role, address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != address(0), "SenParcelle: invalid account");
+        _grantRole(role, account);
+    }
+
+    function revokeRole(bytes32 role, address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(account != address(0), "SenParcelle: invalid account");
+        _revokeRole(role, account);
+    }
+
+    function hasRole(bytes32 role, address account) external view returns (bool) {
+        return _roles[role][account];
+    }
+
+    // ═════════════════════════════════════════════
+    // REENTRANCY GUARD (inline)
+    // ═════════════════════════════════════════════
+
+    uint256 private _status;
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED     = 2;
+
+    modifier nonReentrant() {
+        require(_status != _ENTERED, "SenParcelle: reentrant call");
+        _status = _ENTERED;
+        _;
+        _status = _NOT_ENTERED;
+    }
+
+    // ═════════════════════════════════════════════
+    // PAUSE
+    // ═════════════════════════════════════════════
+
+    bool public paused;
 
     modifier notPaused() {
         require(!paused, "SenParcelle: contract paused");
         _;
     }
 
-    // ─────────────────────────────────────────────
+    // ═════════════════════════════════════════════
     // STRUCTURES
-    // ─────────────────────────────────────────────
+    // ═════════════════════════════════════════════
 
     struct Parcel {
-        uint256 parcelId;          // ID Django
-        bytes32 documentHash;      // SHA-256 du titre foncier
-        bytes32 ipfsHash;          // CID IPFS (metadata)
-        address owner;             // Wallet propriétaire actuel
-        string  localisation;      // Région / localisation
-        uint256 superficie;        // m²
-        uint256 prix;              // FCFA (optionnel)
-        uint256 registeredAt;      // Timestamp
-        bool    active;            // false = révoqué
+        uint256 parcelId;
+        bytes32 documentHash;
+        bytes32 ipfsHash;
+        address owner;
+        string  localisation;
+        uint256 superficie;
+        uint256 prix;
+        uint256 registeredAt;
+        bool    active;
     }
 
     struct OwnershipRecord {
         address from;
         address to;
         uint256 timestamp;
-        bytes32 transactionRef;    // Référence tx Django
+        bytes32 transactionRef;
     }
 
-    // ─────────────────────────────────────────────
+    // ═════════════════════════════════════════════
     // STORAGE
-    // ─────────────────────────────────────────────
+    // ═════════════════════════════════════════════
 
-    // parcelId → Parcel
     mapping(uint256 => Parcel) public parcels;
-
-    // documentHash → parcelId (vérification rapide)
     mapping(bytes32 => uint256) public hashToParcelId;
-
-    // parcelId → historique des transferts
     mapping(uint256 => OwnershipRecord[]) public ownershipHistory;
-
-    // wallet → liste des parcelIds détenus
     mapping(address => uint256[]) public ownerParcels;
+    mapping(address => mapping(uint256 => uint256)) public ownerParcelIndex;
 
     uint256 public totalParcels;
     uint256 public totalTransfers;
 
-    // ─────────────────────────────────────────────
-    // ÉVÉNEMENTS
-    // ─────────────────────────────────────────────
+    // ═════════════════════════════════════════════
+    // EVENTS
+    // ═════════════════════════════════════════════
 
     event ParcelRegistered(
         uint256 indexed parcelId,
@@ -98,30 +138,23 @@ contract SenParcelle {
     );
 
     event ContractPaused(bool paused, uint256 timestamp);
+    event PaymentReceived(address indexed sender, uint256 amount, uint256 timestamp);
 
-    // ─────────────────────────────────────────────
-    // CONSTRUCTEUR
-    // ─────────────────────────────────────────────
+    // ═════════════════════════════════════════════
+    // CONSTRUCTOR
+    // ═════════════════════════════════════════════
 
     constructor() {
-        owner  = msg.sender;
-        paused = false;
+        _status = _NOT_ENTERED;
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(VALIDATOR_ROLE,     msg.sender);
+        _grantRole(EMERGENCY_ROLE,     msg.sender);
     }
 
     // ═════════════════════════════════════════════
-    // FONCTIONS PRINCIPALES
+    // MAIN FUNCTIONS
     // ═════════════════════════════════════════════
 
-    /**
-     * @notice Enregistre une nouvelle parcelle certifiée
-     * @param _parcelId      ID unique Django
-     * @param _documentHash  SHA-256 du titre foncier (bytes32)
-     * @param _ipfsHash      CID IPFS des métadonnées
-     * @param _owner         Adresse wallet du propriétaire
-     * @param _localisation  Localisation textuelle
-     * @param _superficie    Surface en m²
-     * @param _prix          Prix en FCFA
-     */
     function registerParcel(
         uint256 _parcelId,
         bytes32 _documentHash,
@@ -130,10 +163,10 @@ contract SenParcelle {
         string  calldata _localisation,
         uint256 _superficie,
         uint256 _prix
-    ) external onlyOwner notPaused {
-        require(_parcelId > 0,           "SenParcelle: invalid parcel id");
-        require(_documentHash != bytes32(0), "SenParcelle: empty document hash");
-        require(_owner != address(0),    "SenParcelle: invalid owner");
+    ) external onlyRole(VALIDATOR_ROLE) notPaused {
+        require(_parcelId > 0,                "SenParcelle: invalid parcel id");
+        require(_documentHash != bytes32(0),  "SenParcelle: empty document hash");
+        require(_owner != address(0),         "SenParcelle: invalid owner");
         require(parcels[_parcelId].parcelId == 0, "SenParcelle: already registered");
         require(hashToParcelId[_documentHash] == 0, "SenParcelle: hash already exists");
 
@@ -150,10 +183,10 @@ contract SenParcelle {
         });
 
         hashToParcelId[_documentHash] = _parcelId;
+        ownerParcelIndex[_owner][_parcelId] = ownerParcels[_owner].length;
         ownerParcels[_owner].push(_parcelId);
         totalParcels++;
 
-        // Premier enregistrement dans l'historique
         ownershipHistory[_parcelId].push(OwnershipRecord({
             from:           address(0),
             to:             _owner,
@@ -161,32 +194,23 @@ contract SenParcelle {
             transactionRef: bytes32(0)
         }));
 
-        emit ParcelRegistered(
-            _parcelId, _documentHash, _owner, _localisation, block.timestamp
-        );
+        emit ParcelRegistered(_parcelId, _documentHash, _owner, _localisation, block.timestamp);
     }
 
-    /**
-     * @notice Transfère la propriété d'une parcelle après paiement confirmé
-     * @param _parcelId      ID de la parcelle
-     * @param _newOwner      Nouveau propriétaire
-     * @param _txRef         Référence transaction Django/paiement
-     */
     function transferOwnership(
         uint256 _parcelId,
         address _newOwner,
         bytes32 _txRef
-    ) external onlyOwner notPaused {
+    ) external onlyRole(VALIDATOR_ROLE) notPaused {
         Parcel storage parcel = parcels[_parcelId];
 
-        require(parcel.active,               "SenParcelle: parcel not active");
         require(parcel.parcelId != 0,        "SenParcelle: parcel not found");
+        require(parcel.active,               "SenParcelle: parcel not active");
         require(_newOwner != address(0),     "SenParcelle: invalid new owner");
         require(_newOwner != parcel.owner,   "SenParcelle: already owner");
 
         address previousOwner = parcel.owner;
 
-        // Enregistrer dans l'historique
         ownershipHistory[_parcelId].push(OwnershipRecord({
             from:           previousOwner,
             to:             _newOwner,
@@ -194,71 +218,52 @@ contract SenParcelle {
             transactionRef: _txRef
         }));
 
-        // Retirer la parcelle de l'ancien propriétaire
         _removeFromOwnerList(_parcelId, previousOwner);
 
-        // Ajouter au nouveau propriétaire
         parcel.owner = _newOwner;
         ownerParcels[_newOwner].push(_parcelId);
+        ownerParcelIndex[_newOwner][_parcelId] = ownerParcels[_newOwner].length - 1;
         totalTransfers++;
 
-        emit OwnershipTransferred(
-            _parcelId, previousOwner, _newOwner, _txRef, block.timestamp
-        );
+        emit OwnershipTransferred(_parcelId, previousOwner, _newOwner, _txRef, block.timestamp);
     }
 
-    /**
-     * @notice Met à jour le CID IPFS des métadonnées d'une parcelle
-     */
-    function updateMetadata(uint256 _parcelId, bytes32 _newIpfsHash) 
-        external onlyOwner notPaused 
+    function updateMetadata(uint256 _parcelId, bytes32 _newIpfsHash)
+        external onlyRole(VALIDATOR_ROLE) notPaused
     {
         require(parcels[_parcelId].parcelId != 0, "SenParcelle: not found");
         require(_newIpfsHash != bytes32(0),       "SenParcelle: invalid hash");
-        
         parcels[_parcelId].ipfsHash = _newIpfsHash;
     }
 
-    /**
-     * @notice Révoque une parcelle (fraude détectée)
-     */
-    function revokeParcel(uint256 _parcelId) external onlyOwner {
+    function revokeParcel(uint256 _parcelId) external onlyRole(EMERGENCY_ROLE) {
         require(parcels[_parcelId].active, "SenParcelle: already revoked");
-        Parcel storage parcel = parcels[_parcelId];
-        parcel.active = false;
-        _removeFromOwnerList(_parcelId, parcel.owner);
+        Parcel storage p = parcels[_parcelId];
+        p.active = false;
+        _removeFromOwnerList(_parcelId, p.owner);
         emit ParcelRevoked(_parcelId, msg.sender, block.timestamp);
     }
 
-    /**
-     * @dev Retire un parcelId de la liste ownerParcels[owner]
-     *     en déplaçant le dernier élément à la position supprimée.
-     */
     function _removeFromOwnerList(uint256 _parcelId, address _owner) internal {
         uint256[] storage list = ownerParcels[_owner];
         uint256 len = list.length;
-        for (uint256 i = 0; i < len; i++) {
-            if (list[i] == _parcelId) {
-                if (i != len - 1) {
-                    list[i] = list[len - 1];
-                }
-                list.pop();
-                return;
-            }
+        uint256 index = ownerParcelIndex[_owner][_parcelId];
+        require(index < len && list[index] == _parcelId, "SenParcelle: not in list");
+
+        if (index != len - 1) {
+            uint256 lastId = list[len - 1];
+            list[index] = lastId;
+            ownerParcelIndex[_owner][lastId] = index;
         }
+
+        list.pop();
+        delete ownerParcelIndex[_owner][_parcelId];
     }
 
     // ═════════════════════════════════════════════
-    // FONCTIONS DE LECTURE (view — gratuites)
+    // READ FUNCTIONS (view — free)
     // ═════════════════════════════════════════════
 
-    /**
-     * @notice Vérifie un hash de document
-     * @return valid       true si le hash est enregistré et actif
-     * @return parcelId    ID de la parcelle
-     * @return ownerAddr   Adresse du propriétaire actuel
-     * @return registeredAt Timestamp d'enregistrement
-     */
     function verifyDocument(bytes32 _documentHash) external view returns (
         bool    valid,
         uint256 parcelId,
@@ -267,69 +272,53 @@ contract SenParcelle {
     ) {
         uint256 pid = hashToParcelId[_documentHash];
         if (pid == 0) return (false, 0, address(0), 0);
-
         Parcel storage p = parcels[pid];
         return (p.active, p.parcelId, p.owner, p.registeredAt);
     }
 
-    /**
-     * @notice Retourne les infos complètes d'une parcelle
-     */
     function getParcel(uint256 _parcelId) external view returns (Parcel memory) {
         require(parcels[_parcelId].parcelId != 0, "SenParcelle: not found");
         return parcels[_parcelId];
     }
 
-    /**
-     * @notice Retourne l'historique complet des propriétaires
-     */
     function getParcelHistory(uint256 _parcelId)
-        external view
-        returns (OwnershipRecord[] memory)
+        external view returns (OwnershipRecord[] memory)
     {
         return ownershipHistory[_parcelId];
     }
 
-    /**
-     * @notice Retourne les parcelles d'un propriétaire
-     */
     function getOwnerParcels(address _owner)
-        external view
-        returns (uint256[] memory)
+        external view returns (uint256[] memory)
     {
         return ownerParcels[_owner];
     }
 
-    /**
-     * @notice Vérifie si une adresse est propriétaire d'une parcelle
-     */
     function isOwner(uint256 _parcelId, address _addr)
-        external view
-        returns (bool)
+        external view returns (bool)
     {
         return parcels[_parcelId].owner == _addr && parcels[_parcelId].active;
     }
 
     // ═════════════════════════════════════════════
-    // ADMIN
+    // EMERGENCY
     // ═════════════════════════════════════════════
 
-    function pause()   external onlyOwner { paused = true;  emit ContractPaused(true,  block.timestamp); }
-    function unpause() external onlyOwner { paused = false; emit ContractPaused(false, block.timestamp); }
+    function pause()   external onlyRole(EMERGENCY_ROLE) { paused = true;  emit ContractPaused(true,  block.timestamp); }
+    function unpause() external onlyRole(EMERGENCY_ROLE) { paused = false; emit ContractPaused(false, block.timestamp); }
 
-    function transferContractOwnership(address _newOwner) external onlyOwner {
-        require(_newOwner != address(0), "SenParcelle: invalid address");
-        owner = _newOwner;
-    }
+    // ═════════════════════════════════════════════
+    // PAYMENTS
+    // ═════════════════════════════════════════════
 
-    // ─── Recevoir MATIC (si nécessaire pour gas) ───
     receive() external payable {
-        emit ContractPaused(false, block.timestamp);
+        emit PaymentReceived(msg.sender, msg.value, block.timestamp);
     }
-    function withdraw() external onlyOwner {
+
+    function withdraw(address payable to) external onlyRole(EMERGENCY_ROLE) nonReentrant {
         uint256 balance = address(this).balance;
         require(balance > 0, "SenParcelle: no balance");
-        (bool sent, ) = payable(owner).call{value: balance}("");
+        require(to != address(0), "SenParcelle: invalid address");
+        (bool sent, ) = to.call{value: balance}("");
         require(sent, "SenParcelle: transfer failed");
     }
 }

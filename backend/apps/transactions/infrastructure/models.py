@@ -4,10 +4,9 @@
 # ════════════════════════════════════════════════════════════════
 
 from django.db import models
+
+from apps.transactions.domain.entities import PaymentProvider, TransactionEntity, TransactionStatus
 from core.models.base import BaseModel
-from apps.transactions.domain.entities import (
-    TransactionEntity, TransactionStatus, PaymentProvider
-)
 
 
 class Transaction(BaseModel):
@@ -79,20 +78,20 @@ class Transaction(BaseModel):
 # REPOSITORY DJANGO
 # ──────────────────────────────────────────────────────────────
 
-from typing import Optional, List
+
 from apps.transactions.domain.repositories import ITransactionRepository
 
 
 class DjangoTransactionRepository(ITransactionRepository):
     """Implémentation Django du repository Transaction."""
 
-    def get_by_id(self, tx_id: str) -> Optional[TransactionEntity]:
+    def get_by_id(self, tx_id: str) -> TransactionEntity | None:
         try:
             return Transaction.objects.get(id=tx_id).to_domain()
         except Transaction.DoesNotExist:
             return None
 
-    def get_by_payment_ref(self, payment_ref: str) -> Optional[TransactionEntity]:
+    def get_by_payment_ref(self, payment_ref: str) -> TransactionEntity | None:
         try:
             return Transaction.objects.get(payment_ref=payment_ref).to_domain()
         except Transaction.DoesNotExist:
@@ -103,11 +102,14 @@ class DjangoTransactionRepository(ITransactionRepository):
         tx_orm.save()
         return tx_orm.to_domain()
 
-    def find_by_buyer(self, buyer_id: str) -> List[TransactionEntity]:
-        return [t.to_domain() for t in Transaction.objects.filter(buyer_id=buyer_id)]
+    def find_by_buyer(self, buyer_id: str) -> list[TransactionEntity]:
+        qs = Transaction.objects.select_related('parcel', 'buyer', 'seller').filter(buyer_id=buyer_id)
+        return [t.to_domain() for t in qs]
 
-    def find_by_seller(self, seller_id: str) -> List[TransactionEntity]:
-        return [t.to_domain() for t in Transaction.objects.filter(seller_id=seller_id)]
+    def find_by_seller(self, seller_id: str) -> list[TransactionEntity]:
+        qs = Transaction.objects.select_related('parcel', 'buyer', 'seller').filter(seller_id=seller_id)
+        return [t.to_domain() for t in qs]
 
-    def find_by_parcel(self, parcel_id: str) -> List[TransactionEntity]:
-        return [t.to_domain() for t in Transaction.objects.filter(parcel_id=parcel_id)]
+    def find_by_parcel(self, parcel_id: str) -> list[TransactionEntity]:
+        qs = Transaction.objects.select_related('parcel', 'buyer', 'seller').filter(parcel_id=parcel_id)
+        return [t.to_domain() for t in qs]

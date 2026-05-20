@@ -2,21 +2,17 @@
 # INFRASTRUCTURE : models.py (PostGIS)
 # ══════════════════════════════════════════════════════════════
 
-import uuid as uuid_lib
-from typing import List, Optional
+
 from django.db import models
 
-try:
-    from django.contrib.gis.db import models as gis_models
-    from django.contrib.gis.geos import Point
-    HAS_GIS = True
-except Exception:
-    HAS_GIS = False
-    gis_models = None
-    Point = None
-
+from apps.parcels.domain.entities import (
+    GeoPoint,
+    IParcelRepository,
+    ParcelEntity,
+    ParcelStatus,
+    ParcelType,
+)
 from core.models.base import BaseModel, TimeStampedModel
-from apps.parcels.domain.entities import ParcelEntity, GeoPoint, ParcelStatus, IParcelRepository
 
 
 class Parcel(BaseModel):
@@ -32,6 +28,13 @@ class Parcel(BaseModel):
         ("certified", "Certifiée"),
         ("rejected",  "Rejetée"),
         ("sold",      "Vendue"),
+    ]
+
+    TYPE_CHOICES = [
+        ("residentiel", "Résidentiel"),
+        ("commercial",  "Commercial"),
+        ("agricole",    "Agricole"),
+        ("industriel",  "Industriel"),
     ]
 
     REGION_CHOICES = [
@@ -60,26 +63,20 @@ class Parcel(BaseModel):
     )
 
     # ─── Infos de base ───
-    titre       = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    region      = models.CharField(max_length=50, choices=REGION_CHOICES, db_index=True)
-    surface     = models.FloatField(help_text="Superficie en m²")
-    price       = models.DecimalField(max_digits=14, decimal_places=2, help_text="Prix en FCFA")
-    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", db_index=True)
+    titre        = models.CharField(max_length=200)
+    description  = models.TextField(blank=True)
+    localisation = models.CharField(max_length=255, blank=True)
+    region       = models.CharField(max_length=50, choices=REGION_CHOICES, db_index=True)
+    superficie   = models.FloatField(help_text="Superficie en m²")
+    prix         = models.DecimalField(max_digits=14, decimal_places=2, help_text="Prix en FCFA")
+    type_terrain = models.CharField(max_length=20, choices=TYPE_CHOICES, default="residentiel", db_index=True)
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", db_index=True)
 
-    # ─── PostGIS : coordonnées géographiques ───
-    if HAS_GIS:
-        location = gis_models.PointField(
-            geography=True,        # Calculs en mètres (pas degrés)
-            srid=4326,             # WGS84 (GPS standard)
-            null=True, blank=True,
-            help_text="Point GPS (longitude, latitude)"
-        )
-    else:
-        location = models.JSONField(
-            null=True, blank=True,
-            help_text="Point GPS (longitude, latitude) - FALLBACK (GDAL missing)"
-        )
+    # ─── Coordonnées GPS (JSON) ───
+    location = models.JSONField(
+        null=True, blank=True,
+        help_text="Point GPS {latitude, longitude}"
+    )
 
     # ─── Blockchain & Documents ───
     document_hash      = models.CharField(max_length=64,  blank=True, db_index=True)   # SHA-256
@@ -112,14 +109,8 @@ class Parcel(BaseModel):
 
     def to_domain(self) -> ParcelEntity:
         loc = None
-        if self.location:
-            if HAS_GIS:
-                # Point PostGIS : (longitude, latitude)
-                loc = GeoPoint(latitude=self.location.y, longitude=self.location.x)
-            else:
-                # Fallback JSON : {"latitude": 1.23, "longitude": 4.56}
-                if isinstance(self.location, dict):
-                    loc = GeoPoint(latitude=self.location.get("latitude"), longitude=self.location.get("longitude"))
+        if self.location and isinstance(self.location, dict):
+            loc = GeoPoint(latitude=self.location.get("latitude"), longitude=self.location.get("longitude"))
 
         return ParcelEntity(
             id=str(self.id),
@@ -127,9 +118,11 @@ class Parcel(BaseModel):
             titre=self.titre,
             description=self.description,
             location=loc,
+            localisation=self.localisation,
             region=self.region,
-            surface=self.surface,
-            price=float(self.price),
+            superficie=self.superficie,
+            prix=float(self.prix),
+            type_terrain=ParcelType(self.type_terrain),
             status=ParcelStatus(self.status),
             document_hash=self.document_hash or None,
             ipfs_hash=self.ipfs_hash or None,
@@ -141,20 +134,17 @@ class Parcel(BaseModel):
     def from_domain(cls, entity: ParcelEntity) -> "Parcel":
         point = None
         if entity.location:
-            if HAS_GIS:
-                # PostGIS Point : Point(longitude, latitude)
-                point = Point(entity.location.longitude, entity.location.latitude, srid=4326)
-            else:
-                # Fallback JSON
-                point = {"latitude": entity.location.latitude, "longitude": entity.location.longitude}
+            point = {"latitude": entity.location.latitude, "longitude": entity.location.longitude}
 
         return cls(
             id=entity.id,
             titre=entity.titre,
             description=entity.description,
+            localisation=entity.localisation,
             region=entity.region,
-            surface=entity.surface,
-            price=entity.price,
+            superficie=entity.superficie,
+            prix=entity.prix,
+            type_terrain=entity.type_terrain.value,
             status=entity.status.value,
             location=point,
             document_hash=entity.document_hash or "",
@@ -182,70 +172,37 @@ class ParcelPhoto(TimeStampedModel):
 # REPOSITORY DJANGO avec PostGIS
 # ──────────────────────────────────────────────────────────────
 
-try:
-    from django.contrib.gis.measure import Distance
-    from django.contrib.gis.geos import Point as GeoPoint_ORM
-except Exception:
-    Distance = None
-    GeoPoint_ORM = None
-
-
 class DjangoParcelRepository(IParcelRepository):
-    """Implémentation PostGIS du repository Parcel."""
+    """Implémentation repository Parcel (JSON fallback, pas de PostGIS)."""
 
-    def get_by_id(self, parcel_id: str) -> Optional[ParcelEntity]:
+    def get_by_id(self, parcel_id: str) -> ParcelEntity | None:
         try:
-            return Parcel.objects.get(id=parcel_id).to_domain()
+            return Parcel.objects.select_related('owner', 'validated_by').get(id=parcel_id).to_domain()
         except Parcel.DoesNotExist:
             return None
 
     def save(self, entity: ParcelEntity) -> ParcelEntity:
         parcel_orm = Parcel.from_domain(entity)
-        # owner_id est un FK, à assigner séparément
         parcel_orm.owner_id = entity.owner_id
         parcel_orm.save()
         return parcel_orm.to_domain()
 
-    def find_nearby(self, location: GeoPoint, radius_m: float) -> List[ParcelEntity]:
-        """Utilise PostGIS pour trouver les parcelles dans un rayon."""
-        if not HAS_GIS:
-            return []
-            
-        point = GeoPoint_ORM(location.longitude, location.latitude, srid=4326)
-        qs = Parcel.objects.filter(
-            location__distance_lte=(point, Distance(m=radius_m))
-        ).exclude(status="rejected")
-        return [p.to_domain() for p in qs]
+    def find_nearby(self, location: GeoPoint, radius_m: float) -> list[ParcelEntity]:
+        return []
 
-    def find_nearby_active(self, location: GeoPoint, radius_m: float) -> List[ParcelEntity]:
-        """Parcelles actives (pending, validated, certified, sold) dans un rayon."""
-        if not HAS_GIS:
-            return []
-            
-        point = GeoPoint_ORM(location.longitude, location.latitude, srid=4326)
-        qs = Parcel.objects.filter(
-            location__distance_lte=(point, Distance(m=radius_m)),
-            status__in=["pending", "validated", "certified", "sold"],
-        )
-        return [p.to_domain() for p in qs]
+    def find_nearby_active(self, location: GeoPoint, radius_m: float) -> list[ParcelEntity]:
+        return []
 
-    def find_by_region(self, region: Optional[str], status: Optional[str] = None) -> List[ParcelEntity]:
-        qs = Parcel.objects.all()
+    def find_by_region(self, region: str | None, status: str | None = None) -> list[ParcelEntity]:
+        qs = Parcel.objects.select_related('owner', 'validated_by').all()
         if region:
             qs = qs.filter(region=region)
         if status:
             qs = qs.filter(status=status)
         return [p.to_domain() for p in qs]
 
-    def find_by_owner(self, owner_id: str) -> List[ParcelEntity]:
-        return [p.to_domain() for p in Parcel.objects.filter(owner_id=owner_id)]
+    def find_by_owner(self, owner_id: str) -> list[ParcelEntity]:
+        return [p.to_domain() for p in Parcel.objects.select_related('owner', 'validated_by').filter(owner_id=owner_id)]
 
     def exists_near(self, location: GeoPoint, radius_m: float = 50.0) -> bool:
-        if not HAS_GIS:
-            return False
-            
-        point = GeoPoint_ORM(location.longitude, location.latitude, srid=4326)
-        return Parcel.objects.filter(
-            location__distance_lte=(point, Distance(m=radius_m)),
-            status__in=["pending", "validated", "certified"],
-        ).exists()
+        return False

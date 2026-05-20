@@ -4,23 +4,24 @@ apps/parcels/presentation/views.py
 ViewSets DRF pour la gestion des parcelles.
 """
 
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, JSONParser
 
-from core.permissions.rbac import (
-    IsAuthenticated, CanPublishParcel, CanValidateParcel
-)
 from apps.parcels.application.use_cases.submit_parcel import (
-    SubmitParcelInput, ValidateParcelInput, SearchParcelsInput
+    SearchParcelsInput,
+    SubmitParcelInput,
+    ValidateParcelInput,
 )
+from core.permissions.rbac import CanPublishParcel, CanValidateParcel, IsAuthenticated
+
+from .di import get_search_parcels_uc, get_submit_parcel_uc, get_validate_parcel_uc
 from .serializers import (
-    ParcelCreateSerializer, ParcelListSerializer,
-    ParcelDetailSerializer, ValidateParcelSerializer
-)
-from .di import (
-    get_submit_parcel_uc, get_validate_parcel_uc, get_search_parcels_uc
+    ParcelCreateSerializer,
+    ParcelDetailSerializer,
+    ParcelListSerializer,
+    ValidateParcelSerializer,
 )
 
 
@@ -37,7 +38,7 @@ class ParcelViewSet(viewsets.ViewSet):
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
-            return []
+            return [IsAuthenticated()]
         if self.action == "create":
             return [CanPublishParcel()]
         if self.action == "valider":
@@ -47,14 +48,15 @@ class ParcelViewSet(viewsets.ViewSet):
     def list(self, request):
         """
         GET /api/parcelles/
-        Recherche avec filtres : région, prix, surface, géo.
+        Recherche avec filtres : région, prix, superficie, type_terrain, géo.
         """
         uc = get_search_parcels_uc()
         result = uc.execute(SearchParcelsInput(
             region=request.query_params.get("region"),
-            min_price=request.query_params.get("min_price"),
-            max_price=request.query_params.get("max_price"),
-            min_surface=request.query_params.get("min_surface"),
+            min_prix=request.query_params.get("min_prix") or request.query_params.get("min_price"),
+            max_prix=request.query_params.get("max_prix") or request.query_params.get("max_price"),
+            min_superficie=request.query_params.get("min_superficie") or request.query_params.get("min_surface"),
+            type_terrain=request.query_params.get("type_terrain"),
             latitude=request.query_params.get("latitude"),
             longitude=request.query_params.get("longitude"),
             radius_km=request.query_params.get("radius_km"),

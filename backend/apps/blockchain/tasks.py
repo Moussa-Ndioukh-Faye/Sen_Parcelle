@@ -1,32 +1,12 @@
 """
-apps/blockchain/tasks.py + notifications/tasks.py
---------------------------------------------------
-Tâches Celery asynchrones pour Sen_parcelle.
-Principe : les opérations lentes ne bloquent jamais la réponse HTTP.
-Flux : ViewSet → réponse 202 → Celery → résultat → notification.
+apps/blockchain/tasks.py
+Tâches Celery asynchrones pour la blockchain Sen_parcelle.
 """
 
-import logging
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
-
-
-
-# ══════════════════════════════════════════════════════════════
-# CELERY APP CONFIG
-# infrastructure/celery/app.py
-# ══════════════════════════════════════════════════════════════
-
-"""
-Le beat schedule est défini dans infrastructure/celery/app.py
-"""
-
-
-# ══════════════════════════════════════════════════════════════
-# TÂCHES BLOCKCHAIN
-# ══════════════════════════════════════════════════════════════
 
 @shared_task(
     bind=True,
@@ -44,11 +24,11 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
     logger.info(f"Démarrage certification blockchain : parcel_id={parcel_id}")
 
     try:
-        from apps.parcels.infrastructure.models import DjangoParcelRepository
-        from apps.blockchain.infrastructure.adapters.polygon_adapter import PolygonAdapter
-        from apps.blockchain.infrastructure.adapters.ipfs_adapter import IPFSAdapter
-        from apps.notifications.services.notification_service import NotificationService
         from apps.audit.services import AuditService
+        from apps.blockchain.infrastructure.adapters.ipfs_adapter import IPFSAdapter
+        from apps.blockchain.infrastructure.adapters.polygon_adapter import PolygonAdapter
+        from apps.notifications.services.notification_service import NotificationService
+        from apps.parcels.infrastructure.models import DjangoParcelRepository
 
         # ─── Charger la parcelle ───
         parcel_repo = DjangoParcelRepository()
@@ -69,7 +49,10 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
             "document_hash":  parcel.document_hash,
             "titre":          parcel.titre,
             "region":         parcel.region,
-            "surface":        parcel.surface,
+            "superficie":     parcel.superficie,
+            "prix":           parcel.prix,
+            "localisation":   parcel.localisation,
+            "type_terrain":   parcel.type_terrain.value,
             "owner_id":       parcel.owner_id,
         })
         logger.info(f"IPFS hash : {ipfs_hash}")
@@ -81,16 +64,17 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
             document_hash=parcel.document_hash,
             ipfs_hash=ipfs_hash,
             owner_address=polygon.get_owner_address(parcel.owner_id),
-            localisation=f"{parcel.region} - {parcel.titre}",
-            surface=int(parcel.surface),
-            prix=int(parcel.price),
+            localisation=parcel.localisation,
+            superficie=int(parcel.superficie),
+            prix=int(parcel.prix),
         )
 
         logger.info(f"TX Polygon : {tx_result['tx_hash']}")
 
         # ─── Mettre à jour la parcelle ───
-        from apps.parcels.infrastructure.models import Parcel as ParcelORM
         from django.utils import timezone
+
+        from apps.parcels.infrastructure.models import Parcel as ParcelORM
 
         ParcelORM.objects.filter(id=parcel_id).update(
             status="certified",
@@ -137,7 +121,7 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
     name="blockchain.transfer_ownership"
 )
 def transfer_ownership_on_blockchain(
-    parcel_id: str, seller_id: str, buyer_id: str, transaction_id: str
+    self, parcel_id: str, seller_id: str, buyer_id: str, transaction_id: str
 ):
     """
     Tâche Celery : transfère la propriété d'une parcelle sur Polygon.
@@ -147,12 +131,11 @@ def transfer_ownership_on_blockchain(
 
     try:
         from apps.blockchain.infrastructure.adapters.polygon_adapter import PolygonAdapter
-        from apps.parcels.infrastructure.models import Parcel as ParcelORM, DjangoParcelRepository
-        from apps.transactions.infrastructure.models import Transaction as TxORM
         from apps.notifications.services.notification_service import NotificationService
+        from apps.parcels.infrastructure.models import Parcel as ParcelORM
+        from apps.transactions.infrastructure.models import Transaction as TxORM
 
         polygon = PolygonAdapter()
-        parcel  = DjangoParcelRepository().get_by_id(parcel_id)
 
         tx_result = polygon.transfer_ownership(
             parcel_id=parcel_id,
@@ -183,100 +166,5 @@ def transfer_ownership_on_blockchain(
         raise self.retry(exc=exc)
 
 
-# ══════════════════════════════════════════════════════════════
-# TÂCHES NOTIFICATIONS
-# ══════════════════════════════════════════════════════════════
-
-@shared_task(name="notifications.send_sms")
-def send_sms_async(to: str, message: str):
-    """Envoi SMS asynchrone — ne bloque pas la requête HTTP."""
-    from apps.users.infrastructure.adapters.sms_adapter import get_sms_adapter
-    try:
-        adapter = get_sms_adapter()
-        adapter.send(to=to, message=message)
-        logger.info(f"SMS envoyé (async) : to={to[:6]}***")
-    except Exception as e:
-        logger.error(f"Erreur SMS async : {e}")
-
-
-@shared_task(name="notifications.send_push")
-def send_push_notification(user_id: str, title: str, body: str, data: dict = None):
-    """Notification push Firebase FCM."""
-    import firebase_admin
-    from firebase_admin import messaging, credentials
-    from django.conf import settings
-    from apps.users.infrastructure.models import User
-
-    logger.info(f"Push notification : user={user_id} title={title}")
-    
-    try:
-        # Initialisation unique de Firebase
-        try:
-            firebase_admin.get_app()
-        except ValueError:
-            cred = credentials.Certificate(settings.FIREBASE_SERVICE_ACCOUNT_JSON)
-            firebase_admin.initialize_app(cred)
-
-        # Récupérer le token FCM de l'utilisateur
-        user = User.objects.get(id=user_id)
-        fcm_token = getattr(user, "fcm_token", None)
-
-        if not fcm_token:
-            logger.warning(f"Pas de token FCM pour l'utilisateur {user_id}")
-            return
-
-        message = messaging.Message(
-            notification=messaging.Notification(title=title, body=body),
-            data=data or {},
-            token=fcm_token,
-        )
-        response = messaging.send(message)
-        logger.info(f"Push envoyé avec succès : {response}")
-
-    except Exception as e:
-        logger.error(f"Erreur Push Firebase : {e}")
-
-
-@shared_task(name="notifications.daily_report")
-def send_daily_admin_report():
-    """Rapport quotidien envoyé aux admins (statistiques)."""
-    from apps.parcels.infrastructure.models import Parcel
-    from apps.users.infrastructure.models import User
-    from django.utils import timezone
-    from datetime import timedelta
-    from django.core.mail import send_mail
-    from django.conf import settings
-
-    yesterday = timezone.now() - timedelta(days=1)
-
-    stats = {
-        "new_users":            User.objects.filter(created_at__gte=yesterday).count(),
-        "new_parcels":          Parcel.objects.filter(created_at__gte=yesterday).count(),
-        "pending_parcels":      Parcel.objects.filter(status="pending").count(),
-        "certified_yesterday":  Parcel.objects.filter(
-                                    certified_at__gte=yesterday, status="certified"
-                                ).count(),
-        "pending_kyc":          User.objects.filter(kyc_status="pending").count(),
-    }
-
-    logger.info(f"Rapport quotidien : {stats}")
-    
-    report_message = f"""
-    Rapport quotidien Sen_parcelle ({yesterday.date()})
-    
-    - Nouveaux utilisateurs : {stats['new_users']}
-    - Nouvelles parcelles soumises : {stats['new_parcels']}
-    - Parcelles certifiées blockchain : {stats['certified_yesterday']}
-    - Parcelles en attente de validation : {stats['pending_parcels']}
-    - Utilisateurs en attente de KYC : {stats['pending_kyc']}
-    
-    Consultez le dashboard : {settings.FRONTEND_URL}/admin
-    """
-
-    send_mail(
-        subject=f"Sen_parcelle : Rapport quotidien {yesterday.date()}",
-        message=report_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[admin[1] for admin in settings.ADMINS],
-        fail_silently=False,
-    )
+# Note : les tâches notifications (send_sms, send_push, daily_report)
+# ont été déplacées vers apps/notifications/tasks.py

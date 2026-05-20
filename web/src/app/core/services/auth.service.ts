@@ -41,6 +41,7 @@ export class AuthService {
   private _user         = signal<AuthUser | null>(null);
   private _requiresOTP  = signal(false);
   private _pendingUserId = signal<string | null>(null);
+  private _pendingUserEmail = signal<string | null>(null);
   private _isLoading    = signal(false);
   private _error        = signal<string | null>(null);
 
@@ -74,6 +75,7 @@ export class AuthService {
         if (response.requires_otp) {
           this._requiresOTP.set(true);
           this._pendingUserId.set(response.user_id ?? null);
+          this._pendingUserEmail.set(payload.email);
         } else if (response.access_token) {
           this._saveTokens(response);
           this._loadCurrentUser();
@@ -89,7 +91,7 @@ export class AuthService {
   }
 
   submitOTP(otpCode: string): Observable<LoginResponse> {
-    const email = this._pendingUserId();
+    const email = this._pendingUserEmail();
     return this.login({
       email: email ?? '',
       password: '',

@@ -3,21 +3,20 @@ apps/users/presentation/views.py
 ----------------------------------
 ViewSets DRF pour l'authentification et la gestion des utilisateurs.
 """
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
-from core.permissions.rbac import IsAuthenticated, IsAdmin
-from apps.parcels.presentation.di import (
-    get_register_uc, get_login_uc, get_verify_kyc_uc
-)
-from apps.users.application.use_cases.register import RegisterInput
+from apps.parcels.presentation.di import get_login_uc, get_register_uc, get_verify_kyc_uc
 from apps.users.application.use_cases.login import LoginInput
+from apps.users.application.use_cases.register import RegisterInput
 from apps.users.application.use_cases.verify_kyc import VerifyKYCInput
-from .serializers import RegisterSerializer, LoginSerializer
+from core.permissions.rbac import IsAdmin, IsAuthenticated
+
+from .serializers import LoginSerializer, RegisterSerializer
 
 
 class AuthViewSet(viewsets.ViewSet):

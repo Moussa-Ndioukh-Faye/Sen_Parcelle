@@ -5,10 +5,9 @@ Philosophie : tester le domaine SANS base de données.
 Les entités et use cases sont testés avec des mocks.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime
+from unittest.mock import MagicMock
 
+import pytest
 
 # ══════════════════════════════════════════════════════════════
 # FIXTURES
@@ -112,9 +111,7 @@ class TestDocumentHash:
 
 class TestUserEntity:
     def _make_user(self, role="vendeur", kyc_status="verified", is_2fa=True):
-        from apps.users.domain.entities import (
-            UserEntity, Email, PhoneNumber, UserRole, KYCStatus
-        )
+        from apps.users.domain.entities import Email, KYCStatus, PhoneNumber, UserEntity, UserRole
         return UserEntity(
             id="user-123",
             nom="Moussa Faye",
@@ -184,16 +181,17 @@ class TestGeoPoint:
 
 class TestParcelEntity:
     def _make_parcel(self, status="pending"):
-        from apps.parcels.domain.entities import ParcelEntity, GeoPoint, ParcelStatus
+        from apps.parcels.domain.entities import GeoPoint, ParcelEntity, ParcelStatus
         return ParcelEntity(
             id="parcel-123",
             owner_id="user-123",
             titre="Terrain Almadies",
             description="Belle vue",
             location=GeoPoint(14.7645, -17.5149),
+            localisation="Almadies, Dakar",
             region="Dakar",
-            surface=500,
-            price=25_000_000,
+            superficie=500,
+            prix=25_000_000,
             status=ParcelStatus(status),
         )
 
@@ -234,7 +232,7 @@ class TestRegisterUseCase:
     @pytest.mark.django_db
     def test_inscription_succes(self, mock_user_repo, mock_otp_service, mock_sms_service):
         from apps.users.application.use_cases.register import RegisterInput
-        from apps.users.domain.entities import UserEntity, Email, PhoneNumber, UserRole, KYCStatus
+        from apps.users.domain.entities import Email, KYCStatus, PhoneNumber, UserEntity, UserRole
 
         mock_user_repo.exists_by_email.return_value = False
         mock_user_repo.exists_by_phone.return_value = False

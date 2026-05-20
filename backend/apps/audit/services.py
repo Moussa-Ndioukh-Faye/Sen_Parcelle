@@ -1,5 +1,7 @@
 import logging
+
 from django.utils import timezone
+
 from .models import AuditLog
 
 logger = logging.getLogger(__name__)
@@ -15,7 +17,7 @@ class AuditService:
     """
 
     def log(self, user_id: str, action: str, metadata: dict,
-            ip_address: str = None, user_agent: str = None):
+            ip_address: str | None = None, user_agent: str | None = None):
         """
         Enregistre une action dans le journal d'audit.
         Non bloquant : les erreurs d'audit ne doivent pas affecter le flux principal.
@@ -41,6 +43,20 @@ class AuditService:
                 "created_at": log.created_at.isoformat(),
                 "metadata":   log.metadata,
                 "ip":         log.ip_address,
+            }
+            for log in logs
+        ]
+
+    def get_recent_events(self, limit: int = 20) -> list:
+        """Retourne les événements d'audit les plus récents."""
+        logs = AuditLog.objects.order_by("-created_at")[:limit]
+        return [
+            {
+                "action":     log.action,
+                "created_at": log.created_at.isoformat(),
+                "metadata":   log.metadata,
+                "ip":         log.ip_address,
+                "user_id":    log.user_id,
             }
             for log in logs
         ]

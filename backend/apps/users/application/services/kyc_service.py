@@ -14,7 +14,6 @@ import hashlib
 import logging
 import uuid
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class KYCSubmissionInput:
     document_type:  str          # "cni" | "passeport" | "permis"
     document_bytes: bytes        # Contenu binaire du document
     document_name:  str
-    selfie_bytes:   Optional[bytes] = None   # Photo selfie (optionnel V1)
+    selfie_bytes:   bytes | None = None   # Photo selfie (optionnel V1)
 
 
 @dataclass
@@ -60,7 +59,9 @@ class KYCService:
         L'utilisateur soumet ses documents KYC.
         """
         from core.exceptions.base import (
-            EntityNotFoundException, BusinessRuleViolationException, ValidationException
+            BusinessRuleViolationException,
+            EntityNotFoundException,
+            ValidationException,
         )
 
         # ─── Validation ───
@@ -135,8 +136,8 @@ class KYCService:
 
     def get_kyc_status(self, user_id: str) -> dict:
         """Retourne le statut KYC détaillé d'un utilisateur."""
-        from core.exceptions.base import EntityNotFoundException
         from apps.users.infrastructure.models import User as UserORM
+        from core.exceptions.base import EntityNotFoundException
 
         try:
             user_orm = UserORM.objects.get(id=user_id)

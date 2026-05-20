@@ -14,7 +14,7 @@ import { ParcelDetail } from '@core/models';
         <h2>{{ parcel.titre }}</h2>
         <p>{{ parcel.localisation }}</p>
         <p>{{ parcel.description }}</p>
-        <p class="price">{{ parcel.price | currency:'XOF' }}</p>
+        <p class="price">{{ parcel.prix | currency:'XOF' }}</p>
         <p>Statut: {{ parcel.status }}</p>
       } @else {
         <p>Chargement...</p>
@@ -23,7 +23,7 @@ import { ParcelDetail } from '@core/models';
   `,
   styles: [`
     .detail-container { padding: 24px; max-width: 800px; margin: 0 auto; }
-    .price { color: #2e7d32; font-weight: bold; font-size: 1.5em; }
+    .price { color: var(--green-700); font-weight: bold; font-size: 1.5em; }
   `]
 })
 export class ParcelDetailComponent implements OnInit {

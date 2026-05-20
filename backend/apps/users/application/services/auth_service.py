@@ -5,7 +5,6 @@
 
 import logging
 import re
-from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +94,7 @@ class AuthService:
         self._audit.log(user_id, "2fa_disabled", {})
         return True
 
-    def logout(self, user_id: str, access_token_jti: str, refresh_token: str = None):
+    def logout(self, user_id: str, access_token_jti: str, refresh_token: str | None = None):
         """
         Déconnexion : révoque les tokens.
         """
@@ -113,10 +112,12 @@ class AuthService:
         Incrémente les tentatives échouées.
         Verrouille le compte après MAX_FAILED_ATTEMPTS.
         """
-        from django.utils import timezone
         from datetime import timedelta
-        from apps.users.infrastructure.models import User as UserORM
+
         from django.db.models import F
+        from django.utils import timezone
+
+        from apps.users.infrastructure.models import User as UserORM
 
         # Incrément atomique via F() — pas de race condition
         updated = UserORM.objects.filter(id=user_id).update(
@@ -150,11 +151,12 @@ class AuthService:
                     )
                 )
             except Exception:
-                pass
+                logger.warning(f"Échec d'envoi SMS d'alerte verrouillage user={user_id}")
 
     def is_account_locked(self, user_id: str) -> bool:
         """Vérifie si un compte est verrouillé."""
         from django.utils import timezone
+
         from apps.users.infrastructure.models import User as UserORM
         try:
             user_orm = UserORM.objects.get(id=user_id)

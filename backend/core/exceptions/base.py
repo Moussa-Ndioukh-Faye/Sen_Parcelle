@@ -8,7 +8,6 @@ la couche présentation les traduit en réponses HTTP.
 
 from rest_framework import status
 
-
 # ══════════════════════════════════════════════════════════════
 # EXCEPTIONS DOMAINE (couche domain/ — 0 dépendance HTTP)
 # ══════════════════════════════════════════════════════════════
@@ -134,9 +133,10 @@ class PaymentFailedException(ApplicationException):
 # core/exceptions/handlers.py
 # ══════════════════════════════════════════════════════════════
 
-from rest_framework.views import exception_handler
-from rest_framework.response import Response
 import logging
+
+from rest_framework.response import Response
+from rest_framework.views import exception_handler
 
 logger = logging.getLogger(__name__)
 

@@ -63,6 +63,16 @@ web/dist/
 web/.angular/
 /test_data/
 
+# Reports / Audit
+backend/.coverage
+bandit-report.json
+mobile/dart-analyze-report.txt
+blockchain/npm-audit-blockchain.json
+web/npm-audit-web.json
+
+# Build output
+mobile/build/
+
 # IDEs
 .vscode/
 .idea/

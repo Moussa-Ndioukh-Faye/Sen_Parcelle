@@ -5,21 +5,21 @@ Use Case : Inscription d'un nouvel utilisateur.
 Orchestre : validation → création → OTP SMS → retour.
 """
 
-import uuid
-import hashlib
 import logging
+import uuid
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 from apps.users.domain.entities import (
-    UserEntity, Email, PhoneNumber, UserRole, KYCStatus,
+    Email,
+    KYCStatus,
+    PhoneNumber,
+    UserEntity,
+    UserRole,
 )
 from apps.users.domain.repositories import IUserRepository
-from core.exceptions.base import (
-    DuplicateEntityException, ValidationException
-)
+from core.exceptions.base import DuplicateEntityException, ValidationException
 
 
 @dataclass

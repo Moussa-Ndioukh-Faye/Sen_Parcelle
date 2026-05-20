@@ -1,0 +1,36 @@
+services:
+  sen_parcelle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sen_parcelle
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:80"
+    volumes:
+      - sen_parcelle_data:/data
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DJANGO_SETTINGS_MODULE=config.settings.single
+      - SQLITE_PATH=/data/db.sqlite3
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:80,http://localhost}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:80}
+      - DEBUG=${DEBUG:-0}
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  sen_parcelle_data:

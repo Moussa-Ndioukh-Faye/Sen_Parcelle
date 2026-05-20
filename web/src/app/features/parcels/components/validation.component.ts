@@ -63,7 +63,7 @@ import { Parcel } from '@core/models';
               <td>{{ p.vendeur_nom ?? '—' }}</td>
               <td><span class="region-tag">{{ p.region }}</span></td>
               <td>{{ p.superficie }} m²</td>
-              <td class="price">{{ formatPrice(p.price) }}</td>
+              <td class="price">{{ formatPrix(p.prix) }}</td>
               <td class="date">{{ formatDate(p.created_at) }}</td>
               <td>
                 <code class="hash" *ngIf="p.document_hash">
@@ -112,7 +112,7 @@ import { Parcel } from '@core/models';
               </div>
               <div class="detail-item">
                 <span class="detail-label">Prix</span>
-                <span class="detail-value price">{{ formatPrice(detailParcel()?.price ?? 0) }}</span>
+                <span class="detail-value price">{{ formatPrix(detailParcel()?.prix ?? 0) }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Type</span>
@@ -168,81 +168,81 @@ import { Parcel } from '@core/models';
   `,
   styles: [`
     .page-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
-    .page-title  { margin: 0; font-size: 22px; font-weight: 800; color: #1E293B; }
+    .page-title  { margin: 0; font-size: 22px; font-weight: 800; color: var(--slate-900); }
     .page-header__badge {
-      background: #D97706; color: #fff;
+      background: var(--amber-600); color: var(--white);
       padding: 4px 12px; border-radius: 20px;
       font-size: 13px; font-weight: 700;
     }
 
     .loading { display: flex; align-items: center; gap: 12px; padding: 40px;
-      justify-content: center; color: #64748B; }
+      justify-content: center; color: var(--slate-500); }
     .spinner {
       width: 24px; height: 24px;
-      border: 2px solid #E2E8F0; border-top-color: #16A34A;
+      border: 2px solid var(--slate-200); border-top-color: var(--green-600);
       border-radius: 50%; animation: spin .7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .empty-state {
       text-align: center; padding: 60px 24px;
-      background: #fff; border-radius: 16px;
+      background: var(--white); border-radius: 16px;
     }
     .empty-state__icon { font-size: 56px; display: block; margin-bottom: 16px; }
-    .empty-state h3 { font-size: 18px; color: #1E293B; margin: 0 0 8px; }
-    .empty-state p  { color: #64748B; margin: 0; }
+    .empty-state h3 { font-size: 18px; color: var(--slate-900); margin: 0 0 8px; }
+    .empty-state p  { color: var(--slate-500); margin: 0; }
 
     .table-card {
-      background: #fff; border-radius: 16px;
+      background: var(--white); border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,.06);
       overflow: auto;
     }
     .table { width: 100%; border-collapse: collapse; min-width: 900px; }
-    .table thead tr { background: #F8FAFC; }
+    .table thead tr { background: var(--slate-50); }
     .table th {
       padding: 12px 16px; text-align: left;
-      font-size: 11px; font-weight: 700; color: #64748B;
+      font-size: 11px; font-weight: 700; color: var(--slate-500);
       text-transform: uppercase; letter-spacing: .5px;
       white-space: nowrap;
     }
     .table td {
-      padding: 14px 16px; border-bottom: 1px solid #F8FAFC;
+      padding: 14px 16px; border-bottom: 1px solid var(--slate-50);
       font-size: 13px; vertical-align: middle;
     }
-    .table__row--selected td { background: #F0FDF4; }
-    .table tbody tr:hover td  { background: #F8FAFC; }
+    .table__row--selected td { background: var(--green-50); }
+    .table tbody tr:hover td  { background: var(--slate-50); }
 
-    .cell-main  { font-weight: 600; color: #1E293B; }
-    .cell-sub   { font-size: 11px; color: #64748B; margin-top: 2px; }
+    .cell-main  { font-weight: 600; color: var(--slate-900); }
+    .cell-sub   { font-size: 11px; color: var(--slate-500); margin-top: 2px; }
     .region-tag {
-      background: #DBEAFE; color: #2563EB;
+      background: var(--blue-50); color: var(--blue-600);
       padding: 3px 10px; border-radius: 20px;
       font-size: 11px; font-weight: 600;
     }
-    .price { font-weight: 700; color: #14532D; }
-    .date  { color: #64748B; }
+    .price { font-weight: 700; color: var(--green-800); }
+    .date  { color: var(--slate-500); }
     .hash  {
       font-family: monospace; font-size: 11px;
-      background: #F1F5F9; padding: 2px 6px; border-radius: 4px; color: #2563EB;
+      background: var(--slate-100); padding: 2px 6px; border-radius: 4px; color: var(--blue-600);
     }
     .hash-full {
       display: block; font-family: monospace; font-size: 11px;
-      background: #F1F5F9; padding: 10px; border-radius: 8px;
-      color: #2563EB; word-break: break-all; margin-top: 6px;
+      background: var(--slate-100); padding: 10px; border-radius: 8px;
+      color: var(--blue-600); word-break: break-all; margin-top: 6px;
     }
-    .no-doc { color: #CBD5E1; }
+    .no-doc { color: var(--slate-300); }
 
     .actions  { display: flex; gap: 6px; align-items: center; }
     .btn { padding: 10px 18px; border-radius: 10px; border: none;
       font-size: 14px; font-weight: 600; cursor: pointer; transition: .15s; }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
     .btn--sm      { padding: 6px 12px; font-size: 12px; }
-    .btn--success { background: #16A34A; color: #fff; }
-    .btn--success:hover:not(:disabled) { background: #14532D; }
-    .btn--danger  { background: #DC2626; color: #fff; }
-    .btn--danger:hover:not(:disabled)  { background: #B91C1C; }
-    .btn--outline { background: transparent; border: 1.5px solid #E2E8F0; color: #64748B; }
-    .btn--outline:hover { border-color: #16A34A; color: #16A34A; }
+    .btn--success { background: var(--green-600); color: var(--white); }
+    .btn--success:hover:not(:disabled) { background: var(--green-800); }
+    .btn--danger  { background: var(--red-600); color: var(--white); }
+    .btn--danger:hover:not(:disabled)  { background: var(--red-700); }
+    .btn--outline { background: transparent; border: 1.5px solid var(--slate-200); color: var(--slate-500); }
+    .btn--outline:hover { border-color: var(--green-600); color: var(--green-600); }
 
     /* Modal */
     .modal-overlay {
@@ -252,48 +252,48 @@ import { Parcel } from '@core/models';
       z-index: 1000; padding: 20px;
     }
     .modal {
-      background: #fff; border-radius: 20px;
+      background: var(--white); border-radius: 20px;
       width: 100%; max-width: 520px;
       box-shadow: 0 24px 80px rgba(0,0,0,.25);
     }
     .modal--sm { max-width: 420px; }
     .modal__header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 24px; border-bottom: 1px solid #F1F5F9;
+      padding: 20px 24px; border-bottom: 1px solid var(--slate-100);
     }
-    .modal__header h3 { margin: 0; font-size: 16px; color: #1E293B; }
+    .modal__header h3 { margin: 0; font-size: 16px; color: var(--slate-900); }
     .modal__close {
       background: none; border: none; font-size: 22px;
-      cursor: pointer; color: #64748B; line-height: 1;
+      cursor: pointer; color: var(--slate-500); line-height: 1;
     }
     .modal__body    { padding: 20px 24px; }
     .modal__footer  {
       display: flex; justify-content: flex-end; gap: 10px;
-      padding: 16px 24px; border-top: 1px solid #F1F5F9;
+      padding: 16px 24px; border-top: 1px solid var(--slate-100);
     }
-    .modal__text    { font-size: 14px; color: #374151; margin: 0 0 12px; }
+    .modal__text    { font-size: 14px; color: var(--slate-700); margin: 0 0 12px; }
     .modal__textarea {
       width: 100%; padding: 10px 14px;
-      border: 1.5px solid #E2E8F0; border-radius: 10px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px;
       font-size: 13px; resize: vertical; outline: none;
       font-family: inherit; box-sizing: border-box;
     }
-    .modal__textarea:focus { border-color: #16A34A; }
+    .modal__textarea:focus { border-color: var(--green-600); }
 
     .detail-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
       margin-bottom: 16px;
     }
     .detail-item  { display: flex; flex-direction: column; gap: 3px; }
-    .detail-label { font-size: 11px; color: #64748B; font-weight: 600;
+    .detail-label { font-size: 11px; color: var(--slate-500); font-weight: 600;
       text-transform: uppercase; letter-spacing: .5px; }
-    .detail-value { font-size: 14px; color: #1E293B; font-weight: 500; }
+    .detail-value { font-size: 14px; color: var(--slate-900); font-weight: 500; }
     .detail-hash  { display: flex; flex-direction: column; }
 
     /* Toast */
     .toast {
       position: fixed; bottom: 24px; right: 24px;
-      background: #16A34A; color: #fff;
+      background: var(--green-600); color: var(--white);
       padding: 12px 20px; border-radius: 12px;
       font-size: 14px; font-weight: 600;
       box-shadow: 0 8px 24px rgba(22,163,74,.35);
@@ -352,9 +352,9 @@ export class ValidationComponent implements OnInit {
     setTimeout(() => this.toast.set(null), 3500);
   }
 
-  formatPrice(price: number): string {
-    if (price >= 1_000_000) return `${(price / 1_000_000).toFixed(0)}M FCFA`;
-    return `${price.toLocaleString()} FCFA`;
+  formatPrix(prix: number): string {
+    if (prix >= 1_000_000) return `${(prix / 1_000_000).toFixed(0)}M FCFA`;
+    return `${prix.toLocaleString()} FCFA`;
   }
   formatDate(d: string): string {
     return new Date(d).toLocaleDateString('fr-SN', { day: '2-digit', month: 'short', year: 'numeric' });

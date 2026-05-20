@@ -36,7 +36,7 @@ export interface Parcel {
   localisation:     string;
   region:           string;
   superficie:       number;
-  price:            number;
+  prix:             number;
   type_terrain:     ParcelType;
   status:           ParcelStatus;
   owner_id:         string;

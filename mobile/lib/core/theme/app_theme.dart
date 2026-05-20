@@ -18,6 +18,27 @@ class AppTheme {
   static const bgLight   = Color(0xFFF5F5F5);
   static const muted     = Color(0xFF757575);
 
+  // ─── Tokens additionnels ───
+  static const surfaceDark  = Color(0xFF0F172A);
+  static const green400     = Color(0xFF4ADE80);
+
+  // ─── Spacing tokens ───
+  static const double space4  = 4;
+  static const double space8  = 8;
+  static const double space12 = 12;
+  static const double space16 = 16;
+  static const double space20 = 20;
+  static const double space24 = 24;
+  static const double space32 = 32;
+  static const double space40 = 40;
+
+  // ─── Radius tokens ───
+  static const double radiusSm = 8;
+  static const double radiusMd = 12;
+  static const double radiusLg = 16;
+  static const double radiusXl = 20;
+  static const double radiusFull = 999;
+
   // ─── Light Theme ───
   static final lightTheme = ThemeData(
     useMaterial3: true,
@@ -28,6 +49,22 @@ class AppTheme {
     textTheme: GoogleFonts.dmSansTextTheme(),
     appBarTheme: AppBarTheme(
       backgroundColor: greenDark,
+      foregroundColor: Colors.white,
+      elevation: 0,
+    ),
+  );
+
+  // ─── Dark Theme ───
+  static final darkTheme = ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: green,
+      brightness: Brightness.dark,
+    ),
+    textTheme: GoogleFonts.dmSansTextTheme(ThemeData.dark().textTheme),
+    scaffoldBackgroundColor: surfaceDark,
+    appBarTheme: AppBarTheme(
+      backgroundColor: surfaceDark,
       foregroundColor: Colors.white,
       elevation: 0,
     ),

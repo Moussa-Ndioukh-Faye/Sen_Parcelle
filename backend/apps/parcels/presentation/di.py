@@ -10,7 +10,6 @@ En production → remplacer par un vrai conteneur IoC (dependency-injector).
 
 from functools import lru_cache
 
-
 # ══════════════════════════════════════════════════════════════
 # SERVICES PARTAGÉS (singletons)
 # ══════════════════════════════════════════════════════════════
@@ -133,8 +132,9 @@ def get_submit_parcel_uc():
 
 
 def get_validate_parcel_uc():
-    from apps.parcels.application.use_cases.submit_parcel import ValidateParcelUseCase
     from celery import current_app as celery_app
+
+    from apps.parcels.application.use_cases.submit_parcel import ValidateParcelUseCase
     return ValidateParcelUseCase(
         parcel_repo=get_parcel_repository(),
         blockchain_service=None,         # Délégué à Celery

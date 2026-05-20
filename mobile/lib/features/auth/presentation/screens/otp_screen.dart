@@ -54,14 +54,14 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vérification')),
-      body: Padding(
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 32),
-            const Text('📱', textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 60)),
+            const Center(child: Icon(Icons.smartphone_outlined, size: 60, color: AppTheme.greenDark)),
             const SizedBox(height: 16),
             Text('Code de vérification',
               textAlign: TextAlign.center,
@@ -114,9 +114,10 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
             TextButton(
               onPressed: () {},
               child: const Text('Renvoyer le code'),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
+      ),
       ),
     );
   }

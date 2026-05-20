@@ -5,13 +5,12 @@ Tests unitaires : TransactionEntity, WaveAdapter, OrangeMoneyAdapter,
 InitiatePaymentUseCase, ConfirmPaymentUseCase
 """
 
-import pytest
 import hashlib
 import hmac
 import json
-from unittest.mock import MagicMock, patch, PropertyMock
-from datetime import datetime
+from unittest.mock import MagicMock, patch
 
+import pytest
 
 # ════════════════════════════════════════════════════════════════
 # FIXTURES
@@ -24,7 +23,7 @@ def mock_parcel():
     parcel.owner_id  = "seller-456"
     parcel.titre     = "Terrain Almadies"
     parcel.region    = "Dakar"
-    parcel.price     = 25_000_000.0
+    parcel.prix     = 25_000_000.0
     parcel.can_be_purchased.return_value = True
     return parcel
 
@@ -75,7 +74,9 @@ class TestTransactionEntity:
 
     def _make_tx(self, status="initiated"):
         from apps.transactions.domain.entities import (
-            TransactionEntity, TransactionStatus, PaymentProvider
+            PaymentProvider,
+            TransactionEntity,
+            TransactionStatus,
         )
         return TransactionEntity(
             id="tx-001",
@@ -310,7 +311,9 @@ class TestConfirmPaymentUseCase:
 
     def _make_tx(self):
         from apps.transactions.domain.entities import (
-            TransactionEntity, TransactionStatus, PaymentProvider
+            PaymentProvider,
+            TransactionEntity,
+            TransactionStatus,
         )
         return TransactionEntity(
             id="tx-001",
@@ -325,9 +328,9 @@ class TestConfirmPaymentUseCase:
 
     def test_webhook_confirme_transaction(self, mock_wave_adapter):
         from apps.transactions.application.use_cases.payment import (
-            ConfirmPaymentInput, ConfirmPaymentUseCase
+            ConfirmPaymentInput,
+            ConfirmPaymentUseCase,
         )
-        from apps.transactions.domain.entities import TransactionStatus
 
         tx_repo = MagicMock()
         tx      = self._make_tx()
@@ -367,7 +370,8 @@ class TestConfirmPaymentUseCase:
 
     def test_signature_invalide_leve_exception(self, mock_wave_adapter):
         from apps.transactions.application.use_cases.payment import (
-            ConfirmPaymentInput, ConfirmPaymentUseCase
+            ConfirmPaymentInput,
+            ConfirmPaymentUseCase,
         )
         from core.exceptions.base import BusinessRuleViolationException
 
@@ -391,10 +395,13 @@ class TestConfirmPaymentUseCase:
 
     def test_transaction_deja_finalisee_retourne_sans_retraiter(self, mock_wave_adapter):
         from apps.transactions.application.use_cases.payment import (
-            ConfirmPaymentInput, ConfirmPaymentUseCase
+            ConfirmPaymentInput,
+            ConfirmPaymentUseCase,
         )
         from apps.transactions.domain.entities import (
-            TransactionEntity, TransactionStatus, PaymentProvider
+            PaymentProvider,
+            TransactionEntity,
+            TransactionStatus,
         )
 
         tx = TransactionEntity(

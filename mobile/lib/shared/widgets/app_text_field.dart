@@ -36,8 +36,25 @@ class AppTextField extends StatelessWidget {
         hintText:     hint,
         prefixIcon:   prefixIcon != null ? Icon(prefixIcon, color: AppTheme.greenDark) : null,
         suffixIcon:   suffixIcon,
-        labelStyle:   const TextStyle(color: Colors.grey),
+        labelStyle:   const TextStyle(color: AppTheme.muted),
         floatingLabelStyle: const TextStyle(color: AppTheme.greenDark),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.green, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.red, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.red, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

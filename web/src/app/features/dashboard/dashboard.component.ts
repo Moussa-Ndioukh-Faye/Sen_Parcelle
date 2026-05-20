@@ -1,7 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-// src/app/features/dashboard/dashboard.component.ts
-// ═══════════════════════════════════════════════════════════════
-
 import {
   Component, inject, OnInit, signal, computed, ChangeDetectionStrategy
 } from '@angular/core';
@@ -17,124 +13,164 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
   imports:          [CommonModule, RouterLink],
   template: `
     <div class="dashboard">
-
-      <!-- ─── Header page ─── -->
       <div class="page-header">
-        <h1 class="page-title">Tableau de bord</h1>
-        <p class="page-subtitle">Vue d'ensemble de Sen_parcelle</p>
+        <div>
+          <h1 class="page-title">Tableau de bord</h1>
+          <p class="page-subtitle">Vue d'ensemble de Sen_parcelle</p>
+        </div>
+        <button class="btn btn--outline btn--sm" (click)="refresh()">
+          <span class="material-icons">refresh</span> Actualiser
+        </button>
       </div>
 
-      <!-- ─── Stats cards ─── -->
-      <div class="stats-grid" *ngIf="stats()">
-        <div class="stat-card stat-card--amber">
-          <div class="stat-card__header">
-            <span class="stat-card__icon material-icons">hourglass_empty</span>
-            <span class="stat-card__trend">↑</span>
-          </div>
-          <div class="stat-card__value">{{ stats()!.parcels.pending }}</div>
-          <div class="stat-card__label">Parcelles en attente</div>
-          <a routerLink="/validation" class="stat-card__link">Valider →</a>
+      @if (isLoading()) {
+        <div class="stats-grid">
+          @for (_ of [1,2,3,4]; track _) {
+            <div class="stat-card stat-card--skeleton">
+              <div class="skeleton" style="width:40px;height:40px;border-radius:12px"></div>
+              <div class="skeleton" style="width:60%;height:28px;margin-top:12px"></div>
+              <div class="skeleton" style="width:40%;height:14px;margin-top:8px"></div>
+            </div>
+          }
         </div>
+      }
 
-        <div class="stat-card stat-card--green">
-          <div class="stat-card__header">
-            <span class="stat-card__icon material-icons">check_circle</span>
+      @if (stats(); as s) {
+        <div class="stats-grid fade-in">
+          <div class="stat-card stat-card--amber">
+            <div class="stat-card__header">
+              <div class="stat-card__icon stat-card__icon--amber">
+                <span class="material-icons">hourglass_empty</span>
+              </div>
+              <span class="stat-card__trend">+{{ s.parcels.pending > 0 ? 3 : 0 }}%</span>
+            </div>
+            <div class="stat-card__value">{{ s.parcels.pending }}</div>
+            <div class="stat-card__label">Parcelles en attente</div>
+            <a routerLink="/validation" class="stat-card__link">Valider <span class="material-icons">arrow_forward</span></a>
           </div>
-          <div class="stat-card__value">{{ stats()!.parcels.certified }}</div>
-          <div class="stat-card__label">Parcelles certifiées</div>
-          <a routerLink="/blockchain" class="stat-card__link">Voir blockchain →</a>
-        </div>
 
-        <div class="stat-card stat-card--blue">
-          <div class="stat-card__header">
-            <span class="stat-card__icon material-icons">person</span>
+          <div class="stat-card stat-card--green">
+            <div class="stat-card__header">
+              <div class="stat-card__icon stat-card__icon--green">
+                <span class="material-icons">check_circle</span>
+              </div>
+              <span class="stat-card__trend">+{{ s.parcels.certified > 0 ? 12 : 0 }}%</span>
+            </div>
+            <div class="stat-card__value">{{ s.parcels.certified }}</div>
+            <div class="stat-card__label">Parcelles certifiées</div>
+            <a routerLink="/blockchain" class="stat-card__link">Voir blockchain <span class="material-icons">arrow_forward</span></a>
           </div>
-          <div class="stat-card__value">{{ stats()!.users.total }}</div>
-          <div class="stat-card__label">Utilisateurs inscrits</div>
-          <div class="stat-card__sub">{{ stats()!.users.pending_kyc }} KYC en attente</div>
-        </div>
 
-        <div class="stat-card stat-card--purple">
-          <div class="stat-card__header">
-            <span class="stat-card__icon material-icons">link</span>
+          <div class="stat-card stat-card--blue">
+            <div class="stat-card__header">
+              <div class="stat-card__icon stat-card__icon--blue">
+                <span class="material-icons">people</span>
+              </div>
+            </div>
+            <div class="stat-card__value">{{ s.users.total }}</div>
+            <div class="stat-card__label">Utilisateurs inscrits</div>
+            <div class="stat-card__sub">{{ s.users.pending_kyc }} KYC en attente</div>
           </div>
-          <div class="stat-card__value">{{ stats()!.blockchain.total_tx }}</div>
-          <div class="stat-card__label">Transactions blockchain</div>
-          <a routerLink="/blockchain" class="stat-card__link">Explorer →</a>
+
+          <div class="stat-card stat-card--purple">
+            <div class="stat-card__header">
+              <div class="stat-card__icon stat-card__icon--purple">
+                <span class="material-icons">link</span>
+              </div>
+            </div>
+            <div class="stat-card__value">{{ s.blockchain.total_tx }}</div>
+            <div class="stat-card__label">Transactions blockchain</div>
+            <a routerLink="/blockchain" class="stat-card__link">Explorer <span class="material-icons">arrow_forward</span></a>
+          </div>
         </div>
-      </div>
+      }
 
-      <!-- ─── Skeleton loading ─── -->
-      <div class="stats-grid" *ngIf="isLoading()">
-        <div class="stat-card skeleton" *ngFor="let _ of [1,2,3,4]"></div>
-      </div>
-
-      <!-- ─── Main grid ─── -->
       <div class="dashboard-grid">
-
-        <!-- Parcelles récentes -->
-        <div class="dashboard-card">
+        <div class="dashboard-card fade-in">
           <div class="dashboard-card__header">
-            <h2 class="dashboard-card__title">Parcelles récentes</h2>
+            <h2 class="dashboard-card__title">
+              <span class="material-icons">home</span> Parcelles récentes
+            </h2>
             <a routerLink="/parcelles" class="dashboard-card__link">Voir tout</a>
           </div>
           <div class="dashboard-card__body">
-            <div class="parcel-item" *ngFor="let p of recentParcels()">
-              <div class="parcel-item__info">
-                <span class="parcel-item__title">{{ p.titre }}</span>
-                <span class="parcel-item__region">{{ p.region }}</span>
+            @for (p of recentParcels(); track p.id) {
+              <div class="parcel-item">
+                <div class="parcel-item__info">
+                  <span class="parcel-item__title">{{ p.titre }}</span>
+                  <span class="parcel-item__region">
+                    <span class="material-icons">location_on</span> {{ p.region }}
+                  </span>
+                </div>
+                <div class="parcel-item__right">
+                  <span class="badge" [ngClass]="getStatusClass(p.status)">
+                    <span class="material-icons" style="font-size:12px">{{ getStatusIcon(p.status) }}</span>
+                    {{ getStatusLabel(p.status) }}
+                  </span>
+                  <span class="parcel-item__price">{{ formatPrix(p.prix) }}</span>
+                </div>
               </div>
-              <div class="parcel-item__right">
-                <span class="badge" [ngClass]="getStatusClass(p.status)">
-                  <span class="material-icons" style="font-size:12px;vertical-align:middle">{{ getStatusIcon(p.status) }}</span>
-                  {{ getStatusLabel(p.status) }}
-                </span>
-                <span class="parcel-item__price">{{ formatPrice(p.price) }}</span>
+            }
+            @empty {
+              <div class="empty-state">
+                <span class="material-icons">inbox</span>
+                <span>Aucune parcelle récente</span>
               </div>
-            </div>
-            <div class="empty-state" *ngIf="!recentParcels().length && !isLoading()">
-              Aucune parcelle récente
-            </div>
+            }
           </div>
         </div>
 
-        <!-- Activité récente -->
-        <div class="dashboard-card">
+        <div class="dashboard-card fade-in">
           <div class="dashboard-card__header">
-            <h2 class="dashboard-card__title">Activité récente</h2>
+            <h2 class="dashboard-card__title">
+              <span class="material-icons">timeline</span> Activité récente
+            </h2>
           </div>
           <div class="dashboard-card__body">
-            <div class="activity-item" *ngFor="let log of recentActivity()">
-              <div class="activity-item__dot"
-                [class.activity-item__dot--green]="log.action.includes('success') || log.action.includes('certified')"
-                [class.activity-item__dot--red]="log.action.includes('failed') || log.action.includes('reject')"
-                [class.activity-item__dot--amber]="log.action.includes('pending') || log.action.includes('submitted')">
-              </div>
-              <div class="activity-item__content">
-                <span class="activity-item__action">
-                  <span class="material-icons" style="font-size:13px;vertical-align:middle">{{ getActionIcon(log.action) }}</span>
-                  {{ getActionLabel(log.action) }}
-                </span>
-                <span class="activity-item__time">{{ formatTime(log.created_at) }}</span>
-              </div>
-            </div>
-            <div class="empty-state" *ngIf="!recentActivity().length && !isLoading()">
-              Aucune activité récente
+            <div class="activity-feed">
+              @for (log of recentActivity(); track log.id) {
+                <div class="activity-item">
+                  <div class="activity-item__line">
+                    <div class="activity-item__dot"
+                      [class.dot--green]="log.action.includes('success') || log.action.includes('certified')"
+                      [class.dot--red]="log.action.includes('failed') || log.action.includes('reject')"
+                      [class.dot--amber]="log.action.includes('pending') || log.action.includes('submitted')">
+                    </div>
+                    @if (!$last) { <div class="activity-item__connector"></div> }
+                  </div>
+                  <div class="activity-item__content">
+                    <span class="activity-item__action">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">{{ getActionIcon(log.action) }}</span>
+                      {{ getActionLabel(log.action) }}
+                    </span>
+                    <span class="activity-item__time">{{ formatTime(log.created_at) }}</span>
+                  </div>
+                </div>
+              }
+              @empty {
+                <div class="empty-state">
+                  <span class="material-icons">inbox</span>
+                  <span>Aucune activité récente</span>
+                </div>
+              }
             </div>
           </div>
         </div>
-
       </div>
     </div>
   `,
   styles: [`
     .dashboard { max-width: 1400px; }
 
-    .page-header { margin-bottom: 24px; }
-    .page-title  { font-size: 24px; font-weight: 800; color: #1E293B; margin: 0 0 4px; }
-    .page-subtitle { font-size: 14px; color: #64748B; margin: 0; }
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-title  { font-size: 24px; font-weight: 800; color: var(--slate-900); margin: 0 0 4px; letter-spacing: -0.5px; }
+    .page-subtitle { font-size: 14px; color: var(--slate-500); margin: 0; }
 
-    /* ── Stats Grid ── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -145,35 +181,82 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
     @media (max-width: 640px)  { .stats-grid { grid-template-columns: 1fr; } }
 
     .stat-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,.06);
-      border-top: 4px solid transparent;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s var(--ease-out);
+      position: relative;
+      overflow: hidden;
     }
-    .stat-card--amber  { border-top-color: #D97706; }
-    .stat-card--green  { border-top-color: #16A34A; }
-    .stat-card--blue   { border-top-color: #2563EB; }
-    .stat-card--purple { border-top-color: #7C3AED; }
-
-    .stat-card__header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .stat-card__icon    { font-size: 24px; }
-    .stat-card__trend   { font-size: 12px; color: #16A34A; font-weight: 600; }
-    .stat-card__value   { font-size: 32px; font-weight: 900; color: #1E293B; margin: 4px 0; }
-    .stat-card__label   { font-size: 13px; color: #64748B; font-weight: 600; margin-bottom: 8px; }
-    .stat-card__sub     { font-size: 12px; color: #D97706; }
-    .stat-card__link    { font-size: 12px; color: #16A34A; font-weight: 600; text-decoration: none; }
-
-    .skeleton {
-      height: 130px;
-      background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-top: none !important;
+    .stat-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
     }
-    @keyframes shimmer { to { background-position: -200% 0; } }
+    .stat-card--skeleton { padding: 22px; }
+    .stat-card--amber  { --accent: var(--amber-500); }
+    .stat-card--green  { --accent: var(--green-500); }
+    .stat-card--blue   { --accent: var(--blue-600); }
+    .stat-card--purple { --accent: var(--purple-600); }
 
-    /* ── Dashboard Grid ── */
+    .stat-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .stat-card__icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .stat-card__icon--amber  { background: var(--amber-50); color: var(--amber-600); }
+    .stat-card__icon--green  { background: var(--green-50); color: var(--green-600); }
+    .stat-card__icon--blue   { background: var(--blue-50); color: var(--blue-600); }
+    .stat-card__icon--purple { background: var(--purple-50); color: var(--purple-600); }
+
+    .stat-card__trend {
+      font-size: 12px;
+      color: var(--green-600);
+      font-weight: 600;
+      background: var(--green-50);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .stat-card__value {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--slate-900);
+      margin: 0 0 4px;
+      letter-spacing: -1px;
+    }
+    .stat-card__label {
+      font-size: 13px;
+      color: var(--slate-500);
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .stat-card__sub {
+      font-size: 12px;
+      color: var(--amber-600);
+      font-weight: 500;
+    }
+    .stat-card__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--accent, var(--green-600));
+      font-weight: 600;
+      text-decoration: none;
+      transition: gap 0.15s;
+    }
+    .stat-card__link:hover { gap: 8px; }
+    .stat-card__link .material-icons { font-size: 14px; }
+
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -182,78 +265,122 @@ import { DashboardStats, AuditLog, Parcel } from '@core/models';
     @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
     .dashboard-card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
       overflow: hidden;
+      transition: box-shadow 0.2s var(--ease-out);
     }
+    .dashboard-card:hover { box-shadow: var(--shadow-md); }
     .dashboard-card__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      border-bottom: 1px solid #F1F5F9;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--slate-100);
     }
-    .dashboard-card__title { font-size: 15px; font-weight: 700; margin: 0; color: #1E293B; }
-    .dashboard-card__link  { font-size: 12px; color: #16A34A; font-weight: 600; text-decoration: none; }
-    .dashboard-card__body  { padding: 8px 0; }
+    .dashboard-card__title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--slate-900);
+    }
+    .dashboard-card__title .material-icons { font-size: 18px; color: var(--green-600); }
+    .dashboard-card__link {
+      font-size: 12px;
+      color: var(--green-600);
+      font-weight: 600;
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .dashboard-card__link:hover { color: var(--green-700); }
+    .dashboard-card__body { padding: 4px 0; }
 
-    /* ── Parcel items ── */
     .parcel-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
-      border-bottom: 1px solid #F8FAFC;
-      transition: .15s;
+      padding: 12px 22px;
+      border-bottom: 1px solid var(--slate-50);
+      transition: all 0.15s;
     }
-    .parcel-item:hover { background: #F8FAFC; }
-    .parcel-item__info  { display: flex; flex-direction: column; gap: 2px; }
-    .parcel-item__title  { font-size: 13px; font-weight: 600; color: #1E293B; }
-    .parcel-item__region { font-size: 12px; color: #64748B; }
-    .parcel-item__right  { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-    .parcel-item__price  { font-size: 13px; font-weight: 700; color: #14532D; }
-
-    /* ── Badges ── */
-    .badge {
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
+    .parcel-item:hover { background: var(--slate-50); padding-left: 26px; }
+    .parcel-item:last-child { border-bottom: none; }
+    .parcel-item__info  { display: flex; flex-direction: column; gap: 3px; }
+    .parcel-item__title  { font-size: 13px; font-weight: 600; color: var(--slate-900); }
+    .parcel-item__region {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 12px;
+      color: var(--slate-500);
     }
-    .badge--pending   { background: #FEF3C7; color: #D97706; }
-    .badge--certified { background: #DCFCE7; color: #16A34A; }
-    .badge--rejected  { background: #FEE2E2; color: #DC2626; }
-    .badge--sold      { background: #DBEAFE; color: #2563EB; }
+    .parcel-item__region .material-icons { font-size: 13px; }
+    .parcel-item__right  { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .parcel-item__price  { font-size: 13px; font-weight: 700; color: var(--green-800); }
 
-    /* ── Activity ── */
+    .activity-feed { padding: 8px 0; }
     .activity-item {
       display: flex;
-      align-items: flex-start;
       gap: 12px;
-      padding: 12px 20px;
-      border-bottom: 1px solid #F8FAFC;
+      padding: 0 22px;
+    }
+    .activity-item__line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 12px;
+      flex-shrink: 0;
+      padding-top: 3px;
     }
     .activity-item__dot {
-      width: 8px; height: 8px;
+      width: 10px; height: 10px;
       border-radius: 50%;
-      background: #94A3B8;
-      margin-top: 4px;
+      background: var(--slate-300);
       flex-shrink: 0;
+      border: 2px solid var(--slate-100);
     }
-    .activity-item__dot--green  { background: #16A34A; }
-    .activity-item__dot--red    { background: #DC2626; }
-    .activity-item__dot--amber  { background: #D97706; }
-    .activity-item__content     { flex: 1; }
-    .activity-item__action      { display: block; font-size: 13px; color: #1E293B; font-weight: 500; }
-    .activity-item__time        { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+    .activity-item__dot.dot--green  { background: var(--green-500); border-color: var(--green-100); }
+    .activity-item__dot.dot--red    { background: var(--red-500); border-color: var(--red-100); }
+    .activity-item__dot.dot--amber  { background: var(--amber-500); border-color: var(--amber-100); }
+
+    .activity-item__connector {
+      width: 2px;
+      flex: 1;
+      background: var(--slate-100);
+      margin: 4px 0;
+    }
+
+    .activity-item__content {
+      flex: 1;
+      padding-bottom: 16px;
+    }
+    .activity-item__action {
+      display: block;
+      font-size: 13px;
+      color: var(--slate-900);
+      font-weight: 500;
+    }
+    .activity-item__time {
+      display: block;
+      font-size: 11px;
+      color: var(--slate-400);
+      margin-top: 3px;
+    }
 
     .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: #94A3B8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 32px;
+      color: var(--slate-400);
       font-size: 13px;
     }
+    .empty-state .material-icons { font-size: 32px; opacity: 0.5; }
   `],
 })
 export class DashboardComponent implements OnInit {
@@ -265,6 +392,16 @@ export class DashboardComponent implements OnInit {
   readonly recentActivity = signal<AuditLog[]>([]);
 
   ngOnInit(): void {
+    this.loadData();
+  }
+
+  private loadData(): void {
+    this.dashboardService.loadDashboard().subscribe();
+    this.dashboardService.getRecentParcels().subscribe(p => this.recentParcels.set(p));
+    this.dashboardService.getRecentActivity().subscribe(a => this.recentActivity.set(a));
+  }
+
+  refresh(): void {
     this.dashboardService.loadDashboard().subscribe();
     this.dashboardService.getRecentParcels().subscribe(p => this.recentParcels.set(p));
     this.dashboardService.getRecentActivity().subscribe(a => this.recentActivity.set(a));
@@ -294,10 +431,10 @@ export class DashboardComponent implements OnInit {
     return map[status] ?? status;
   }
 
-  formatPrice(price: number): string {
-    if (price >= 1_000_000_000) return `${(price / 1_000_000_000).toFixed(1)}Md FCFA`;
-    if (price >= 1_000_000)    return `${(price / 1_000_000).toFixed(0)}M FCFA`;
-    return `${price.toLocaleString()} FCFA`;
+  formatPrix(prix: number): string {
+    if (prix >= 1_000_000_000) return `${(prix / 1_000_000_000).toFixed(1)}Md FCFA`;
+    if (prix >= 1_000_000)    return `${(prix / 1_000_000).toFixed(0)}M FCFA`;
+    return `${prix.toLocaleString()} FCFA`;
   }
 
   getActionIcon(action: string): string {

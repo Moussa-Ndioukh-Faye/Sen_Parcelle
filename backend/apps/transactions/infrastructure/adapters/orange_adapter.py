@@ -6,10 +6,12 @@
 import hashlib
 import hmac
 import logging
+
 import requests
 from django.conf import settings
-from core.exceptions.base import ExternalServiceException
+
 from apps.transactions.domain.entities import IPaymentAdapter
+from core.exceptions.base import ExternalServiceException
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +69,6 @@ class OrangeMoneyAdapter(IPaymentAdapter):
         """Initie un paiement Orange Money."""
         try:
             token = self._get_token()
-            phone_clean = phone.replace("+221", "").replace(" ", "")
 
             payload = {
                 "merchant_key": self._merchant_key,

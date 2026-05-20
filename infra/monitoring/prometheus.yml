@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "sen-parcelle-backend"
+    metrics_path: "/api/health/"
+    static_configs:
+      - targets:
+          - "backend:8000"
+        labels:
+          app: "sen-parcelle"
+          tier: "backend"
+
+  - job_name: "celery"
+    static_configs:
+      - targets:
+          - "celery_worker:8001"
+        labels:
+          app: "sen-parcelle"
+          tier: "celery"
+
+  - job_name: "redis"
+    static_configs:
+      - targets:
+          - "redis:6379"
+        labels:
+          app: "sen-parcelle"
+          tier: "cache"
+
+  - job_name: "postgres"
+    static_configs:
+      - targets:
+          - "db:9187"
+        labels:
+          app: "sen-parcelle"
+          tier: "database"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "alertmanager:9093"
+
+rule_files:
+  - "alerts.yml"

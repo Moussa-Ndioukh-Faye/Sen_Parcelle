@@ -4,7 +4,6 @@
 # ════════════════════════════════════════════════════════════
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from apps.users.domain.entities import UserEntity
 
@@ -17,17 +16,17 @@ class IUserRepository(ABC):
     """
 
     @abstractmethod
-    def get_by_id(self, user_id: str) -> Optional[UserEntity]:
+    def get_by_id(self, user_id: str) -> UserEntity | None:
         """Retourne un utilisateur par ID ou None."""
         ...
 
     @abstractmethod
-    def get_by_email(self, email: str) -> Optional[UserEntity]:
+    def get_by_email(self, email: str) -> UserEntity | None:
         """Retourne un utilisateur par email ou None."""
         ...
 
     @abstractmethod
-    def get_by_phone(self, phone: str) -> Optional[UserEntity]:
+    def get_by_phone(self, phone: str) -> UserEntity | None:
         """Retourne un utilisateur par téléphone ou None."""
         ...
 

@@ -217,7 +217,7 @@ class _UploadView extends StatelessWidget {
           border: Border.all(color: Colors.amber.shade200),
         ),
         child: Row(children: [
-          const Icon(Icons.warning_amber, color: Colors.amber, size: 20),
+          const Icon(Icons.warning_amber, color: AppTheme.amber, size: 20),
           const SizedBox(width: 8),
           const Expanded(child: Text(
             'Vos documents sont chiffrés et stockés de façon sécurisée. '

@@ -10,7 +10,7 @@ class MessagesScreen extends StatelessWidget {
 
   static final _demoMessages = [
     _DemoConv('Aminata Diop', 'Bonjour, le terrain est encore disponible ?',
-      '10:24', 2, Colors.amber),
+      '10:24', 2, AppTheme.amber),
     _DemoConv('Ibrahima Seck', 'D\'accord pour la visite mercredi',
       'Hier', 0, Colors.blue),
     _DemoConv('Fatou Ba', 'Merci pour les informations',
@@ -26,7 +26,8 @@ class MessagesScreen extends StatelessWidget {
           IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () {}),
         ],
       ),
-      body: ListView.separated(
+      body: SafeArea(
+        child: ListView.separated(
         itemCount: _demoMessages.length,
         separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
         itemBuilder: (_, i) {
@@ -66,6 +67,7 @@ class MessagesScreen extends StatelessWidget {
              ),
           );
         },
+      ),
       ),
     );
   }

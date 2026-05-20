@@ -8,9 +8,8 @@ Service OTP (One-Time Password) pour le 2FA Sen_parcelle.
 - Stockage Redis (pas en base → plus rapide, auto-expiration)
 """
 
-import secrets
 import logging
-from datetime import timedelta
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +49,7 @@ class OTPService:
             Le code généré (à envoyer par SMS)
         """
         from django.core.cache import cache
+
         from core.utils.crypto import RateLimitService
 
         # Rate limit : max 3 générations d'OTP par 10 minutes
@@ -98,7 +98,8 @@ class OTPService:
             True si valide, False sinon
         """
         from django.core.cache import cache
-        from core.exceptions.base import InvalidOTPException, BusinessRuleViolationException
+
+        from core.exceptions.base import BusinessRuleViolationException, InvalidOTPException
 
         code_key     = self._cache_key(user_id, purpose, "code")
         attempts_key = self._cache_key(user_id, purpose, "attempts")

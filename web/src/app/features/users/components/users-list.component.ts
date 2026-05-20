@@ -1,9 +1,5 @@
-// src/app/features/users/components/users-list.component.ts
-// ══════════════════════════════════════════════════════════════
-
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { map } from 'rxjs/operators';
 import { UsersService } from '../services/users.service';
 
 @Component({
@@ -13,14 +9,14 @@ import { UsersService } from '../services/users.service';
   template: `
     <div class="users-container">
       <h2>Utilisateurs</h2>
-      @if (users$ | async; as users) {
+      @if (usersService.users(); as users) {
         <div class="users-table">
           <table>
             <thead>
               <tr>
                 <th>Nom</th>
                 <th>Email</th>
-                <th>Rôle</th>
+                <th>Role</th>
                 <th>KYC</th>
               </tr>
             </thead>
@@ -45,13 +41,14 @@ import { UsersService } from '../services/users.service';
     .users-container { padding: 24px; }
     .users-table { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-    th { background-color: #f5f5f5; font-weight: 600; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--slate-200); }
+    th { background-color: var(--slate-50); font-weight: 600; }
   `]
 })
 export class UsersListComponent implements OnInit {
-  private usersService = inject(UsersService);
-  users$ = this.usersService.fetchUsers().pipe(map(res => res.results));
+  readonly usersService = inject(UsersService);
 
-  ngOnInit() {}
+  ngOnInit(): void {
+    this.usersService.fetchUsers().subscribe();
+  }
 }
