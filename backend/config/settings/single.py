@@ -22,6 +22,8 @@ CACHES = {
     }
 }
 
+SILENCED_SYSTEM_CHECKS = ["django_ratelimit.E003", "django_ratelimit.W001"]
+
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_RESULT_BACKEND = "cache+memory://"
