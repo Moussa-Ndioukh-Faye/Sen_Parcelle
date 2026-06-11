@@ -1,0 +1,1 @@
+0 2 * * * root /usr/local/bin/sqlite3 /data/db.sqlite3 ".backup '/data/backups/sen_parcelle_$(date +\%Y\%m\%d\%H\%M\%S).sqlite3'" && find /data/backups -name "*.sqlite3" -mtime +30 -delete
