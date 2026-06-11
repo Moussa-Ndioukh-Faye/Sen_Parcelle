@@ -18,7 +18,7 @@ User = get_user_model();
 if not User.objects.filter(is_superuser=True).exists():
     User.objects.create_superuser(
         'admin@sen-parcelle.sn',
-        '0000000000',
+        '771234567',
         'admin123',
         nom='Admin',
         role='admin'
