@@ -26,17 +26,17 @@ class AppTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller:   controller,
-      obscureText:  obscureText,
+      controller: controller,
+      obscureText: obscureText,
       keyboardType: keyboardType,
-      validator:    validator,
-      style:        const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      validator: validator,
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
-        labelText:    label,
-        hintText:     hint,
-        prefixIcon:   prefixIcon != null ? Icon(prefixIcon, color: AppTheme.greenDark) : null,
-        suffixIcon:   suffixIcon,
-        labelStyle:   const TextStyle(color: AppTheme.muted),
+        labelText: label,
+        hintText: hint,
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppTheme.greenDark) : null,
+        suffixIcon: suffixIcon,
+        labelStyle: const TextStyle(color: AppTheme.muted),
         floatingLabelStyle: const TextStyle(color: AppTheme.greenDark),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

@@ -5,8 +5,8 @@
 
 import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { tap, catchError, map, switchMap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 export interface AuthUser {
@@ -57,10 +57,9 @@ export class AuthService {
     return nom.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   });
 
-  constructor() {
-    // Restaurer la session au démarrage
-    this._restoreSession();
-  }
+  // La session est restaurée à la demande par les guards (ensureSession) :
+  // l'appeler dans le constructeur passait par l'intercepteur JWT, qui dépend
+  // lui-même de ce service, et la requête échouait en déconnectant l'utilisateur.
 
   // ──────────────────────────────────────────────
   // LOGIN
@@ -71,17 +70,24 @@ export class AuthService {
     this._error.set(null);
 
     return this.api.post<LoginResponse>('/auth/login/', payload, false).pipe(
-      tap(response => {
+      switchMap(response => {
         if (response.requires_otp) {
           this._requiresOTP.set(true);
           this._pendingUserId.set(response.user_id ?? null);
           this._pendingUserEmail.set(payload.email);
-        } else if (response.access_token) {
-          this._saveTokens(response);
-          this._loadCurrentUser();
+          return of(response);
         }
-        this._isLoading.set(false);
+        if (response.access_token) {
+          this._saveTokens(response);
+          // Charger le profil AVANT d'émettre : les guards le lisent dès la navigation
+          return this.api.get<AuthUser>('/utilisateurs/moi/').pipe(
+            tap(user => this._user.set(user)),
+            map(() => response),
+          );
+        }
+        return of(response);
       }),
+      tap(() => this._isLoading.set(false)),
       catchError(err => {
         this._error.set(err.message ?? 'Connexion échouée');
         this._isLoading.set(false);
@@ -172,18 +178,19 @@ export class AuthService {
     if (response.role)          localStorage.setItem('user_role',     response.role);
   }
 
-  private _loadCurrentUser(): void {
-    this.api.get<AuthUser>('/utilisateurs/moi/').subscribe({
-      next:  user => this._user.set(user),
-      error: ()   => this.logout(),
-    });
-  }
-
-  private _restoreSession(): void {
+  /**
+   * Garantit que le profil est chargé si un token valide existe
+   * (rechargement de page). Utilisé par les guards de navigation.
+   */
+  ensureSession(): Observable<boolean> {
+    if (this._user()) return of(true);
     const token = this.getAccessToken();
-    if (token && !this.isTokenExpired()) {
-      this._loadCurrentUser();
-    }
+    if (!token || this.isTokenExpired()) return of(false);
+    return this.api.get<AuthUser>('/utilisateurs/moi/').pipe(
+      tap(user => this._user.set(user)),
+      map(() => true),
+      catchError(() => of(false)),
+    );
   }
 }
 

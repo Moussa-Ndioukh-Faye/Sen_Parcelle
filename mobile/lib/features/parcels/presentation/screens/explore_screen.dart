@@ -12,23 +12,24 @@ import 'package:sen_parcelle/features/parcels/presentation/providers/parcel_prov
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
-  @override ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
+  @override
+  ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
 }
 
 class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final _searchCtrl = TextEditingController();
   String? _selectedRegion;
   String? _selectedType;
-  RangeValues _priceRange = const RangeValues(0, 500000000);
+  final RangeValues _priceRange = const RangeValues(0, 500000000);
 
-  static const _regions = ['Dakar','Thiès','Saint-Louis','Ziguinchor','Kaolack'];
-  static const _types   = ['residentiel','commercial','agricole','industriel'];
+  static const _regions = ['Dakar', 'Thiès', 'Saint-Louis', 'Ziguinchor', 'Kaolack'];
+  static const _types = ['residentiel', 'commercial', 'agricole', 'industriel'];
 
   @override
   Widget build(BuildContext context) {
     final params = <String, dynamic>{
       if (_selectedRegion != null) 'region': _selectedRegion,
-      if (_selectedType   != null) 'type_terrain': _selectedType,
+      if (_selectedType != null) 'type_terrain': _selectedType,
       if (_searchCtrl.text.isNotEmpty) 'search': _searchCtrl.text,
       'min_price': _priceRange.start,
       'max_price': _priceRange.end,
@@ -65,11 +66,13 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             itemCount: _regions.length + 1,
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (_, i) {
-              if (i == 0) return FilterChip(
-                label: const Text('Toutes'),
-                selected: _selectedRegion == null,
-                onSelected: (_) => setState(() => _selectedRegion = null),
-              );
+              if (i == 0) {
+                return FilterChip(
+                  label: const Text('Toutes'),
+                  selected: _selectedRegion == null,
+                  onSelected: (_) => setState(() => _selectedRegion = null),
+                );
+              }
               final r = _regions[i - 1];
               return FilterChip(
                 label: Text(r),
@@ -81,7 +84,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         ),
 
         // ─── Résultats ───
-        Expanded(child: parcelsAsync.when(
+        Expanded(
+            child: parcelsAsync.when(
           loading: () => ListView.builder(
             itemCount: 3,
             itemBuilder: (_, __) => const ShimmerCard(height: 200),
@@ -98,15 +102,15 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             ]),
           ),
           data: (r) => r.results.isEmpty
-            ? const Center(child: Text('Aucune parcelle trouvée'))
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: r.results.length,
-                itemBuilder: (ctx, i) => ParcelCard(
-                  parcel: r.results[i],
-                  onTap:  () => ctx.push('/parcelle/${r.results[i].id}'),
+              ? const Center(child: Text('Aucune parcelle trouvée'))
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: r.results.length,
+                  itemBuilder: (ctx, i) => ParcelCard(
+                    parcel: r.results[i],
+                    onTap: () => ctx.push('/parcelle/${r.results[i].id}'),
+                  ),
                 ),
-              ),
         )),
       ]),
     );
@@ -116,28 +120,34 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('Filtres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          const Align(alignment: Alignment.centerLeft,
-            child: Text('Type de terrain', style: TextStyle(fontWeight: FontWeight.w600))),
+          const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Type de terrain', style: TextStyle(fontWeight: FontWeight.w600))),
           const SizedBox(height: 8),
           Wrap(
-            spacing: 8, runSpacing: 8,
-            children: _types.map((t) => FilterChip(
-              label: Text(t),
-              selected: _selectedType == t,
-              onSelected: (_) => setState(() => _selectedType = _selectedType == t ? null : t),
-            )).toList(),
+            spacing: 8,
+            runSpacing: 8,
+            children: _types
+                .map((t) => FilterChip(
+                      label: Text(t),
+                      selected: _selectedType == t,
+                      onSelected: (_) => setState(() => _selectedType = _selectedType == t ? null : t),
+                    ))
+                .toList(),
           ),
           const SizedBox(height: 24),
           GradientButton(
             label: 'Appliquer',
-            onPressed: () { Navigator.pop(context); setState(() {}); },
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {});
+            },
           ),
         ]),
       ),

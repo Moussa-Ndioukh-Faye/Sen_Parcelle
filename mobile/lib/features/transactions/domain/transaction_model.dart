@@ -52,8 +52,7 @@ class InitiatePaymentResponse {
     required this.message,
   });
 
-  factory InitiatePaymentResponse.fromJson(Map<String, dynamic> j) =>
-      InitiatePaymentResponse(
+  factory InitiatePaymentResponse.fromJson(Map<String, dynamic> j) => InitiatePaymentResponse(
         transactionId: j['transaction_id'] as String,
         paymentUrl: j['payment_url'] as String,
         amount: (j['amount'] as num).toDouble(),

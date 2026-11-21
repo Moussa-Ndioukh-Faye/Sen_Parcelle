@@ -13,7 +13,7 @@ void main() {
     });
 
     test('Failure contient l\'erreur', () {
-      final result = Failure<int>(ApiException(code: 'err', message: 'test error'));
+      const result = Failure<int>(ApiException(code: 'err', message: 'test error'));
       expect(result.isSuccess, false);
       expect(result.isFailure, true);
       expect(result.errorOrNull, isA<ApiException>());
@@ -30,7 +30,7 @@ void main() {
     });
 
     test('when failure retourne la valeur par défaut', () {
-      final result = Failure<int>(ApiException(code: 'err', message: 'err'));
+      const result = Failure<int>(ApiException(code: 'err', message: 'err'));
       final transformed = result.when(
         success: (v) => v,
         failure: (e) => -1,
@@ -44,7 +44,7 @@ void main() {
     });
 
     test('dataOrNull retourne null sur failure', () {
-      final result = Failure<int>(ApiException(code: 'err', message: 'err'));
+      const result = Failure<int>(ApiException(code: 'err', message: 'err'));
       expect(result.dataOrNull, isNull);
     });
 
@@ -56,9 +56,9 @@ void main() {
 
     test('safeApiCall retourne Failure quand la fonction échoue', () async {
       final result = await safeApiCall<int>(() async => throw DioException(
-        requestOptions: RequestOptions(path: '/test'),
-        type: DioExceptionType.connectionTimeout,
-      ));
+            requestOptions: RequestOptions(path: '/test'),
+            type: DioExceptionType.connectionTimeout,
+          ));
       expect(result.isFailure, true);
     });
   });

@@ -19,7 +19,7 @@ class TransactionRepository {
     try {
       final response = await _dio.post('/transactions/initier/', data: {
         'parcel_id': parcelId,
-        'provider':  provider,
+        'provider': provider,
       });
       return Success(InitiatePaymentResponse.fromJson(response.data));
     } on DioException catch (e) {
@@ -32,9 +32,7 @@ class TransactionRepository {
   Future<Result<List<TransactionModel>>> fetchMyPurchases() async {
     try {
       final response = await _dio.get('/transactions/mes-achats/');
-      return Success((response.data as List)
-          .map((e) => TransactionModel.fromJson(e))
-          .toList());
+      return Success((response.data as List).map((e) => TransactionModel.fromJson(e)).toList());
     } on DioException catch (e) {
       return Failure(ApiException.fromDioError(e));
     } catch (e) {
@@ -45,9 +43,7 @@ class TransactionRepository {
   Future<Result<List<TransactionModel>>> fetchMySales() async {
     try {
       final response = await _dio.get('/transactions/mes-ventes/');
-      return Success((response.data as List)
-          .map((e) => TransactionModel.fromJson(e))
-          .toList());
+      return Success((response.data as List).map((e) => TransactionModel.fromJson(e)).toList());
     } on DioException catch (e) {
       return Failure(ApiException.fromDioError(e));
     } catch (e) {

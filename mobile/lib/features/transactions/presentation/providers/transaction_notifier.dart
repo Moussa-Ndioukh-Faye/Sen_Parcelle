@@ -70,8 +70,7 @@ final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
   return PaymentRepository(dio);
 });
 
-final transactionNotifierProvider =
-    StateNotifierProvider<TransactionNotifier, TransactionState>((ref) {
+final transactionNotifierProvider = StateNotifierProvider<TransactionNotifier, TransactionState>((ref) {
   final repo = ref.watch(paymentRepositoryProvider);
   return TransactionNotifier(repo);
 });

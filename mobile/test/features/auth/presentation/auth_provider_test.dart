@@ -14,8 +14,11 @@ void main() {
 
   group('isAdmin', () {
     test('devrait être vrai pour admin', () {
-      final user = AuthUser(
-        id: '1', email: 'admin@sn', nom: 'Admin', role: 'admin',
+      const user = AuthUser(
+        id: '1',
+        email: 'admin@sn',
+        nom: 'Admin',
+        role: 'admin',
       );
       expect(user.isAdmin, true);
       expect(user.isVendeur, false);
@@ -23,8 +26,11 @@ void main() {
     });
 
     test('devrait être vrai pour vendeur', () {
-      final user = AuthUser(
-        id: '2', email: 'vendeur@sn', nom: 'Vendeur', role: 'vendeur',
+      const user = AuthUser(
+        id: '2',
+        email: 'vendeur@sn',
+        nom: 'Vendeur',
+        role: 'vendeur',
       );
       expect(user.isAdmin, false);
       expect(user.isVendeur, true);
@@ -32,8 +38,11 @@ void main() {
     });
 
     test('devrait être vrai pour acheteur', () {
-      final user = AuthUser(
-        id: '3', email: 'acheteur@sn', nom: 'Acheteur', role: 'acheteur',
+      const user = AuthUser(
+        id: '3',
+        email: 'acheteur@sn',
+        nom: 'Acheteur',
+        role: 'acheteur',
       );
       expect(user.isAdmin, false);
       expect(user.isVendeur, false);
@@ -43,15 +52,21 @@ void main() {
 
   group('AuthUser.initials', () {
     test('devrait retourner les initiales', () {
-      final user = AuthUser(
-        id: '1', email: 'test@sn', nom: 'Moussa Faye', role: 'admin',
+      const user = AuthUser(
+        id: '1',
+        email: 'test@sn',
+        nom: 'Moussa Faye',
+        role: 'admin',
       );
       expect(user.initials, 'MF');
     });
 
     test('devrait gérer les noms simples', () {
-      final user = AuthUser(
-        id: '1', email: 'test@sn', nom: 'Admin', role: 'admin',
+      const user = AuthUser(
+        id: '1',
+        email: 'test@sn',
+        nom: 'Admin',
+        role: 'admin',
       );
       expect(user.initials, 'A');
     });
@@ -77,8 +92,11 @@ void main() {
     });
 
     test('toJson doit produire le bon format', () {
-      final user = AuthUser(
-        id: '1', email: 'a@sn', nom: 'A', role: 'acheteur',
+      const user = AuthUser(
+        id: '1',
+        email: 'a@sn',
+        nom: 'A',
+        role: 'acheteur',
       );
       final json = user.toJson();
       expect(json['id'], '1');

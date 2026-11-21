@@ -27,28 +27,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
-      final isLoggedIn    = authState.isAuthenticated;
-      final isAuthRoute   = state.matchedLocation.startsWith('/auth');
-      final isSplash      = state.matchedLocation == '/splash';
+      final isLoggedIn = authState.isAuthenticated;
+      final isAuthRoute = state.matchedLocation.startsWith('/auth');
+      final isSplash = state.matchedLocation == '/splash';
 
       if (isSplash) return null;
       if (!isLoggedIn && !isAuthRoute) return '/auth/login';
-      if (isLoggedIn && isAuthRoute)   return '/home';
+      if (isLoggedIn && isAuthRoute) return '/home';
       return null;
     },
     routes: [
-      GoRoute(path: '/splash',   builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/auth/login',    builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/auth/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/auth/register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: '/auth/otp',      builder: (c, s)  => OTPScreen(extra: s.extra as Map<String, dynamic>)),
-
+      GoRoute(path: '/auth/otp', builder: (c, s) => OTPScreen(extra: s.extra as Map<String, dynamic>)),
       ShellRoute(
         builder: (_, __, child) => MainShell(child: child),
         routes: [
-          GoRoute(path: '/home',     builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/explore',  builder: (_, __) => const ExploreScreen()),
+          GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+          GoRoute(path: '/explore', builder: (_, __) => const ExploreScreen()),
           GoRoute(path: '/messages', builder: (_, __) => const MessagesScreen()),
-          GoRoute(path: '/profile',  builder: (_, __) => const ProfileScreen()),
+          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
           GoRoute(
             path: '/parcelle/:id',
             builder: (_, state) => ParcelDetailScreen(id: state.pathParameters['id']!),
@@ -57,8 +56,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/parcelle/:id/certificat',
             builder: (_, state) => CertificatScreen(parcelId: state.pathParameters['id']!),
           ),
-          GoRoute(path: '/publier',  builder: (_, __) => const PublierScreen()),
-          GoRoute(path: '/kyc',      builder: (_, __) => const KYCScreen()),
+          GoRoute(path: '/publier', builder: (_, __) => const PublierScreen()),
+          GoRoute(path: '/kyc', builder: (_, __) => const KYCScreen()),
         ],
       ),
     ],

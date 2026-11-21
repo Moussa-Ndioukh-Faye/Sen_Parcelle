@@ -1,28 +1,29 @@
 import { test, expect } from '@playwright/test';
+import { ADMIN_STATE } from './helpers';
+
+test.use({ storageState: ADMIN_STATE });
 
 test.describe('Blockchain Admin', () => {
   test('affiche le titre de la page blockchain', async ({ page }) => {
     await page.goto('/blockchain');
-    await expect(page.locator('h1')).toContainText('Blockchain');
+    await expect(page.locator('main h1')).toContainText('Blockchain');
   });
 
   test('affiche le vérificateur de certificat', async ({ page }) => {
     await page.goto('/blockchain');
-    await expect(page.locator('input')).toBeVisible();
-    await expect(page.locator('button')).toContainText('Vérifier');
+    await expect(page.locator('main input')).toBeVisible();
+    await expect(page.locator('main button', { hasText: 'Vérifier' })).toBeVisible();
   });
 });
 
 test.describe('Parcelles', () => {
-  test('affiche la liste des parcelles', async ({ page }) => {
+  test('affiche la page des parcelles', async ({ page }) => {
     await page.goto('/parcelles');
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('main h2')).toContainText('Parcelles');
   });
 
-  test('affiche les boutons de filtre', async ({ page }) => {
+  test('affiche la grille des parcelles', async ({ page }) => {
     await page.goto('/parcelles');
-    const buttons = page.locator('button');
-    const count = await buttons.count();
-    expect(count).toBeGreaterThanOrEqual(1);
+    await expect(page.locator('main .parcels-grid')).toBeAttached();
   });
 });

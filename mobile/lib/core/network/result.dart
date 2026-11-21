@@ -19,7 +19,7 @@ extension ResultExtension<T> on Result<T> {
   bool get isSuccess => this is Success<T>;
   bool get isFailure => this is Failure<T>;
 
-  T? get dataOrNull    => isSuccess ? (this as Success<T>).data : null;
+  T? get dataOrNull => isSuccess ? (this as Success<T>).data : null;
   ApiException? get errorOrNull => isFailure ? (this as Failure<T>).error : null;
 
   R when<R>({

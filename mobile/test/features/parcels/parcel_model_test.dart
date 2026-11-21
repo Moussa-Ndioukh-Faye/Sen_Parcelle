@@ -49,10 +49,16 @@ void main() {
 
     test('prixFormate devrait formater en FCFA', () {
       final json = {
-        'id': 'p1', 'titre': 'Test', 'localisation': 'Dakar',
-        'region': 'Dakar', 'superficie': 100, 'prix': 25000000,
-        'type_terrain': 'residentiel', 'statut': 'pending',
-        'vendeur_nom': 'Test', 'date_ajout': '2026-01-01T00:00:00Z',
+        'id': 'p1',
+        'titre': 'Test',
+        'localisation': 'Dakar',
+        'region': 'Dakar',
+        'superficie': 100,
+        'prix': 25000000,
+        'type_terrain': 'residentiel',
+        'statut': 'pending',
+        'vendeur_nom': 'Test',
+        'date_ajout': '2026-01-01T00:00:00Z',
       };
       final parcel = ParcelModel.fromJson(json);
       expect(parcel.prixFormate, contains('25'));
@@ -60,10 +66,16 @@ void main() {
 
     test('isCertified devrait être vrai pour certifiee', () {
       final json = {
-        'id': 'p1', 'titre': 'Test', 'localisation': 'Dakar',
-        'region': 'Dakar', 'superficie': 100, 'prix': 5000000,
-        'type_terrain': 'residentiel', 'statut': 'certifiee',
-        'vendeur_nom': 'T', 'date_ajout': '2026-01-01T00:00:00Z',
+        'id': 'p1',
+        'titre': 'Test',
+        'localisation': 'Dakar',
+        'region': 'Dakar',
+        'superficie': 100,
+        'prix': 5000000,
+        'type_terrain': 'residentiel',
+        'statut': 'certifiee',
+        'vendeur_nom': 'T',
+        'date_ajout': '2026-01-01T00:00:00Z',
       };
       final parcel = ParcelModel.fromJson(json);
       expect(parcel.isCertified, true);
@@ -71,10 +83,16 @@ void main() {
 
     test('isCertified devrait être vrai pour certified', () {
       final json = {
-        'id': 'p1', 'titre': 'Test', 'localisation': 'Dakar',
-        'region': 'Dakar', 'superficie': 100, 'prix': 5000000,
-        'type_terrain': 'residentiel', 'statut': 'certified',
-        'vendeur_nom': 'T', 'date_ajout': '2026-01-01T00:00:00Z',
+        'id': 'p1',
+        'titre': 'Test',
+        'localisation': 'Dakar',
+        'region': 'Dakar',
+        'superficie': 100,
+        'prix': 5000000,
+        'type_terrain': 'residentiel',
+        'statut': 'certified',
+        'vendeur_nom': 'T',
+        'date_ajout': '2026-01-01T00:00:00Z',
       };
       final parcel = ParcelModel.fromJson(json);
       expect(parcel.isCertified, true);
@@ -82,10 +100,16 @@ void main() {
 
     test('isCertified devrait être faux pour pending', () {
       final json = {
-        'id': 'p1', 'titre': 'Test', 'localisation': 'Dakar',
-        'region': 'Dakar', 'superficie': 100, 'prix': 5000000,
-        'type_terrain': 'residentiel', 'statut': 'pending',
-        'vendeur_nom': 'T', 'date_ajout': '2026-01-01T00:00:00Z',
+        'id': 'p1',
+        'titre': 'Test',
+        'localisation': 'Dakar',
+        'region': 'Dakar',
+        'superficie': 100,
+        'prix': 5000000,
+        'type_terrain': 'residentiel',
+        'statut': 'pending',
+        'vendeur_nom': 'T',
+        'date_ajout': '2026-01-01T00:00:00Z',
       };
       final parcel = ParcelModel.fromJson(json);
       expect(parcel.isCertified, false);
@@ -132,7 +156,7 @@ void main() {
       };
       final info = CertificatInfo.fromJson(json);
       expect(info.hashBlockchain, '0x123');
-      expect(info.dateValidation, DateTime(2026, 1, 1, 0, 0, 0, 0, 0));
+      expect(info.dateValidation, DateTime.utc(2026, 1, 1));
     });
   });
 
@@ -142,10 +166,16 @@ void main() {
         'count': 1,
         'results': [
           {
-            'id': 'p1', 'titre': 'Test', 'localisation': 'Dakar',
-            'region': 'Dakar', 'superficie': 100, 'prix': 5000000,
-            'type_terrain': 'residentiel', 'statut': 'pending',
-            'vendeur_nom': 'T', 'date_ajout': '2026-01-01T00:00:00Z',
+            'id': 'p1',
+            'titre': 'Test',
+            'localisation': 'Dakar',
+            'region': 'Dakar',
+            'superficie': 100,
+            'prix': 5000000,
+            'type_terrain': 'residentiel',
+            'statut': 'pending',
+            'vendeur_nom': 'T',
+            'date_ajout': '2026-01-01T00:00:00Z',
           },
         ],
       };
