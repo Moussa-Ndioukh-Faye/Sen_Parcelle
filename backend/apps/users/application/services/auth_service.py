@@ -17,14 +17,14 @@ class AuthService:
     """
 
     MAX_FAILED_ATTEMPTS = 5
-    LOCKOUT_MINUTES     = 30
+    LOCKOUT_MINUTES = 30
 
     def __init__(self, user_repo, jwt_service, otp_service, sms_service, audit_service):
-        self._users  = user_repo
-        self._jwt    = jwt_service
-        self._otp    = otp_service
-        self._sms    = sms_service
-        self._audit  = audit_service
+        self._users = user_repo
+        self._jwt = jwt_service
+        self._otp = otp_service
+        self._sms = sms_service
+        self._audit = audit_service
 
     def change_password(self, user_id: str, old_password: str, new_password: str) -> bool:
         """
@@ -34,9 +34,7 @@ class AuthService:
         from core.exceptions.base import BusinessRuleViolationException, ValidationException
 
         if not self._users.check_password(user_id, old_password):
-            raise BusinessRuleViolationException(
-                "Mot de passe actuel incorrect.", "wrong_password"
-            )
+            raise BusinessRuleViolationException("Mot de passe actuel incorrect.", "wrong_password")
 
         if len(new_password) < 12:
             raise ValidationException({"new_password": "Minimum 12 caractères."})
@@ -70,7 +68,7 @@ class AuthService:
         user_entity = self._users.get_by_id(user_id)
         self._sms.send(
             to=str(user_entity.telephone),
-            message=f"Sen_parcelle : code d'activation 2FA : {otp_code}. Valable 5 minutes."
+            message=f"Sen_parcelle : code d'activation 2FA : {otp_code}. Valable 5 minutes.",
         )
         return {"message": "Code de confirmation envoyé par SMS."}
 
@@ -78,6 +76,7 @@ class AuthService:
         """Confirme le 2FA après vérification OTP."""
         if self._otp.verify(user_id, otp_code, purpose="enable_2fa"):
             from apps.users.infrastructure.models import User as UserORM
+
             UserORM.objects.filter(id=user_id).update(is_2fa_enabled=True)
             self._audit.log(user_id, "2fa_enabled", {})
             return True
@@ -87,9 +86,11 @@ class AuthService:
         """Désactive le 2FA (requiert mot de passe actuel)."""
         if not self._users.check_password(user_id, password):
             from core.exceptions.base import BusinessRuleViolationException
+
             raise BusinessRuleViolationException("Mot de passe incorrect.", "wrong_password")
 
         from apps.users.infrastructure.models import User as UserORM
+
         UserORM.objects.filter(id=user_id).update(is_2fa_enabled=False)
         self._audit.log(user_id, "2fa_disabled", {})
         return True
@@ -101,6 +102,7 @@ class AuthService:
         self._jwt.revoke(access_token_jti)
         if refresh_token:
             from apps.users.application.services.jwt_service import JWTService
+
             jwt_svc = JWTService()
             payload = jwt_svc.validate_refresh(refresh_token)
             if payload:
@@ -120,9 +122,7 @@ class AuthService:
         from apps.users.infrastructure.models import User as UserORM
 
         # Incrément atomique via F() — pas de race condition
-        updated = UserORM.objects.filter(id=user_id).update(
-            failed_attempts=F("failed_attempts") + 1
-        )
+        updated = UserORM.objects.filter(id=user_id).update(failed_attempts=F("failed_attempts") + 1)
         if not updated:
             return
 
@@ -130,16 +130,11 @@ class AuthService:
         user_orm = UserORM.objects.get(id=user_id)
         if user_orm.failed_attempts >= self.MAX_FAILED_ATTEMPTS:
             # Verrouiller (update atomique pour éviter double-lock)
-            UserORM.objects.filter(
-                id=user_id,
-                locked_until__isnull=True
-            ).update(
+            UserORM.objects.filter(id=user_id, locked_until__isnull=True).update(
                 locked_until=timezone.now() + timedelta(minutes=self.LOCKOUT_MINUTES)
             )
             logger.warning(f"Compte verrouillé : user={user_id}")
-            self._audit.log(user_id, "account_locked", {
-                "attempts": user_orm.failed_attempts
-            })
+            self._audit.log(user_id, "account_locked", {"attempts": user_orm.failed_attempts})
             # SMS d'alerte
             try:
                 self._sms.send(
@@ -148,7 +143,7 @@ class AuthService:
                         "⚠️ Sen_parcelle : Votre compte a été temporairement verrouillé "
                         f"suite à {self.MAX_FAILED_ATTEMPTS} tentatives échouées. "
                         f"Réessayez dans {self.LOCKOUT_MINUTES} minutes."
-                    )
+                    ),
                 )
             except Exception:
                 logger.warning(f"Échec d'envoi SMS d'alerte verrouillage user={user_id}")
@@ -158,15 +153,14 @@ class AuthService:
         from django.utils import timezone
 
         from apps.users.infrastructure.models import User as UserORM
+
         try:
             user_orm = UserORM.objects.get(id=user_id)
             if user_orm.locked_until and user_orm.locked_until > timezone.now():
                 return True
             # Déverrouiller automatiquement si le délai est passé
             if user_orm.locked_until and user_orm.locked_until <= timezone.now():
-                UserORM.objects.filter(id=user_id).update(
-                    locked_until=None, failed_attempts=0
-                )
+                UserORM.objects.filter(id=user_id).update(locked_until=None, failed_attempts=0)
         except UserORM.DoesNotExist:
             pass
         return False
@@ -174,4 +168,5 @@ class AuthService:
     def reset_failed_attempts(self, user_id: str):
         """Réinitialise les tentatives après une connexion réussie."""
         from apps.users.infrastructure.models import User as UserORM
+
         UserORM.objects.filter(id=user_id).update(failed_attempts=0, locked_until=None)

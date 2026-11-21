@@ -49,7 +49,8 @@ DATABASES = {
 }
 
 INSTALLED_APPS = [
-    app for app in INSTALLED_APPS  # noqa: F405
+    app
+    for app in INSTALLED_APPS  # noqa: F405
     if app not in ("django.contrib.gis",)
 ]
 
@@ -69,4 +70,3 @@ CACHES = {
     }
 }
 CELERY_TASK_ALWAYS_EAGER = True
-

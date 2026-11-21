@@ -16,16 +16,19 @@ from apps.parcels.presentation.di import (
 @lru_cache(maxsize=1)
 def get_transaction_repository():
     from apps.transactions.infrastructure.models import DjangoTransactionRepository
+
     return DjangoTransactionRepository()
 
 
 def get_payment_factory():
     from apps.transactions.infrastructure.adapters.factory import get_payment_adapter
+
     return get_payment_adapter
 
 
 def get_initiate_payment_uc():
     from apps.transactions.application.use_cases.payment import InitiatePaymentUseCase
+
     return InitiatePaymentUseCase(
         parcel_repo=get_parcel_repository(),
         user_repo=get_user_repository(),
@@ -40,6 +43,7 @@ def get_confirm_payment_uc():
     from celery import current_app as celery_app
 
     from apps.transactions.application.use_cases.payment import ConfirmPaymentUseCase
+
     return ConfirmPaymentUseCase(
         tx_repo=get_transaction_repository(),
         payment_factory=get_payment_factory(),

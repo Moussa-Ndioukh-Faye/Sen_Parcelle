@@ -10,14 +10,16 @@ logger = logging.getLogger(__name__)
 # SERVICE AUDIT
 # ══════════════════════════════════════════════════════════════
 
+
 class AuditService:
     """
     Service d'audit centralisé.
     Utilisé par tous les use cases et services.
     """
 
-    def log(self, user_id: str, action: str, metadata: dict,
-            ip_address: str | None = None, user_agent: str | None = None):
+    def log(
+        self, user_id: str, action: str, metadata: dict, ip_address: str | None = None, user_agent: str | None = None
+    ):
         """
         Enregistre une action dans le journal d'audit.
         Non bloquant : les erreurs d'audit ne doivent pas affecter le flux principal.
@@ -39,10 +41,10 @@ class AuditService:
         logs = AuditLog.objects.filter(user_id=user_id)[:limit]
         return [
             {
-                "action":     log.action,
+                "action": log.action,
                 "created_at": log.created_at.isoformat(),
-                "metadata":   log.metadata,
-                "ip":         log.ip_address,
+                "metadata": log.metadata,
+                "ip": log.ip_address,
             }
             for log in logs
         ]
@@ -52,11 +54,11 @@ class AuditService:
         logs = AuditLog.objects.order_by("-created_at")[:limit]
         return [
             {
-                "action":     log.action,
+                "action": log.action,
                 "created_at": log.created_at.isoformat(),
-                "metadata":   log.metadata,
-                "ip":         log.ip_address,
-                "user_id":    log.user_id,
+                "metadata": log.metadata,
+                "ip": log.ip_address,
+                "user_id": log.user_id,
             }
             for log in logs
         ]
@@ -67,11 +69,9 @@ class AuditService:
         Utilisé par le dashboard admin.
         """
         from datetime import timedelta
+
         since = timezone.now() - timedelta(hours=hours)
-        security_actions = [
-            "login_failed", "account_locked",
-            "password_changed", "2fa_disabled"
-        ]
+        security_actions = ["login_failed", "account_locked", "password_changed", "2fa_disabled"]
         logs = AuditLog.objects.filter(
             action__in=security_actions,
             created_at__gte=since,

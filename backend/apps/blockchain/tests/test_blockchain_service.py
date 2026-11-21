@@ -37,7 +37,10 @@ class TestPolygonAdapter:
         contract = MagicMock()
         register_fn = MagicMock()
         register_fn.build_transaction.return_value = {
-            "from": "0xadmin", "nonce": 1, "gas": 400000, "gasPrice": 20000000000,
+            "from": "0xadmin",
+            "nonce": 1,
+            "gas": 400000,
+            "gasPrice": 20000000000,
         }
         contract.functions.registerParcel.return_value = register_fn
         w3.eth.contract.return_value = contract
@@ -81,7 +84,10 @@ class TestPolygonAdapter:
         contract = MagicMock()
         transfer_fn = MagicMock()
         transfer_fn.build_transaction.return_value = {
-            "from": "0xadmin", "nonce": 2, "gas": 250000, "gasPrice": 20000000000,
+            "from": "0xadmin",
+            "nonce": 2,
+            "gas": 250000,
+            "gasPrice": 20000000000,
         }
         contract.functions.transferOwnership.return_value = transfer_fn
         w3.eth.contract.return_value = contract
@@ -115,7 +121,10 @@ class TestPolygonAdapter:
         w3 = MagicMock()
         contract = MagicMock()
         contract.functions.verifyDocument.return_value.call.return_value = (
-            True, 1, "0xowner", 1700000000,
+            True,
+            1,
+            "0xowner",
+            1700000000,
         )
         w3.eth.contract.return_value = contract
         w3.to_bytes.return_value = b"\x00" * 32
@@ -138,7 +147,10 @@ class TestPolygonAdapter:
         w3 = MagicMock()
         contract = MagicMock()
         contract.functions.verifyDocument.return_value.call.return_value = (
-            False, 0, "0x0000", 0,
+            False,
+            0,
+            "0x0000",
+            0,
         )
         w3.eth.contract.return_value = contract
         w3.to_bytes.return_value = b"\x00" * 32
@@ -158,9 +170,7 @@ class TestBlockchainTasks:
     @patch("apps.blockchain.infrastructure.adapters.polygon_adapter.PolygonAdapter")
     @patch("apps.blockchain.infrastructure.adapters.ipfs_adapter.IPFSAdapter")
     @patch("apps.parcels.infrastructure.models.DjangoParcelRepository")
-    def test_certify_parcel_task(
-        self, MockRepo, MockIPFSAdapter, MockPolygonAdapter, django_user_model
-    ):
+    def test_certify_parcel_task(self, MockRepo, MockIPFSAdapter, MockPolygonAdapter, django_user_model):
         from apps.blockchain.tasks import certify_parcel_on_blockchain
 
         admin = django_user_model.objects.create_user(

@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # MODÈLE AuditLog
 # ══════════════════════════════════════════════════════════════
 
+
 class AuditLog(models.Model):
     """
     Journal d'audit immuable.
@@ -30,47 +31,47 @@ class AuditLog(models.Model):
 
     ACTION_CHOICES = [
         # Auth
-        ("login_success",    "Connexion réussie"),
-        ("login_failed",     "Échec connexion"),
-        ("logout",           "Déconnexion"),
+        ("login_success", "Connexion réussie"),
+        ("login_failed", "Échec connexion"),
+        ("logout", "Déconnexion"),
         ("password_changed", "Mot de passe modifié"),
-        ("2fa_enabled",      "2FA activé"),
-        ("2fa_disabled",     "2FA désactivé"),
-        ("account_locked",   "Compte verrouillé"),
+        ("2fa_enabled", "2FA activé"),
+        ("2fa_disabled", "2FA désactivé"),
+        ("account_locked", "Compte verrouillé"),
         # KYC
-        ("kyc_submitted",    "KYC soumis"),
-        ("kyc_approved",     "KYC approuvé"),
-        ("kyc_rejected",     "KYC rejeté"),
+        ("kyc_submitted", "KYC soumis"),
+        ("kyc_approved", "KYC approuvé"),
+        ("kyc_rejected", "KYC rejeté"),
         # Parcelles
         ("parcel_submitted", "Parcelle soumise"),
-        ("parcel_approved",  "Parcelle validée"),
-        ("parcel_rejected",  "Parcelle rejetée"),
+        ("parcel_approved", "Parcelle validée"),
+        ("parcel_rejected", "Parcelle rejetée"),
         ("parcel_certified", "Parcelle certifiée blockchain"),
         # Transactions
-        ("transaction_initiated",  "Transaction initiée"),
-        ("transaction_completed",  "Transaction complétée"),
-        ("transaction_failed",     "Transaction échouée"),
+        ("transaction_initiated", "Transaction initiée"),
+        ("transaction_completed", "Transaction complétée"),
+        ("transaction_failed", "Transaction échouée"),
         # Admin
-        ("kyc_decision",     "Décision KYC admin"),
-        ("user_suspended",   "Utilisateur suspendu"),
+        ("kyc_decision", "Décision KYC admin"),
+        ("user_suspended", "Utilisateur suspendu"),
     ]
 
-    id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id     = models.UUIDField(db_index=True, null=True, blank=True)
-    action      = models.CharField(max_length=50, choices=ACTION_CHOICES, db_index=True)
-    ip_address  = models.GenericIPAddressField(null=True, blank=True)
-    user_agent  = models.TextField(blank=True)
-    metadata    = models.JSONField(default=dict)       # Données contextuelles
-    created_at  = models.DateTimeField(default=timezone.now, db_index=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user_id = models.UUIDField(db_index=True, null=True, blank=True)
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES, db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict)  # Données contextuelles
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
 
     # Hash d'intégrité : garantit que le log n'a pas été altéré (chaîne avec hash précédent)
     integrity_hash = models.CharField(max_length=64, blank=True)
-    previous_hash  = models.CharField(max_length=64, blank=True)
+    previous_hash = models.CharField(max_length=64, blank=True)
 
     class Meta:
-        db_table  = "audit_logs"
-        ordering  = ["-created_at"]
-        indexes   = [
+        db_table = "audit_logs"
+        ordering = ["-created_at"]
+        indexes = [
             models.Index(fields=["user_id", "action"]),
             models.Index(fields=["action", "created_at"]),
         ]
@@ -87,6 +88,7 @@ class AuditLog(models.Model):
 
     def _compute_hash(self) -> str:
         import hashlib
+
         previous = AuditLog.objects.order_by("-created_at").values_list("integrity_hash", flat=True).first() or ""
         meta_json = json.dumps(self.metadata, sort_keys=True)
         content = f"{previous}:{self.user_id}:{self.action}:{self.created_at}:{meta_json}"

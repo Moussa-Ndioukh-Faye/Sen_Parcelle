@@ -28,24 +28,23 @@ class OrangeMoneyAdapter(IPaymentAdapter):
     4. GET /paymentstatus → vérifier confirmation
     """
 
-    TOKEN_URL   = "https://api.orange.com/oauth/v3/token"
-    BASE_URL    = "https://api.orange.com/orange-money-webpay/sn/v1"
-    TIMEOUT     = 30
+    TOKEN_URL = "https://api.orange.com/oauth/v3/token"
+    BASE_URL = "https://api.orange.com/orange-money-webpay/sn/v1"
+    TIMEOUT = 30
 
     def __init__(self):
-        self._client_id     = settings.ORANGE_MONEY_CLIENT_ID
+        self._client_id = settings.ORANGE_MONEY_CLIENT_ID
         self._client_secret = settings.ORANGE_MONEY_CLIENT_SECRET
-        self._merchant_key  = settings.ORANGE_MONEY_MERCHANT_KEY
-        self._notif_url     = settings.ORANGE_MONEY_NOTIF_URL
-        self._return_url    = settings.ORANGE_MONEY_RETURN_URL
-        self._cancel_url    = settings.ORANGE_MONEY_CANCEL_URL
+        self._merchant_key = settings.ORANGE_MONEY_MERCHANT_KEY
+        self._notif_url = settings.ORANGE_MONEY_NOTIF_URL
+        self._return_url = settings.ORANGE_MONEY_RETURN_URL
+        self._cancel_url = settings.ORANGE_MONEY_CANCEL_URL
 
     def _get_token(self) -> str:
         """OAuth2 : récupère un access token."""
         import base64
-        credentials = base64.b64encode(
-            f"{self._client_id}:{self._client_secret}".encode()
-        ).decode()
+
+        credentials = base64.b64encode(f"{self._client_id}:{self._client_secret}".encode()).decode()
 
         response = requests.post(
             self.TOKEN_URL,
@@ -61,9 +60,9 @@ class OrangeMoneyAdapter(IPaymentAdapter):
 
     def initiate_payment(
         self,
-        amount:      float,
-        phone:       str,
-        reference:   str,
+        amount: float,
+        phone: str,
+        reference: str,
         description: str,
     ) -> dict:
         """Initie un paiement Orange Money."""
@@ -72,14 +71,14 @@ class OrangeMoneyAdapter(IPaymentAdapter):
 
             payload = {
                 "merchant_key": self._merchant_key,
-                "currency":     "OUV",    # Code devise Orange Money SN
-                "order_id":     reference,
-                "amount":       int(amount),
-                "return_url":   self._return_url,
-                "cancel_url":   self._cancel_url,
-                "notif_url":    self._notif_url,
-                "lang":         "fr",
-                "reference":    description,
+                "currency": "OUV",  # Code devise Orange Money SN
+                "order_id": reference,
+                "amount": int(amount),
+                "return_url": self._return_url,
+                "cancel_url": self._cancel_url,
+                "notif_url": self._notif_url,
+                "lang": "fr",
+                "reference": description,
             }
 
             response = requests.post(
@@ -87,7 +86,7 @@ class OrangeMoneyAdapter(IPaymentAdapter):
                 json=payload,
                 headers={
                     "Authorization": f"Bearer {token}",
-                    "Content-Type":  "application/json",
+                    "Content-Type": "application/json",
                 },
                 timeout=self.TIMEOUT,
             )
@@ -98,7 +97,7 @@ class OrangeMoneyAdapter(IPaymentAdapter):
             return {
                 "payment_url": data["payment_url"],
                 "payment_ref": data["pay_token"],
-                "status":      "pending",
+                "status": "pending",
             }
         except requests.RequestException as e:
             logger.error(f"Erreur Orange Money initiate : {e}")
@@ -118,10 +117,10 @@ class OrangeMoneyAdapter(IPaymentAdapter):
             data = response.json()
 
             status_map = {
-                "SUCCESS":  "confirmed",
-                "PENDING":  "pending",
-                "FAILED":   "failed",
-                "EXPIRED":  "failed",
+                "SUCCESS": "confirmed",
+                "PENDING": "pending",
+                "FAILED": "failed",
+                "EXPIRED": "failed",
             }
             return {
                 "status": status_map.get(data.get("status"), "pending"),
@@ -134,7 +133,8 @@ class OrangeMoneyAdapter(IPaymentAdapter):
     def verify_webhook(self, payload: dict, signature: str) -> bool:
         """Vérifie la signature d'un webhook Orange Money."""
         import json
-        data     = json.dumps(payload, sort_keys=True)
+
+        data = json.dumps(payload, sort_keys=True)
         expected = hmac.new(
             self._merchant_key.encode(),
             data.encode(),

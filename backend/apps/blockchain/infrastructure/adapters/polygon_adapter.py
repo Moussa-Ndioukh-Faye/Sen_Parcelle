@@ -3,6 +3,7 @@
 # apps/blockchain/infrastructure/adapters/polygon_adapter.py
 # ══════════════════════════════════════════════════════════════
 
+
 class PolygonAdapter:
     """
     Adapter Web3.py pour interagir avec le smart contract Polygon.
@@ -21,9 +22,16 @@ class PolygonAdapter:
             abi=self._load_abi(),
         )
 
-    def register_parcel(self, parcel_id: str, document_hash: str,
-                        ipfs_hash: str, owner_address: str,
-                        localisation: str, superficie: int, prix: int) -> dict:
+    def register_parcel(
+        self,
+        parcel_id: str,
+        document_hash: str,
+        ipfs_hash: str,
+        owner_address: str,
+        localisation: str,
+        superficie: int,
+        prix: int,
+    ) -> dict:
         """Appelle registerParcel() sur le smart contract."""
         try:
             # Conversion UUID -> uint256
@@ -42,24 +50,27 @@ class PolygonAdapter:
                 localisation,
                 superficie,
                 prix,
-            ).build_transaction({
-                "from":     self._account.address,
-                "nonce":    self._w3.eth.get_transaction_count(self._account.address),
-                "gas":      400_000,
-                "gasPrice": self._w3.eth.gas_price,
-            })
+            ).build_transaction(
+                {
+                    "from": self._account.address,
+                    "nonce": self._w3.eth.get_transaction_count(self._account.address),
+                    "gas": 400_000,
+                    "gasPrice": self._w3.eth.gas_price,
+                }
+            )
 
-            signed  = self._w3.eth.account.sign_transaction(tx, self._account.key)
+            signed = self._w3.eth.account.sign_transaction(tx, self._account.key)
             tx_hash = self._w3.eth.send_raw_transaction(signed.rawTransaction)
             receipt = self._w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
 
             return {
-                "tx_hash":      tx_hash.hex(),
+                "tx_hash": tx_hash.hex(),
                 "block_number": receipt.blockNumber,
-                "gas_used":     receipt.gasUsed,
+                "gas_used": receipt.gasUsed,
             }
         except Exception as e:
             from core.exceptions.base import ExternalServiceException
+
             raise ExternalServiceException("Polygon", str(e))
 
     def transfer_ownership(self, parcel_id: str, new_owner: str, tx_ref: str = "") -> dict:
@@ -67,24 +78,27 @@ class PolygonAdapter:
         try:
             numeric_id = int(parcel_id.replace("-", ""), 16)
             # tx_ref est optionnel, si présent on le convertit en bytes32
-            tx_ref_bytes = self._str_to_bytes32(tx_ref) if tx_ref else b'\x00'*32
+            tx_ref_bytes = self._str_to_bytes32(tx_ref) if tx_ref else b"\x00" * 32
 
             tx = self._contract.functions.transferOwnership(
                 numeric_id,
                 new_owner,
                 tx_ref_bytes,
-            ).build_transaction({
-                "from":     self._account.address,
-                "nonce":    self._w3.eth.get_transaction_count(self._account.address),
-                "gas":      250_000,
-                "gasPrice": self._w3.eth.gas_price,
-            })
-            signed  = self._w3.eth.account.sign_transaction(tx, self._account.key)
+            ).build_transaction(
+                {
+                    "from": self._account.address,
+                    "nonce": self._w3.eth.get_transaction_count(self._account.address),
+                    "gas": 250_000,
+                    "gasPrice": self._w3.eth.gas_price,
+                }
+            )
+            signed = self._w3.eth.account.sign_transaction(tx, self._account.key)
             tx_hash = self._w3.eth.send_raw_transaction(signed.rawTransaction)
             receipt = self._w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
             return {"tx_hash": tx_hash.hex(), "block_number": receipt.blockNumber}
         except Exception as e:
             from core.exceptions.base import ExternalServiceException
+
             raise ExternalServiceException("Polygon", str(e))
 
     def verify_certificate(self, document_hash: str) -> dict:
@@ -92,19 +106,20 @@ class PolygonAdapter:
         doc_hash_bytes = self._w3.to_bytes(hexstr=document_hash)
         result = self._contract.functions.verifyDocument(doc_hash_bytes).call()
         return {
-            "valide":               result[0],
-            "parcel_id":            hex(result[1]),
-            "owner":                result[2],
-            "date_enregistrement":  result[3],
+            "valide": result[0],
+            "parcel_id": hex(result[1]),
+            "owner": result[2],
+            "date_enregistrement": result[3],
         }
 
     def _str_to_bytes32(self, s: str) -> bytes:
         encoded = s.encode("utf-8")[:32]
-        return encoded.ljust(32, b'\x00')
+        return encoded.ljust(32, b"\x00")
 
     def get_owner_address(self, user_id: str) -> str:
         """Retourne l'adresse wallet d'un utilisateur (ou adresse contrat par défaut)."""
         from apps.users.infrastructure.models import User as UserORM
+
         try:
             user = UserORM.objects.get(id=user_id)
             return getattr(user, "wallet_address", self._account.address)
@@ -118,6 +133,7 @@ class PolygonAdapter:
         from pathlib import Path
 
         from django.conf import settings
+
         # Chercher dans plusieurs emplacements possibles
         abi_rel = "blockchain/artifacts/contracts/SenParcelle.sol/SenParcelle.json"
         possible_paths = [
@@ -130,6 +146,5 @@ class PolygonAdapter:
                 with open(abi_path) as f:
                     return json.load(f)["abi"]
         raise FileNotFoundError(
-            f"ABI introuvable. Vérifiez que le contrat est compilé. "
-            f"Cherché dans: {[str(p) for p in possible_paths]}"
+            f"ABI introuvable. Vérifiez que le contrat est compilé. Cherché dans: {[str(p) for p in possible_paths]}"
         )

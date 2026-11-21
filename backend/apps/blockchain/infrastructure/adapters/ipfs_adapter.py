@@ -24,16 +24,16 @@ class IPFSAdapter:
     """
 
     PINATA_BASE = "https://api.pinata.cloud"
-    TIMEOUT     = 30
+    TIMEOUT = 30
 
     def __init__(self):
-        self._jwt       = settings.PINATA_JWT
-        self._gateway   = getattr(settings, "IPFS_GATEWAY", "https://gateway.pinata.cloud/ipfs")
+        self._jwt = settings.PINATA_JWT
+        self._gateway = getattr(settings, "IPFS_GATEWAY", "https://gateway.pinata.cloud/ipfs")
 
     def _headers(self) -> dict:
         return {
             "Authorization": f"Bearer {self._jwt}",
-            "Content-Type":  "application/json",
+            "Content-Type": "application/json",
         }
 
     def pin_metadata(self, metadata: dict) -> str:
@@ -58,8 +58,8 @@ class IPFSAdapter:
             "pinataMetadata": {
                 "name": f"sen-parcelle-{metadata.get('parcel_id', 'unknown')}",
                 "keyvalues": {
-                    "project":  "sen_parcelle",
-                    "type":     "parcel_certificate",
+                    "project": "sen_parcelle",
+                    "type": "parcel_certificate",
                     "parcelId": str(metadata.get("parcel_id", "")),
                 },
             },
@@ -74,7 +74,7 @@ class IPFSAdapter:
             )
             response.raise_for_status()
             data = response.json()
-            cid  = data["IpfsHash"]
+            cid = data["IpfsHash"]
 
             logger.info(f"IPFS pinned : cid={cid} parcel={metadata.get('parcel_id')}")
             return cid

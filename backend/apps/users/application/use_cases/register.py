@@ -25,19 +25,21 @@ from core.exceptions.base import DuplicateEntityException, ValidationException
 @dataclass
 class RegisterInput:
     """DTO d'entrée pour l'inscription."""
-    nom:       str
-    email:     str
+
+    nom: str
+    email: str
     telephone: str
-    password:  str
-    role:      str = "acheteur"
+    password: str
+    role: str = "acheteur"
 
 
 @dataclass
 class RegisterOutput:
     """DTO de sortie après inscription réussie."""
-    user_id:   str
-    message:   str
-    otp_sent:  bool
+
+    user_id: str
+    message: str
+    otp_sent: bool
 
 
 class RegisterUseCase:
@@ -53,13 +55,13 @@ class RegisterUseCase:
 
     def __init__(self, user_repository: IUserRepository, otp_service, sms_service):
         self._users = user_repository
-        self._otp   = otp_service
-        self._sms   = sms_service
+        self._otp = otp_service
+        self._sms = sms_service
 
     def execute(self, data: RegisterInput) -> RegisterOutput:
         # ─── 1. Validation des value objects ───
         try:
-            email     = Email(data.email)
+            email = Email(data.email)
             telephone = PhoneNumber(data.telephone)
         except ValueError as e:
             raise ValidationException({"field": str(e)})
@@ -73,6 +75,7 @@ class RegisterUseCase:
 
         # ─── 3. Validation mot de passe ───
         import re
+
         if len(data.password) < 12:
             raise ValidationException({"password": "Minimum 12 caractères requis."})
         if not re.search(r"[A-Z]", data.password):
@@ -98,6 +101,7 @@ class RegisterUseCase:
 
         # ─── 5. Persistance (via repository) avec transaction ───
         from django.db import transaction
+
         with transaction.atomic():
             saved_user = self._users.save(user_entity)
             # On délègue le hachage du mot de passe à l'infrastructure
@@ -109,7 +113,7 @@ class RegisterUseCase:
             otp_code = self._otp.generate(user_entity.id, purpose="verification")
             self._sms.send(
                 to=str(telephone),
-                message=f"Sen_parcelle : votre code de vérification est {otp_code}. Valable 5 minutes."
+                message=f"Sen_parcelle : votre code de vérification est {otp_code}. Valable 5 minutes.",
             )
             otp_sent = True
         except Exception as e:

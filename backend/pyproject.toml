@@ -6,6 +6,7 @@ build-backend = "poetry.core.masonry.api"
 name = "sen-parcelle-backend"
 version = "1.0.0"
 description = "Plateforme foncière sécurisée — Sénégal"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -73,4 +74,3 @@ docstring-code-format = true
 [tool.coverage.run]
 source = ["."]
 omit = ["*/migrations/*", "*/tests/*", "config/settings/*", "*/manage.py"]
-plugins = ["django_coverage_plugin"]

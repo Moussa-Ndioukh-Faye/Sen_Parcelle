@@ -3,12 +3,14 @@
 # infrastructure/storage/s3.py
 # ══════════════════════════════════════════════════════════════
 
+
 class S3StorageService:
     """Service de stockage AWS S3 pour documents et photos."""
 
     def __init__(self):
         import boto3
         from django.conf import settings
+
         self._client = boto3.client(
             "s3",
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -37,7 +39,7 @@ class S3StorageService:
             Body=content,
             ContentType=content_type,
             ACL="private",
-            ServerSideEncryption="AES256",   # Chiffrement côté serveur
+            ServerSideEncryption="AES256",  # Chiffrement côté serveur
         )
         return key
 

@@ -39,17 +39,20 @@ class TransactionViewSet(viewsets.ViewSet):
         Liste paginée des transactions (admin).
         """
         from apps.transactions.infrastructure.models import Transaction as TxORM
+
         qs = TxORM.objects.all().order_by("-created_at")
         page = int(request.query_params.get("page", 1))
         limit = 20
         start = (page - 1) * limit
-        transactions = [t.to_domain() for t in qs[start:start+limit]]
+        transactions = [t.to_domain() for t in qs[start : start + limit]]
         serializer = TransactionSerializer(transactions, many=True)
-        return Response({
-            "count": qs.count(),
-            "page": page,
-            "results": serializer.data,
-        })
+        return Response(
+            {
+                "count": qs.count(),
+                "page": page,
+                "results": serializer.data,
+            }
+        )
 
     @method_decorator(csrf_exempt)
     @action(detail=False, methods=["post"], url_path="webhook/(?P<provider>[^/.]+)")
@@ -59,44 +62,38 @@ class TransactionViewSet(viewsets.ViewSet):
         Webhook de confirmation de paiement.
         """
         if provider not in ("wave", "orange_money"):
-            return Response(
-                {"error": "Fournisseur inconnu"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Fournisseur inconnu"}, status=status.HTTP_400_BAD_REQUEST)
 
         signature_header = "X-Wave-Signature" if provider == "wave" else "X-OM-Signature"
         signature = request.headers.get(signature_header, "")
 
         if not signature:
-            return Response(
-                {"error": "Signature manquante"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+            return Response({"error": "Signature manquante"}, status=status.HTTP_401_UNAUTHORIZED)
 
         payment_ref = (
-            request.data.get("id") or
-            request.data.get("notif_token") or
-            request.data.get("data", {}).get("id", "")
+            request.data.get("id") or request.data.get("notif_token") or request.data.get("data", {}).get("id", "")
         )
 
         if not payment_ref:
-            return Response(
-                {"error": "Référence de paiement manquante"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Référence de paiement manquante"}, status=status.HTTP_400_BAD_REQUEST)
 
         uc = get_confirm_payment_uc()
-        result = uc.execute(ConfirmPaymentInput(
-            payment_ref=payment_ref,
-            provider=provider,
-            webhook_payload=request.data,
-            signature=signature,
-        ))
+        result = uc.execute(
+            ConfirmPaymentInput(
+                payment_ref=payment_ref,
+                provider=provider,
+                webhook_payload=request.data,
+                signature=signature,
+            )
+        )
 
-        return Response({
-            "status":  result.status,
-            "message": result.message,
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "status": result.status,
+                "message": result.message,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     @method_decorator(ratelimit(key="user", rate="3/m", method="POST", block=True))
     @action(detail=False, methods=["post"], url_path="initier")
@@ -109,19 +106,24 @@ class TransactionViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
 
         uc = get_initiate_payment_uc()
-        result = uc.execute(InitiatePaymentInput(
-            buyer_id=str(request.user.id),
-            parcel_id=str(serializer.validated_data["parcel_id"]),
-            provider=serializer.validated_data["provider"],
-        ))
+        result = uc.execute(
+            InitiatePaymentInput(
+                buyer_id=str(request.user.id),
+                parcel_id=str(serializer.validated_data["parcel_id"]),
+                provider=serializer.validated_data["provider"],
+            )
+        )
 
-        return Response({
-            "transaction_id": result.transaction_id,
-            "payment_url":    result.payment_url,
-            "amount":         result.amount_fcfa,
-            "provider":       result.provider,
-            "message":        result.message,
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "transaction_id": result.transaction_id,
+                "payment_url": result.payment_url,
+                "amount": result.amount_fcfa,
+                "provider": result.provider,
+                "message": result.message,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=False, methods=["get"], url_path="mes-achats")
     def my_purchases(self, request):

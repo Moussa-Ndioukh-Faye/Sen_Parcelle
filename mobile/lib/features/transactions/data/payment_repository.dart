@@ -2,7 +2,6 @@
 // ═════════════════════════════════════════════
 
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sen_parcelle/core/network/result.dart';
 import 'package:sen_parcelle/core/network/api_exception.dart';
 
