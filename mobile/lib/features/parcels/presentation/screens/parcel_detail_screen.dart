@@ -122,7 +122,7 @@ class _ParcelDetailView extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -273,6 +273,7 @@ class _ParcelDetailView extends ConsumerWidget {
           provider: provider,
         );
 
+    if (!context.mounted) return;
     final state = ref.read(transactionNotifierProvider);
     if (state.paymentResponse != null) {
       // Lancer l'URL de paiement

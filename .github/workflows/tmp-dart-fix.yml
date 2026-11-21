@@ -1,0 +1,32 @@
+name: Temporaire - dart fix
+on:
+  push:
+    branches: [fix/flutter-lints]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.0"
+          channel: stable
+      - run: flutter pub get
+      - run: dart fix --apply
+      - run: dart format --line-length 120 lib test >/dev/null || true
+      - name: Analyse
+        run: flutter analyze > analyze.txt 2>&1 || true; cat analyze.txt
+      - name: Tests
+        run: flutter test > tests.txt 2>&1 || true; tail -40 tests.txt
+      - name: Commit
+        run: |
+          rm -f analyze.txt tests.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A .
+          git diff --cached --quiet || { git commit -m "style(mobile): dart fix --apply"; git push; }

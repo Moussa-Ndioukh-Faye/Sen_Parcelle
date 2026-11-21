@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -150,21 +151,21 @@ class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final sanitizedPath = options.path.replaceAll(RegExp(r'token=[^&]+'), 'token=***');
-    print('→ ${options.method} $sanitizedPath');
+    debugPrint('→ ${options.method} $sanitizedPath');
     handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final sanitizedPath = response.requestOptions.path.replaceAll(RegExp(r'token=[^&]+'), 'token=***');
-    print('← ${response.statusCode} $sanitizedPath');
+    debugPrint('← ${response.statusCode} $sanitizedPath');
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final sanitizedPath = err.requestOptions.path.replaceAll(RegExp(r'token=[^&]+'), 'token=***');
-    print('✗ ${err.response?.statusCode} $sanitizedPath: ${err.message}');
+    debugPrint('✗ ${err.response?.statusCode} $sanitizedPath: ${err.message}');
     handler.next(err);
   }
 }
