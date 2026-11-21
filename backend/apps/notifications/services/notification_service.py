@@ -109,6 +109,7 @@ class NotificationService:
         """
         from apps.notifications.models import NotificationLog
         from apps.users.infrastructure.models import User
+
         try:
             user = User.objects.get(id=user_id)
 
@@ -116,16 +117,16 @@ class NotificationService:
             NotificationLog.objects.create(
                 user=user,
                 event=event,
-                channel="sms", # Par défaut pour le moment
+                channel="sms",  # Par défaut pour le moment
                 message=str(data.get("message", f"Nouvel événement: {event}")),
-                metadata=data
+                metadata=data,
             )
 
             msg = f"[NOTIFICATION USER] Event={event} User={user.email} Data={data}"
             logger.info(msg)
 
             # Envoi SMS réel si adapter présent
-            if self.sms_adapter and hasattr(user, 'telephone'):
+            if self.sms_adapter and hasattr(user, "telephone"):
                 self.sms_adapter.send(user.telephone, str(data.get("message", event)))
 
         except User.DoesNotExist:

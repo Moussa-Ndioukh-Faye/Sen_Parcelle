@@ -9,8 +9,8 @@ import logging
 
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import AccessToken
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class JWTServiceAuthentication(BaseAuthentication):
 
             # 3. Récupérer l'utilisateur
             from django.contrib.auth import get_user_model
+
             User = get_user_model()
             try:
                 user = User.objects.get(id=payload["sub"])
@@ -59,13 +60,12 @@ class JWTServiceAuthentication(BaseAuthentication):
             return (user, access_token)
 
         except TokenError as e:
-            raise AuthenticationFailed(
-                f"Token invalide : {e}"
-            ) from e
+            raise AuthenticationFailed(f"Token invalide : {e}") from e
 
     def authenticate_header(self, request):
         return f'Bearer realm="{self.www_authenticate_realm}"'
 
     def _is_blacklisted(self, jti: str) -> bool:
         from django.core.cache import cache
+
         return cache.get(f"jwt:blacklist:{jti}") is not None

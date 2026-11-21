@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 # core/utils/crypto.py
 # ══════════════════════════════════════════════════════════════
 
+
 class CryptoService:
     """Utilitaires cryptographiques pour Sen_parcelle."""
 
@@ -42,12 +43,14 @@ class CryptoService:
         Délégué à Django (set_password / check_password).
         """
         from django.contrib.auth.hashers import check_password
+
         return check_password(password, hashed)
 
     @staticmethod
     def generate_secure_token(length: int = 32) -> str:
         """Génère un token aléatoire sécurisé (pour les URLs de reset)."""
         import secrets
+
         return secrets.token_urlsafe(length)
 
     @staticmethod
@@ -72,6 +75,7 @@ class CryptoService:
 # VALIDATORS SÉNÉGAL
 # core/validators.py
 # ══════════════════════════════════════════════════════════════
+
 
 class SenegalValidators:
     """Validators spécifiques au contexte sénégalais."""
@@ -128,9 +132,20 @@ class SenegalValidators:
         return True, ""
 
     SENEGAL_REGIONS = {
-        "Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Kaolack",
-        "Diourbel", "Louga", "Fatick", "Kolda", "Tambacounda",
-        "Kaffrine", "Matam", "Kédougou", "Sédhiou",
+        "Dakar",
+        "Thiès",
+        "Saint-Louis",
+        "Ziguinchor",
+        "Kaolack",
+        "Diourbel",
+        "Louga",
+        "Fatick",
+        "Kolda",
+        "Tambacounda",
+        "Kaffrine",
+        "Matam",
+        "Kédougou",
+        "Sédhiou",
     }
 
     @classmethod
@@ -142,6 +157,7 @@ class SenegalValidators:
 # SECURITY HEADERS MIDDLEWARE
 # core/security/headers_middleware.py
 # ══════════════════════════════════════════════════════════════
+
 
 class SecurityHeadersMiddleware:
     """
@@ -156,13 +172,13 @@ class SecurityHeadersMiddleware:
         response = self.get_response(request)
 
         # ─── Headers de sécurité ───
-        response["X-Content-Type-Options"]     = "nosniff"
-        response["X-Frame-Options"]            = "DENY"
-        response["X-XSS-Protection"]           = "1; mode=block"
-        response["Referrer-Policy"]            = "strict-origin-when-cross-origin"
-        response["Permissions-Policy"]         = "geolocation=(), microphone=(), camera=()"
-        response["Strict-Transport-Security"]  = "max-age=31536000; includeSubDomains; preload"
-        response["Content-Security-Policy"]    = (
+        response["X-Content-Type-Options"] = "nosniff"
+        response["X-Frame-Options"] = "DENY"
+        response["X-XSS-Protection"] = "1; mode=block"
+        response["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        response["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        response["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self'; "
             "style-src 'self' 'unsafe-inline'; "
@@ -184,6 +200,7 @@ class SecurityHeadersMiddleware:
 # core/security/rate_limit.py
 # ══════════════════════════════════════════════════════════════
 
+
 class RateLimitService:
     """
     Rate limiting Redis avec fenêtre glissante.
@@ -192,6 +209,7 @@ class RateLimitService:
 
     def __init__(self):
         from django.core.cache import cache
+
         self._cache = cache
 
     def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> tuple[bool, int]:
@@ -202,14 +220,15 @@ class RateLimitService:
         Algorithme : fenêtre glissante avec timestamps.
         """
         import time
-        now        = time.time()
+
+        now = time.time()
         window_key = f"rl:{key}"
 
         # Récupérer les timestamps existants
         timestamps = self._cache.get(window_key) or []
 
         # Nettoyer les timestamps hors de la fenêtre
-        cutoff     = now - window_seconds
+        cutoff = now - window_seconds
         timestamps = [t for t in timestamps if t > cutoff]
 
         if len(timestamps) >= max_requests:

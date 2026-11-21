@@ -7,20 +7,21 @@ from apps.users.domain.repositories import IUserRepository
 # UC : Connexion avec 2FA OTP
 # ══════════════════════════════════════════════════════════════
 
+
 @dataclass
 class LoginInput:
-    email:    str
+    email: str
     password: str
-    otp_code: str | None = None    # Requis si is_2fa_enabled
+    otp_code: str | None = None  # Requis si is_2fa_enabled
 
 
 @dataclass
 class LoginOutput:
-    access_token:  str
+    access_token: str
     refresh_token: str
-    user_id:       str
-    role:          str
-    requires_otp:  bool = False       # True → renvoyer avec le code OTP
+    user_id: str
+    role: str
+    requires_otp: bool = False  # True → renvoyer avec le code OTP
 
 
 class LoginUseCase:
@@ -35,15 +36,15 @@ class LoginUseCase:
     5. Logger l'événement d'audit
     """
 
-    def __init__(self, user_repository: IUserRepository,
-                 otp_service, jwt_service, audit_service, sms_service,
-                 auth_service=None):
-        self._users  = user_repository
-        self._otp    = otp_service
-        self._jwt    = jwt_service
-        self._audit  = audit_service
-        self._sms    = sms_service
-        self._auth   = auth_service
+    def __init__(
+        self, user_repository: IUserRepository, otp_service, jwt_service, audit_service, sms_service, auth_service=None
+    ):
+        self._users = user_repository
+        self._otp = otp_service
+        self._jwt = jwt_service
+        self._audit = audit_service
+        self._sms = sms_service
+        self._auth = auth_service
 
     def execute(self, data: LoginInput) -> LoginOutput:
         from core.exceptions.base import BusinessRuleViolationException, InvalidOTPException
@@ -53,31 +54,24 @@ class LoginUseCase:
         if user_entity is None:
             await_sleep = __import__("time").sleep
             await_sleep(0.5)
-            raise BusinessRuleViolationException(
-                "Email ou mot de passe incorrect.", "invalid_credentials"
-            )
+            raise BusinessRuleViolationException("Email ou mot de passe incorrect.", "invalid_credentials")
 
         # ─── 2. Vérifier verrouillage compte ───
         if self._auth and self._auth.is_account_locked(user_entity.id):
             raise BusinessRuleViolationException(
-                "Compte temporairement verrouillé. Réessayez dans 30 minutes.",
-                "account_locked"
+                "Compte temporairement verrouillé. Réessayez dans 30 minutes.", "account_locked"
             )
 
         # ─── 3. Vérifier compte actif ───
         if not user_entity.is_active:
-            raise BusinessRuleViolationException(
-                "Compte désactivé. Contactez le support.", "account_disabled"
-            )
+            raise BusinessRuleViolationException("Compte désactivé. Contactez le support.", "account_disabled")
 
         # ─── 4. Vérifier le mot de passe (via infrastructure) ───
         if not self._users.check_password(user_entity.id, data.password):
             self._audit.log(user_entity.id, "login_failed", {"reason": "bad_password"})
             if self._auth:
                 self._auth.handle_failed_login(user_entity.id)
-            raise BusinessRuleViolationException(
-                "Email ou mot de passe incorrect.", "invalid_credentials"
-            )
+            raise BusinessRuleViolationException("Email ou mot de passe incorrect.", "invalid_credentials")
 
         # ─── 5. Reset failed attempts après succès ───
         if self._auth:
@@ -89,8 +83,7 @@ class LoginUseCase:
                 # Envoyer OTP + demander code
                 otp = self._otp.generate(user_entity.id, purpose="login")
                 self._sms.send(
-                    to=str(user_entity.telephone),
-                    message=f"Sen_parcelle : code de connexion {otp}. Valable 5 minutes."
+                    to=str(user_entity.telephone), message=f"Sen_parcelle : code de connexion {otp}. Valable 5 minutes."
                 )
                 return LoginOutput(
                     access_token="",

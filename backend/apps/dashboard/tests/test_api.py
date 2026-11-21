@@ -15,13 +15,21 @@ class TestHealthAPI:
 class TestAuthAPI:
     def test_login_fails_with_wrong_credentials(self, django_user_model):
         django_user_model.objects.create_user(
-            email="admin@test.sn", telephone="+221771234567",
-            password="SecurePass123!", nom="Admin",
+            email="admin@test.sn",
+            telephone="+221771234567",
+            password="SecurePass123!",
+            nom="Admin",
         )
         client = APIClient()
-        resp = client.post("/api/auth/login/", {
-            "email": "admin@test.sn", "password": "wrongpass",
-        }, format="json", secure=False)
+        resp = client.post(
+            "/api/auth/login/",
+            {
+                "email": "admin@test.sn",
+                "password": "wrongpass",
+            },
+            format="json",
+            secure=False,
+        )
         assert resp.status_code == 422
 
     def test_me_requires_auth(self):
@@ -31,8 +39,10 @@ class TestAuthAPI:
 
     def test_me_returns_profile(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="user@test.sn", telephone="+221771234567",
-            password="test123", nom="Moussa Faye",
+            email="user@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="Moussa Faye",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -59,8 +69,10 @@ class TestParcelAPI:
 
     def test_auth_user_can_list(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="test@test.sn", telephone="+221771234567",
-            password="test123", nom="Test",
+            email="test@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="Test",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -77,8 +89,10 @@ class TestTransactionAPI:
 
     def test_list_returns_empty(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="user@test.sn", telephone="+221771234567",
-            password="test123", nom="User",
+            email="user@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="User",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -94,8 +108,11 @@ class TestDashboardAPI:
 
     def test_dashboard_returns_stats(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="admin@test.sn", telephone="+221771234567",
-            password="test123", nom="Admin", role="admin",
+            email="admin@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="Admin",
+            role="admin",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -116,8 +133,10 @@ class TestBlockchainAPI:
 
     def test_blockchain_info_returns_fallback(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="test@test.sn", telephone="+221771234567",
-            password="test123", nom="Test",
+            email="test@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="Test",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -134,8 +153,10 @@ class TestAuditAPI:
 
     def test_audit_recent_empty(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="user@test.sn", telephone="+221771234567",
-            password="test123", nom="User",
+            email="user@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="User",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -145,8 +166,10 @@ class TestAuditAPI:
 
     def test_audit_security_events(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="user@test.sn", telephone="+221771234567",
-            password="test123", nom="User",
+            email="user@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="User",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -166,10 +189,12 @@ class TestSchemaAPI:
 class TestSecurity:
     def test_rate_limit_config(self):
         from django.conf import settings
+
         drf = settings.REST_FRAMEWORK
         assert "DEFAULT_THROTTLE_CLASSES" in drf
         assert "DEFAULT_THROTTLE_RATES" in drf
 
     def test_cors_config(self):
         from django.conf import settings
+
         assert hasattr(settings, "CORS_ALLOWED_ORIGINS")

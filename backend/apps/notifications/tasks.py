@@ -13,6 +13,7 @@ logger = get_task_logger(__name__)
 def send_sms_async(to: str, message: str):
     """Envoi SMS asynchrone — ne bloque pas la requête HTTP."""
     from apps.users.infrastructure.adapters.sms_adapter import get_sms_adapter
+
     try:
         adapter = get_sms_adapter()
         adapter.send(to=to, message=message)
@@ -73,13 +74,11 @@ def send_daily_admin_report():
     yesterday = timezone.now() - timedelta(days=1)
 
     stats = {
-        "new_users":            User.objects.filter(created_at__gte=yesterday).count(),
-        "new_parcels":          Parcel.objects.filter(created_at__gte=yesterday).count(),
-        "pending_parcels":      Parcel.objects.filter(status="pending").count(),
-        "certified_yesterday":  Parcel.objects.filter(
-                                    certified_at__gte=yesterday, status="certified"
-                                ).count(),
-        "pending_kyc":          User.objects.filter(kyc_status="pending").count(),
+        "new_users": User.objects.filter(created_at__gte=yesterday).count(),
+        "new_parcels": Parcel.objects.filter(created_at__gte=yesterday).count(),
+        "pending_parcels": Parcel.objects.filter(status="pending").count(),
+        "certified_yesterday": Parcel.objects.filter(certified_at__gte=yesterday, status="certified").count(),
+        "pending_kyc": User.objects.filter(kyc_status="pending").count(),
     }
 
     logger.info(f"Rapport quotidien : {stats}")
@@ -87,11 +86,11 @@ def send_daily_admin_report():
     report_message = f"""
     Rapport quotidien Sen_parcelle ({yesterday.date()})
 
-    - Nouveaux utilisateurs : {stats['new_users']}
-    - Nouvelles parcelles soumises : {stats['new_parcels']}
-    - Parcelles certifiées blockchain : {stats['certified_yesterday']}
-    - Parcelles en attente de validation : {stats['pending_parcels']}
-    - Utilisateurs en attente de KYC : {stats['pending_kyc']}
+    - Nouveaux utilisateurs : {stats["new_users"]}
+    - Nouvelles parcelles soumises : {stats["new_parcels"]}
+    - Parcelles certifiées blockchain : {stats["certified_yesterday"]}
+    - Parcelles en attente de validation : {stats["pending_parcels"]}
+    - Utilisateurs en attente de KYC : {stats["pending_kyc"]}
 
     Consultez le dashboard : {settings.FRONTEND_URL}/admin
     """

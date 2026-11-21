@@ -13,9 +13,9 @@ import secrets
 
 logger = logging.getLogger(__name__)
 
-OTP_TTL_SECONDS  = 300   # 5 minutes
-OTP_MAX_ATTEMPTS = 3     # Tentatives max avant invalidation
-OTP_LENGTH       = 6     # Chiffres
+OTP_TTL_SECONDS = 300  # 5 minutes
+OTP_MAX_ATTEMPTS = 3  # Tentatives max avant invalidation
+OTP_LENGTH = 6  # Chiffres
 
 
 class OTPService:
@@ -57,9 +57,9 @@ class OTPService:
         allowed, _ = rl.check_otp(user_id)
         if not allowed:
             from core.exceptions.base import BusinessRuleViolationException
+
             raise BusinessRuleViolationException(
-                "Trop de demandes de code. Réessayez dans 10 minutes.",
-                "otp_rate_limited"
+                "Trop de demandes de code. Réessayez dans 10 minutes.", "otp_rate_limited"
             )
 
         # Générer code cryptographiquement sûr via secrets
@@ -101,7 +101,7 @@ class OTPService:
 
         from core.exceptions.base import BusinessRuleViolationException, InvalidOTPException
 
-        code_key     = self._cache_key(user_id, purpose, "code")
+        code_key = self._cache_key(user_id, purpose, "code")
         attempts_key = self._cache_key(user_id, purpose, "attempts")
 
         stored_code = cache.get(code_key)
@@ -116,21 +116,19 @@ class OTPService:
             # Key expirée entre-temps — invalider OTP
             cache.delete(code_key)
             logger.warning(f"OTP attempts key expiré : user={user_id}")
-            raise BusinessRuleViolationException(
-                "Code expiré. Demandez un nouveau code.", "otp_expired"
-            )
+            raise BusinessRuleViolationException("Code expiré. Demandez un nouveau code.", "otp_expired")
         if attempts > OTP_MAX_ATTEMPTS:
             # Invalider le code
             cache.delete(code_key)
             cache.delete(attempts_key)
             logger.warning(f"OTP bloqué (trop de tentatives) : user={user_id}")
             raise BusinessRuleViolationException(
-                "Trop de tentatives incorrectes. Demandez un nouveau code.",
-                "otp_max_attempts"
+                "Trop de tentatives incorrectes. Demandez un nouveau code.", "otp_max_attempts"
             )
 
         # Vérifier le code (comparaison timing-safe)
         import hmac
+
         if not hmac.compare_digest(str(stored_code), str(code.strip())):
             remaining = OTP_MAX_ATTEMPTS - attempts
             logger.warning(f"OTP incorrect : user={user_id}, tentatives restantes={remaining}")
@@ -145,10 +143,12 @@ class OTPService:
     def invalidate(self, user_id: str, purpose: str = "login"):
         """Invalide manuellement un OTP (ex: après changement de téléphone)."""
         from django.core.cache import cache
+
         cache.delete(self._cache_key(user_id, purpose, "code"))
         cache.delete(self._cache_key(user_id, purpose, "attempts"))
 
     def is_pending(self, user_id: str, purpose: str = "login") -> bool:
         """Vérifie si un OTP est en attente pour cet utilisateur."""
         from django.core.cache import cache
+
         return cache.get(self._cache_key(user_id, purpose, "code")) is not None

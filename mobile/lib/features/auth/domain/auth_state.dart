@@ -19,9 +19,8 @@ class AuthState {
         user = null,
         error = null;
 
-  const AuthState.authenticated({required AuthUser user})
+  const AuthState.authenticated({required AuthUser this.user})
       : status = AuthStatus.authenticated,
-        user = user,
         error = null;
 
   const AuthState.loading()

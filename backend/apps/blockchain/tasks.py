@@ -8,10 +8,11 @@ from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
 
+
 @shared_task(
     bind=True,
     max_retries=3,
-    default_retry_delay=60,   # Retry après 60s
+    default_retry_delay=60,  # Retry après 60s
     name="blockchain.certify_parcel",
 )
 def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
@@ -32,7 +33,7 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
 
         # ─── Charger la parcelle ───
         parcel_repo = DjangoParcelRepository()
-        parcel      = parcel_repo.get_by_id(parcel_id)
+        parcel = parcel_repo.get_by_id(parcel_id)
 
         if parcel is None:
             logger.error(f"Parcelle introuvable : {parcel_id}")
@@ -43,22 +44,24 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
             return {"success": False, "error": "Déjà certifiée"}
 
         # ─── Upload sur IPFS ───
-        ipfs   = IPFSAdapter()
-        ipfs_hash = ipfs.pin_metadata({
-            "parcel_id":      parcel_id,
-            "document_hash":  parcel.document_hash,
-            "titre":          parcel.titre,
-            "region":         parcel.region,
-            "superficie":     parcel.superficie,
-            "prix":           parcel.prix,
-            "localisation":   parcel.localisation,
-            "type_terrain":   parcel.type_terrain.value,
-            "owner_id":       parcel.owner_id,
-        })
+        ipfs = IPFSAdapter()
+        ipfs_hash = ipfs.pin_metadata(
+            {
+                "parcel_id": parcel_id,
+                "document_hash": parcel.document_hash,
+                "titre": parcel.titre,
+                "region": parcel.region,
+                "superficie": parcel.superficie,
+                "prix": parcel.prix,
+                "localisation": parcel.localisation,
+                "type_terrain": parcel.type_terrain.value,
+                "owner_id": parcel.owner_id,
+            }
+        )
         logger.info(f"IPFS hash : {ipfs_hash}")
 
         # ─── Enregistrer sur Polygon ───
-        polygon   = PolygonAdapter()
+        polygon = PolygonAdapter()
         tx_result = polygon.register_parcel(
             parcel_id=parcel_id,
             document_hash=parcel.document_hash,
@@ -88,10 +91,10 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
             user_id=parcel.owner_id,
             event="parcel_certified",
             data={
-                "parcel_id":   parcel_id,
-                "titre":       parcel.titre,
-                "tx_hash":     tx_result["tx_hash"],
-            }
+                "parcel_id": parcel_id,
+                "titre": parcel.titre,
+                "tx_hash": tx_result["tx_hash"],
+            },
         )
 
         # ─── Audit ───
@@ -99,10 +102,10 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
             user_id=admin_id,
             action="parcel_certified",
             metadata={
-                "parcel_id":  parcel_id,
-                "tx_hash":    tx_result["tx_hash"],
-                "ipfs_hash":  ipfs_hash,
-            }
+                "parcel_id": parcel_id,
+                "tx_hash": tx_result["tx_hash"],
+                "ipfs_hash": ipfs_hash,
+            },
         )
 
         logger.info(f"✅ Parcelle certifiée : {parcel_id} → {tx_result['tx_hash']}")
@@ -114,15 +117,8 @@ def certify_parcel_on_blockchain(self, parcel_id: str, admin_id: str):
         raise self.retry(exc=exc)
 
 
-@shared_task(
-    bind=True,
-    max_retries=3,
-    default_retry_delay=60,
-    name="blockchain.transfer_ownership"
-)
-def transfer_ownership_on_blockchain(
-    self, parcel_id: str, seller_id: str, buyer_id: str, transaction_id: str
-):
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name="blockchain.transfer_ownership")
+def transfer_ownership_on_blockchain(self, parcel_id: str, seller_id: str, buyer_id: str, transaction_id: str):
     """
     Tâche Celery : transfère la propriété d'une parcelle sur Polygon.
     Déclenchée après confirmation du paiement.
@@ -156,7 +152,7 @@ def transfer_ownership_on_blockchain(
 
         # ─── Notifier acheteur et vendeur ───
         notify = NotificationService()
-        notify.notify_user(buyer_id,  "ownership_transferred", {"parcel_id": parcel_id, "role": "buyer"})
+        notify.notify_user(buyer_id, "ownership_transferred", {"parcel_id": parcel_id, "role": "buyer"})
         notify.notify_user(seller_id, "ownership_transferred", {"parcel_id": parcel_id, "role": "seller"})
 
         return {"success": True, "tx_hash": tx_result["tx_hash"]}
