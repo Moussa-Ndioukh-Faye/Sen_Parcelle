@@ -12,8 +12,10 @@ class TestNotificationsAPI:
 
     def test_notifications_preferences(self, django_user_model):
         user = django_user_model.objects.create_user(
-            email="user@test.sn", telephone="+221771234567",
-            password="test123", nom="User",
+            email="user@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="User",
         )
         client = APIClient()
         client.force_authenticate(user=user)
@@ -43,18 +45,22 @@ class TestSecurityHeaders:
     @pytest.fixture(autouse=True)
     def _auth(self, django_user_model):
         self.user = django_user_model.objects.create_user(
-            email="admin@test.sn", telephone="+221771234567",
-            password="test123", nom="Admin",
+            email="admin@test.sn",
+            telephone="+221771234567",
+            password="test123",
+            nom="Admin",
         )
 
     def test_security_middleware_active(self):
         from django.conf import settings
+
         middleware = settings.MIDDLEWARE
         names = [m.split(".")[-1] for m in middleware]
         assert "SecurityMiddleware" in names or "SecurityHeadersMiddleware" in names
 
     def test_cors_middleware_active(self):
         from django.conf import settings
+
         middleware = settings.MIDDLEWARE
         names = [m.split(".")[-1] for m in middleware]
         assert "CorsMiddleware" in names or "CorsMiddleware" in str(middleware)

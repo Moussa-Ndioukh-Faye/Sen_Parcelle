@@ -18,19 +18,19 @@ class DjangoUserRepository(IUserRepository):
 
     def get_by_id(self, user_id: str) -> UserEntity | None:
         try:
-            return User.objects.select_related('kyc_verified_by').get(id=user_id).to_domain()
+            return User.objects.select_related("kyc_verified_by").get(id=user_id).to_domain()
         except User.DoesNotExist:
             return None
 
     def get_by_email(self, email: str) -> UserEntity | None:
         try:
-            return User.objects.select_related('kyc_verified_by').get(email__iexact=email).to_domain()
+            return User.objects.select_related("kyc_verified_by").get(email__iexact=email).to_domain()
         except User.DoesNotExist:
             return None
 
     def get_by_phone(self, phone: str) -> UserEntity | None:
         try:
-            return User.objects.select_related('kyc_verified_by').get(telephone=phone).to_domain()
+            return User.objects.select_related("kyc_verified_by").get(telephone=phone).to_domain()
         except User.DoesNotExist:
             return None
 
@@ -38,14 +38,14 @@ class DjangoUserRepository(IUserRepository):
         user, _ = User.objects.update_or_create(
             id=entity.id,
             defaults={
-                "nom":           entity.nom,
-                "email":         str(entity.email),
-                "telephone":     str(entity.telephone),
-                "role":          entity.role.value,
-                "kyc_status":    entity.kyc_status.value,
+                "nom": entity.nom,
+                "email": str(entity.email),
+                "telephone": str(entity.telephone),
+                "role": entity.role.value,
+                "kyc_status": entity.kyc_status.value,
                 "is_2fa_enabled": entity.is_2fa_enabled,
-                "is_active":     entity.is_active,
-            }
+                "is_active": entity.is_active,
+            },
         )
         return user.to_domain()
 

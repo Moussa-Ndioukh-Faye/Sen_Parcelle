@@ -11,36 +11,37 @@ from enum import StrEnum
 
 
 class TransactionStatus(StrEnum):
-    INITIATED   = "initiated"
-    PENDING     = "pending"       # Paiement initié, en attente
-    CONFIRMED   = "confirmed"     # Paiement confirmé par provider
-    COMPLETED   = "completed"     # Propriété transférée blockchain
-    FAILED      = "failed"
-    CANCELLED   = "cancelled"
-    REFUNDED    = "refunded"
+    INITIATED = "initiated"
+    PENDING = "pending"  # Paiement initié, en attente
+    CONFIRMED = "confirmed"  # Paiement confirmé par provider
+    COMPLETED = "completed"  # Propriété transférée blockchain
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    REFUNDED = "refunded"
 
 
 class PaymentProvider(StrEnum):
-    WAVE         = "wave"
+    WAVE = "wave"
     ORANGE_MONEY = "orange_money"
 
 
 @dataclass
 class TransactionEntity:
     """Entité Transaction — règles métier."""
-    id:               str
-    parcel_id:        str
-    buyer_id:         str
-    seller_id:        str
-    amount_fcfa:      float
-    provider:         PaymentProvider
-    status:           TransactionStatus   = TransactionStatus.INITIATED
-    payment_ref:      str | None       = None   # Ref. Wave/OM
-    blockchain_tx:    str | None       = None   # TX Polygon
-    created_at:       datetime | None  = None
-    confirmed_at:     datetime | None  = None
-    completed_at:     datetime | None  = None
-    failure_reason:   str | None       = None
+
+    id: str
+    parcel_id: str
+    buyer_id: str
+    seller_id: str
+    amount_fcfa: float
+    provider: PaymentProvider
+    status: TransactionStatus = TransactionStatus.INITIATED
+    payment_ref: str | None = None  # Ref. Wave/OM
+    blockchain_tx: str | None = None  # TX Polygon
+    created_at: datetime | None = None
+    confirmed_at: datetime | None = None
+    completed_at: datetime | None = None
+    failure_reason: str | None = None
 
     # ─── Règles métier ───
 
@@ -60,6 +61,7 @@ class TransactionEntity:
 
     def confirm_payment(self, payment_ref: str) -> "TransactionEntity":
         from dataclasses import replace
+
         return replace(
             self,
             status=TransactionStatus.CONFIRMED,
@@ -69,6 +71,7 @@ class TransactionEntity:
 
     def complete(self, blockchain_tx: str) -> "TransactionEntity":
         from dataclasses import replace
+
         return replace(
             self,
             status=TransactionStatus.COMPLETED,
@@ -78,6 +81,7 @@ class TransactionEntity:
 
     def fail(self, reason: str) -> "TransactionEntity":
         from dataclasses import replace
+
         return replace(self, status=TransactionStatus.FAILED, failure_reason=reason)
 
 
@@ -94,9 +98,9 @@ class IPaymentAdapter(ABC):
     @abstractmethod
     def initiate_payment(
         self,
-        amount:      float,
-        phone:       str,
-        reference:   str,
+        amount: float,
+        phone: str,
+        reference: str,
         description: str,
     ) -> dict:
         """

@@ -28,26 +28,26 @@ class WaveAdapter(IPaymentAdapter):
     4. Vérifier signature HMAC
     """
 
-    BASE_URL  = "https://api.wave.com/v1"
-    TIMEOUT   = 30
+    BASE_URL = "https://api.wave.com/v1"
+    TIMEOUT = 30
 
     def __init__(self):
-        self._api_key    = settings.WAVE_API_KEY
+        self._api_key = settings.WAVE_API_KEY
         self._secret_key = settings.WAVE_SECRET_KEY
-        self._currency   = "XOF"   # Franc CFA
+        self._currency = "XOF"  # Franc CFA
 
     def _headers(self) -> dict:
         return {
             "Authorization": f"Bearer {self._api_key}",
-            "Content-Type":  "application/json",
-            "X-Currency":    self._currency,
+            "Content-Type": "application/json",
+            "X-Currency": self._currency,
         }
 
     def initiate_payment(
         self,
-        amount:      float,
-        phone:       str,
-        reference:   str,
+        amount: float,
+        phone: str,
+        reference: str,
         description: str,
     ) -> dict:
         """
@@ -55,11 +55,11 @@ class WaveAdapter(IPaymentAdapter):
         Retourne l'URL de paiement.
         """
         payload = {
-            "currency":          self._currency,
-            "amount":            str(int(amount)),
-            "client_reference":  reference,
-            "success_url":       f"{settings.FRONTEND_URL}/paiement/success?ref={reference}",
-            "error_url":         f"{settings.FRONTEND_URL}/paiement/error?ref={reference}",
+            "currency": self._currency,
+            "amount": str(int(amount)),
+            "client_reference": reference,
+            "success_url": f"{settings.FRONTEND_URL}/paiement/success?ref={reference}",
+            "error_url": f"{settings.FRONTEND_URL}/paiement/error?ref={reference}",
             "restrict_payer_mobile": phone.replace("+221", "").replace(" ", ""),
         }
 
@@ -77,8 +77,8 @@ class WaveAdapter(IPaymentAdapter):
             return {
                 "payment_url": data["wave_launch_url"],
                 "payment_ref": data["id"],
-                "status":      "pending",
-                "expires_at":  data.get("when_expires"),
+                "status": "pending",
+                "expires_at": data.get("when_expires"),
             }
 
         except requests.RequestException as e:
@@ -98,16 +98,16 @@ class WaveAdapter(IPaymentAdapter):
 
             status_map = {
                 "processing": "pending",
-                "succeeded":  "confirmed",
-                "failed":     "failed",
-                "cancelled":  "cancelled",
+                "succeeded": "confirmed",
+                "failed": "failed",
+                "cancelled": "cancelled",
             }
 
             return {
-                "status":   status_map.get(data.get("payment_status"), "pending"),
-                "amount":   float(data.get("amount", 0)),
-                "paid_at":  data.get("when_completed"),
-                "payer":    data.get("client", {}).get("mobile", ""),
+                "status": status_map.get(data.get("payment_status"), "pending"),
+                "amount": float(data.get("amount", 0)),
+                "paid_at": data.get("when_completed"),
+                "payer": data.get("client", {}).get("mobile", ""),
             }
         except requests.RequestException as e:
             raise ExternalServiceException("Wave", str(e))
@@ -117,7 +117,8 @@ class WaveAdapter(IPaymentAdapter):
         Vérifie la signature HMAC-SHA256 du webhook Wave.
         """
         import json
-        body     = json.dumps(payload, separators=(',', ':'), sort_keys=True)
+
+        body = json.dumps(payload, separators=(",", ":"), sort_keys=True)
         expected = hmac.new(
             self._secret_key.encode(),
             body.encode(),

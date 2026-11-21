@@ -13,21 +13,23 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CertificationResult:
     """Résultat d'une certification blockchain."""
-    tx_hash:       str
-    ipfs_hash:     str
-    block_number:  int
-    gas_used:      int
+
+    tx_hash: str
+    ipfs_hash: str
+    block_number: int
+    gas_used: int
     contract_address: str
 
 
 @dataclass
 class VerificationResult:
     """Résultat d'une vérification de certificat."""
-    is_valid:       bool
-    parcel_id:      int | None
-    owner_address:  str | None
-    registered_at:  int | None   # timestamp
-    message:        str
+
+    is_valid: bool
+    parcel_id: int | None
+    owner_address: str | None
+    registered_at: int | None  # timestamp
+    message: str
 
 
 class BlockchainService:
@@ -38,7 +40,7 @@ class BlockchainService:
 
     def __init__(self, polygon_adapter, ipfs_adapter):
         self._polygon = polygon_adapter
-        self._ipfs    = ipfs_adapter
+        self._ipfs = ipfs_adapter
 
     def certify_parcel(self, parcel, admin_wallet: str) -> CertificationResult:
         """
@@ -62,19 +64,19 @@ class BlockchainService:
         # Convertir en bytes32 pour Solidity
         doc_hash_bytes32 = bytes.fromhex(document_hash_hex.replace("0x", ""))
         if len(doc_hash_bytes32) < 32:
-            doc_hash_bytes32 = doc_hash_bytes32.ljust(32, b'\x00')
+            doc_hash_bytes32 = doc_hash_bytes32.ljust(32, b"\x00")
 
         # ─── 2. Upload IPFS ───
         metadata = {
-            "parcel_id":     parcel.id,
+            "parcel_id": parcel.id,
             "document_hash": document_hash_hex,
-            "titre":         parcel.titre,
-            "region":        parcel.region,
-            "superficie":    parcel.superficie,
-            "prix":          parcel.prix,
-            "owner_id":      parcel.owner_id,
-            "certified_at":  timezone.now().isoformat(),
-            "platform":      "Sen_parcelle · Sénégal",
+            "titre": parcel.titre,
+            "region": parcel.region,
+            "superficie": parcel.superficie,
+            "prix": parcel.prix,
+            "owner_id": parcel.owner_id,
+            "certified_at": timezone.now().isoformat(),
+            "platform": "Sen_parcelle · Sénégal",
         }
         ipfs_cid = self._ipfs.pin_metadata(metadata)
         ipfs_hash_bytes32 = self._str_to_bytes32(ipfs_cid)
@@ -93,10 +95,7 @@ class BlockchainService:
             prix=int(parcel.prix) if parcel.prix else 0,
         )
 
-        logger.info(
-            f"Parcelle certifiée : id={parcel.id} "
-            f"tx={result['tx_hash']} ipfs={ipfs_cid}"
-        )
+        logger.info(f"Parcelle certifiée : id={parcel.id} tx={result['tx_hash']} ipfs={ipfs_cid}")
 
         return CertificationResult(
             tx_hash=result["tx_hash"],
@@ -113,7 +112,7 @@ class BlockchainService:
         try:
             doc_hash_bytes32 = bytes.fromhex(document_hash_hex.replace("0x", ""))
             if len(doc_hash_bytes32) < 32:
-                doc_hash_bytes32 = doc_hash_bytes32.ljust(32, b'\x00')
+                doc_hash_bytes32 = doc_hash_bytes32.ljust(32, b"\x00")
 
             result = self._polygon.verify_document(doc_hash_bytes32)
 
@@ -145,8 +144,8 @@ class BlockchainService:
 
     def transfer_ownership(
         self,
-        parcel_id_str:   str,
-        new_owner_id:    str,
+        parcel_id_str: str,
+        new_owner_id: str,
         transaction_ref: str,
     ) -> dict:
         """
@@ -163,8 +162,7 @@ class BlockchainService:
             tx_ref=tx_ref_bytes32,
         )
         logger.info(
-            f"Propriété transférée blockchain : parcel={parcel_id_str} "
-            f"new_owner={new_owner_id} tx={result['tx_hash']}"
+            f"Propriété transférée blockchain : parcel={parcel_id_str} new_owner={new_owner_id} tx={result['tx_hash']}"
         )
         return result
 
@@ -181,6 +179,7 @@ class BlockchainService:
         Les UUID sont sur 128 bits, ils tiennent parfaitement dans uint256.
         """
         import uuid
+
         try:
             uid = uuid.UUID(parcel_id_str)
             return uid.int
@@ -191,6 +190,7 @@ class BlockchainService:
         """Convertit une chaîne en bytes32 pour Solidity.
         Hash SHA-256 de la chaîne pour garantir unicité."""
         import hashlib
+
         return hashlib.sha256(s.encode("utf-8")).digest()
 
     def _get_or_create_wallet(self, user_id: str) -> str:
@@ -200,6 +200,7 @@ class BlockchainService:
         En V2 : générer un wallet déterministe par user_id.
         """
         from apps.users.infrastructure.models import User as UserORM
+
         try:
             user = UserORM.objects.get(id=user_id)
             wallet = getattr(user, "wallet_address", None)
@@ -209,8 +210,9 @@ class BlockchainService:
             pass
 
         from core.exceptions.base import BusinessRuleViolationException
+
         raise BusinessRuleViolationException(
             "Aucune adresse wallet configurée pour cet utilisateur. "
             "Veuillez configurer votre wallet avant la certification.",
-            "wallet_not_configured"
+            "wallet_not_configured",
         )

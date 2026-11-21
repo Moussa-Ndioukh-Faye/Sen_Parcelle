@@ -12,11 +12,12 @@ import pytest
 # TESTS JWT
 # ══════════════════════════════════════════════════════════════
 
-class TestJWTService:
 
+class TestJWTService:
     @pytest.fixture
     def jwt_service(self):
         from apps.users.application.services.jwt_service import JWTService
+
         svc = JWTService()
         return svc
 
@@ -26,16 +27,16 @@ class TestJWTService:
 
     def test_generate_retourne_access_et_refresh(self, jwt_service):
         tokens = jwt_service.generate("user-123", "acheteur", "verified")
-        assert "access"  in tokens
+        assert "access" in tokens
         assert "refresh" in tokens
-        assert tokens["access"]  != ""
+        assert tokens["access"] != ""
         assert tokens["refresh"] != ""
 
     def test_access_token_valide(self, jwt_service):
-        tokens  = jwt_service.generate("user-123", "acheteur")
+        tokens = jwt_service.generate("user-123", "acheteur")
         payload = jwt_service.validate_access(tokens["access"])
         assert payload is not None
-        assert payload["sub"]  == "user-123"
+        assert payload["sub"] == "user-123"
         assert payload["role"] == "acheteur"
         assert payload["type"] == "access"
 
@@ -49,10 +50,13 @@ class TestJWTService:
         import time
 
         import jwt
+
         # Créer un token déjà expiré
         payload = {
-            "sub": "user-123", "type": "access",
-            "jti": "test-jti", "role": "acheteur",
+            "sub": "user-123",
+            "type": "access",
+            "jti": "test-jti",
+            "role": "acheteur",
             "iat": time.time() - 100,
             "exp": time.time() - 10,  # Expiré il y a 10s
         }
@@ -63,16 +67,19 @@ class TestJWTService:
     @patch("django.core.cache.cache")
     def test_token_blackliste_est_rejete(self, mock_cache, jwt_service):
         mock_cache.get.return_value = "1"  # Token en blacklist
-        tokens  = jwt_service.generate("user-123", "acheteur")
+        tokens = jwt_service.generate("user-123", "acheteur")
         payload = jwt_service.validate_access(tokens["access"])
         assert payload is None
 
     def test_token_invalide_signature(self, jwt_service):
         import jwt
+
         # Signer avec une autre clé
         payload = {
-            "sub": "user-123", "type": "access",
-            "jti": "test-jti", "role": "acheteur",
+            "sub": "user-123",
+            "type": "access",
+            "jti": "test-jti",
+            "role": "acheteur",
         }
         bad_token = jwt.encode(payload, "mauvaise-cle-de-32-caracteres-pour-test", algorithm="HS256")
         result = jwt_service.validate_access(bad_token)
@@ -83,11 +90,12 @@ class TestJWTService:
 # TESTS OTP
 # ══════════════════════════════════════════════════════════════
 
-class TestOTPService:
 
+class TestOTPService:
     @pytest.fixture
     def otp_service(self):
         from apps.users.application.services.otp_service import OTPService
+
         return OTPService()
 
     @patch("django.core.cache.cache")
@@ -99,9 +107,7 @@ class TestOTPService:
 
     @patch("django.core.cache.cache")
     def test_verify_code_correct(self, mock_cache, otp_service):
-        mock_cache.get.side_effect = lambda key, *args, **kwargs: (
-            "123456" if "code" in key else 0
-        )
+        mock_cache.get.side_effect = lambda key, *args, **kwargs: ("123456" if "code" in key else 0)
         mock_cache.incr.return_value = 1
         mock_cache.delete = MagicMock()
         result = otp_service.verify("user-123", "123456", "login")
@@ -110,9 +116,8 @@ class TestOTPService:
     @patch("django.core.cache.cache")
     def test_verify_code_incorrect_leve_exception(self, mock_cache, otp_service):
         from core.exceptions.base import InvalidOTPException
-        mock_cache.get.side_effect = lambda key, *args, **kwargs: (
-            "123456" if "code" in key else 0
-        )
+
+        mock_cache.get.side_effect = lambda key, *args, **kwargs: ("123456" if "code" in key else 0)
         mock_cache.incr.return_value = 1
         mock_cache.set = MagicMock()
 
@@ -122,6 +127,7 @@ class TestOTPService:
     @patch("django.core.cache.cache")
     def test_verify_code_expire_leve_exception(self, mock_cache, otp_service):
         from core.exceptions.base import InvalidOTPException
+
         mock_cache.get.return_value = None  # Code expiré (TTL Redis)
 
         with pytest.raises(InvalidOTPException):
@@ -130,8 +136,9 @@ class TestOTPService:
     @patch("django.core.cache.cache")
     def test_trop_de_tentatives_bloque(self, mock_cache, otp_service):
         from core.exceptions.base import BusinessRuleViolationException
+
         mock_cache.get.side_effect = lambda key, *args, **kwargs: (
-            "123456" if "code" in key else 5   # 5 tentatives = bloqué
+            "123456" if "code" in key else 5  # 5 tentatives = bloqué
         )
         mock_cache.incr.return_value = 5
         mock_cache.delete = MagicMock()
@@ -156,8 +163,8 @@ class TestOTPService:
 
         mock_cache.get.side_effect = mock_get
         mock_cache.incr.return_value = 1
-        mock_cache.delete          = MagicMock()
-        mock_cache.set             = MagicMock()
+        mock_cache.delete = MagicMock()
+        mock_cache.set = MagicMock()
 
         # Premier usage → valide
         result = otp_service.verify("user-123", "123456", "login")
@@ -165,6 +172,7 @@ class TestOTPService:
 
         # Deuxième usage → expiré
         from core.exceptions.base import InvalidOTPException
+
         with pytest.raises(InvalidOTPException):
             otp_service.verify("user-123", "123456", "login")
 
@@ -173,42 +181,49 @@ class TestOTPService:
 # TESTS CRYPTO
 # ══════════════════════════════════════════════════════════════
 
-class TestCryptoService:
 
+class TestCryptoService:
     def test_hash_document_sha256(self):
         from core.utils.crypto import CryptoService
+
         content = b"Titre foncier Almadies"
-        h       = CryptoService.hash_document(content)
+        h = CryptoService.hash_document(content)
         assert len(h) == 64
         assert all(c in "0123456789abcdef" for c in h)
 
     def test_hash_document_deterministe(self):
         from core.utils.crypto import CryptoService
+
         content = b"Document test"
         assert CryptoService.hash_document(content) == CryptoService.hash_document(content)
 
     def test_hash_document_different_si_contenu_different(self):
         from core.utils.crypto import CryptoService
+
         assert CryptoService.hash_document(b"doc1") != CryptoService.hash_document(b"doc2")
 
     def test_verify_document_hash_valide(self):
         from core.utils.crypto import CryptoService
+
         content = b"Titre foncier test"
-        h       = CryptoService.hash_document(content)
+        h = CryptoService.hash_document(content)
         assert CryptoService.verify_document_hash(content, h) is True
 
     def test_verify_document_hash_invalide(self):
         from core.utils.crypto import CryptoService
+
         assert CryptoService.verify_document_hash(b"contenu", "a" * 64) is False
 
     def test_mask_phone(self):
         from core.utils.crypto import CryptoService
+
         masked = CryptoService.mask_phone("+221776543210")
         assert "***" in masked
         assert not masked.startswith("+221776")  # Masqué
 
     def test_mask_email(self):
         from core.utils.crypto import CryptoService
+
         masked = CryptoService.mask_email("moussa@email.com")
         assert "***" in masked
         assert "@email.com" in masked
@@ -218,37 +233,43 @@ class TestCryptoService:
 # TESTS VALIDATORS SÉNÉGAL
 # ══════════════════════════════════════════════════════════════
 
-class TestSenegalValidators:
 
+class TestSenegalValidators:
     def test_phone_valide_77(self):
         from core.utils.crypto import SenegalValidators
+
         ok, normalized = SenegalValidators.validate_phone("776543210")
         assert ok is True
         assert normalized == "+221776543210"
 
     def test_phone_valide_avec_indicatif(self):
         from core.utils.crypto import SenegalValidators
+
         ok, _normalized = SenegalValidators.validate_phone("+221776543210")
         assert ok is True
 
     def test_phone_invalide_mauvais_prefixe(self):
         from core.utils.crypto import SenegalValidators
+
         ok, _ = SenegalValidators.validate_phone("556543210")
         assert ok is False
 
     def test_price_valide(self):
         from core.utils.crypto import SenegalValidators
+
         ok, _ = SenegalValidators.validate_prix(25_000_000)
         assert ok is True
 
     def test_price_trop_basse(self):
         from core.utils.crypto import SenegalValidators
+
         ok, msg = SenegalValidators.validate_prix(50_000)
         assert ok is False
         assert "100 000" in msg
 
     def test_region_valide(self):
         from core.utils.crypto import SenegalValidators
+
         assert SenegalValidators.validate_region("Dakar") is True
         assert SenegalValidators.validate_region("Paris") is False
 
@@ -257,11 +278,12 @@ class TestSenegalValidators:
 # TESTS RATE LIMITING
 # ══════════════════════════════════════════════════════════════
 
-class TestRateLimitService:
 
+class TestRateLimitService:
     @patch("django.core.cache.cache")
     def test_premiere_requete_autorisee(self, mock_cache):
         from core.utils.crypto import RateLimitService
+
         mock_cache.get.return_value = []
         mock_cache.set = MagicMock()
         svc = RateLimitService()
@@ -274,10 +296,11 @@ class TestRateLimitService:
         import time
 
         from core.utils.crypto import RateLimitService
+
         # Simuler 5 requêtes récentes
         now = time.time()
         mock_cache.get.return_value = [now - i for i in range(5)]
         svc = RateLimitService()
         allowed, remaining = svc.is_allowed("test:key", max_requests=5, window_seconds=60)
-        assert allowed   is False
+        assert allowed is False
         assert remaining == 0

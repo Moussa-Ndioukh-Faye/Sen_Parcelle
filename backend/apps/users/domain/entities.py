@@ -14,25 +14,28 @@ from enum import StrEnum
 # ENUMS
 # ══════════════════════════════════════════════════════════════
 
+
 class UserRole(StrEnum):
     ACHETEUR = "acheteur"
-    VENDEUR  = "vendeur"
-    ADMIN    = "admin"
+    VENDEUR = "vendeur"
+    ADMIN = "admin"
 
 
 class KYCStatus(StrEnum):
-    PENDING  = "pending"    # En attente de vérification
-    VERIFIED = "verified"   # Validé
-    REJECTED = "rejected"   # Rejeté
+    PENDING = "pending"  # En attente de vérification
+    VERIFIED = "verified"  # Validé
+    REJECTED = "rejected"  # Rejeté
 
 
 # ══════════════════════════════════════════════════════════════
 # VALUE OBJECTS (immuables, identifiés par valeur)
 # ══════════════════════════════════════════════════════════════
 
+
 @dataclass(frozen=True)
 class Email:
     """Email validé — immuable."""
+
     value: str
 
     def __post_init__(self):
@@ -51,6 +54,7 @@ class PhoneNumber:
     Numéro de téléphone sénégalais.
     Formats acceptés : +221XXXXXXXXX ou 7XXXXXXXX
     """
+
     value: str
 
     VALID_PREFIXES = ("70", "75", "76", "77", "78")
@@ -63,7 +67,7 @@ class PhoneNumber:
 
     @staticmethod
     def _normalize(phone: str) -> str:
-        digits = ''.join(filter(str.isdigit, phone))
+        digits = "".join(filter(str.isdigit, phone))
         if digits.startswith("221"):
             return f"+{digits}"
         if len(digits) == 9:
@@ -74,10 +78,7 @@ class PhoneNumber:
         if not phone.startswith("+221"):
             return False
         local = phone[4:]
-        return (
-            len(local) == 9
-            and any(local.startswith(p) for p in self.VALID_PREFIXES)
-        )
+        return len(local) == 9 and any(local.startswith(p) for p in self.VALID_PREFIXES)
 
     def __str__(self) -> str:
         return self.value
@@ -86,6 +87,7 @@ class PhoneNumber:
 @dataclass(frozen=True)
 class DocumentHash:
     """Hash SHA-256 d'un document."""
+
     value: str
 
     def __post_init__(self):
@@ -102,21 +104,23 @@ class DocumentHash:
 # ENTITÉ USER
 # ══════════════════════════════════════════════════════════════
 
+
 @dataclass
 class UserEntity:
     """
     Entité User — représente les règles métier de l'utilisateur.
     Pas d'ORM ici : c'est le modèle conceptuel pur.
     """
-    id:             str
-    nom:            str
-    email:          Email
-    telephone:      PhoneNumber
-    role:           UserRole
-    kyc_status:     KYCStatus      = KYCStatus.PENDING
-    is_2fa_enabled: bool           = False
-    is_active:      bool           = True
-    created_at:     datetime | None = None
+
+    id: str
+    nom: str
+    email: Email
+    telephone: PhoneNumber
+    role: UserRole
+    kyc_status: KYCStatus = KYCStatus.PENDING
+    is_2fa_enabled: bool = False
+    is_active: bool = True
+    created_at: datetime | None = None
 
     # ─── Règles métier ───
 
@@ -126,10 +130,7 @@ class UserEntity:
         - Son rôle est vendeur ou admin
         - Son KYC est vérifié
         """
-        return (
-            self.role in (UserRole.VENDEUR, UserRole.ADMIN)
-            and self.kyc_status == KYCStatus.VERIFIED
-        )
+        return self.role in (UserRole.VENDEUR, UserRole.ADMIN) and self.kyc_status == KYCStatus.VERIFIED
 
     def can_buy_parcel(self) -> bool:
         """
@@ -154,6 +155,7 @@ class UserEntity:
     def verify_kyc(self) -> "UserEntity":
         """Retourne une nouvelle entité avec KYC vérifié."""
         from dataclasses import replace
+
         return replace(self, kyc_status=KYCStatus.VERIFIED)
 
     def reject_kyc(self) -> "UserEntity":

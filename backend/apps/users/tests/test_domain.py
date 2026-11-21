@@ -13,20 +13,24 @@ import pytest
 # FIXTURES
 # ══════════════════════════════════════════════════════════════
 
+
 @pytest.fixture
 def mock_user_repo():
     return MagicMock()
+
 
 @pytest.fixture
 def mock_otp_service():
     svc = MagicMock()
     svc.generate.return_value = "123456"
-    svc.verify.return_value   = True
+    svc.verify.return_value = True
     return svc
+
 
 @pytest.fixture
 def mock_sms_service():
     return MagicMock()
+
 
 @pytest.fixture
 def mock_jwt_service():
@@ -34,15 +38,18 @@ def mock_jwt_service():
     svc.generate.return_value = {"access": "tok_access", "refresh": "tok_refresh"}
     return svc
 
+
 @pytest.fixture
 def mock_audit_service():
     return MagicMock()
+
 
 @pytest.fixture
 def mock_storage_service():
     svc = MagicMock()
     svc.upload.return_value = "parcels/user123/hash/document.pdf"
     return svc
+
 
 @pytest.fixture
 def mock_parcel_repo():
@@ -53,19 +60,23 @@ def mock_parcel_repo():
 # TESTS : Value Objects
 # ══════════════════════════════════════════════════════════════
 
+
 class TestEmail:
     def test_email_valide(self):
         from apps.users.domain.entities import Email
+
         email = Email("Moussa@Email.Com")
-        assert str(email) == "moussa@email.com"   # Normalisé en minuscules
+        assert str(email) == "moussa@email.com"  # Normalisé en minuscules
 
     def test_email_invalide_sans_arobase(self):
         from apps.users.domain.entities import Email
+
         with pytest.raises(ValueError):
             Email("moussa.email.com")
 
     def test_email_invalide_sans_domaine(self):
         from apps.users.domain.entities import Email
+
         with pytest.raises(ValueError):
             Email("moussa@")
 
@@ -73,21 +84,25 @@ class TestEmail:
 class TestPhoneNumber:
     def test_phone_valide_format_local(self):
         from apps.users.domain.entities import PhoneNumber
+
         phone = PhoneNumber("776543210")
         assert str(phone) == "+221776543210"
 
     def test_phone_valide_format_international(self):
         from apps.users.domain.entities import PhoneNumber
+
         phone = PhoneNumber("+221776543210")
         assert str(phone) == "+221776543210"
 
     def test_phone_invalide_prefixe(self):
         from apps.users.domain.entities import PhoneNumber
+
         with pytest.raises(ValueError):
-            PhoneNumber("336543210")   # 33 = numéro fixe pas valide ici
+            PhoneNumber("336543210")  # 33 = numéro fixe pas valide ici
 
     def test_phone_invalide_longueur(self):
         from apps.users.domain.entities import PhoneNumber
+
         with pytest.raises(ValueError):
             PhoneNumber("77654")
 
@@ -95,12 +110,14 @@ class TestPhoneNumber:
 class TestDocumentHash:
     def test_hash_valide(self):
         from apps.users.domain.entities import DocumentHash
+
         valid_hash = "a" * 64
         h = DocumentHash(valid_hash)
         assert str(h) == valid_hash
 
     def test_hash_invalide_longueur(self):
         from apps.users.domain.entities import DocumentHash
+
         with pytest.raises(ValueError):
             DocumentHash("abc123")
 
@@ -109,9 +126,11 @@ class TestDocumentHash:
 # TESTS : Entité User
 # ══════════════════════════════════════════════════════════════
 
+
 class TestUserEntity:
     def _make_user(self, role="vendeur", kyc_status="verified", is_2fa=True):
         from apps.users.domain.entities import Email, KYCStatus, PhoneNumber, UserEntity, UserRole
+
         return UserEntity(
             id="user-123",
             nom="Moussa Faye",
@@ -143,45 +162,52 @@ class TestUserEntity:
         assert user.can_buy_parcel() is False
 
     def test_verify_kyc_retourne_nouvelle_entite(self):
-        user    = self._make_user(kyc_status="pending")
+        user = self._make_user(kyc_status="pending")
         updated = user.verify_kyc()
         from apps.users.domain.entities import KYCStatus
+
         assert updated.kyc_status == KYCStatus.VERIFIED
-        assert user.kyc_status   == KYCStatus.PENDING   # Immuabilité
+        assert user.kyc_status == KYCStatus.PENDING  # Immuabilité
 
 
 # ══════════════════════════════════════════════════════════════
 # TESTS : GeoPoint + Détection fraude
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGeoPoint:
     def test_coordonnees_valides(self):
         from apps.parcels.domain.entities import GeoPoint
+
         p = GeoPoint(latitude=14.7645, longitude=-17.5149)
         assert p.latitude == 14.7645
 
     def test_latitude_invalide(self):
         from apps.parcels.domain.entities import GeoPoint
+
         with pytest.raises(ValueError):
             GeoPoint(latitude=95.0, longitude=-17.5)
 
     def test_distance_meme_point_est_zero(self):
         from apps.parcels.domain.entities import GeoPoint
+
         p = GeoPoint(14.7645, -17.5149)
         assert p.distance_to_meters(p) < 1
 
     def test_distance_almadies_plateau(self):
         """Distance between Almadies and Plateau Dakar ≈ 8.7km."""
         from apps.parcels.domain.entities import GeoPoint
+
         almadies = GeoPoint(14.7278, -17.5070)
-        plateau  = GeoPoint(14.6820, -17.4413)
+        plateau = GeoPoint(14.6820, -17.4413)
         dist = almadies.distance_to_meters(plateau)
-        assert 8000 < dist < 10000   # Entre 8 et 10km
+        assert 8000 < dist < 10000  # Entre 8 et 10km
 
 
 class TestParcelEntity:
     def _make_parcel(self, status="pending"):
         from apps.parcels.domain.entities import GeoPoint, ParcelEntity, ParcelStatus
+
         return ParcelEntity(
             id="parcel-123",
             owner_id="user-123",
@@ -209,14 +235,16 @@ class TestParcelEntity:
 
     def test_detection_doublon_proche(self):
         from apps.parcels.domain.entities import GeoPoint
-        parcel  = self._make_parcel()
-        nearby  = GeoPoint(14.76451, -17.51491)   # À quelques mètres
+
+        parcel = self._make_parcel()
+        nearby = GeoPoint(14.76451, -17.51491)  # À quelques mètres
         assert parcel.is_near(nearby, threshold_m=50) is True
 
     def test_pas_doublon_loin(self):
         from apps.parcels.domain.entities import GeoPoint
+
         parcel = self._make_parcel()
-        far    = GeoPoint(14.80, -17.45)           # Plusieurs km
+        far = GeoPoint(14.80, -17.45)  # Plusieurs km
         assert parcel.is_near(far, threshold_m=50) is False
 
 
@@ -224,9 +252,11 @@ class TestParcelEntity:
 # TESTS : Use Case Register
 # ══════════════════════════════════════════════════════════════
 
+
 class TestRegisterUseCase:
     def _make_uc(self, mock_user_repo, mock_otp_service, mock_sms_service):
         from apps.users.application.use_cases.register import RegisterUseCase
+
         return RegisterUseCase(mock_user_repo, mock_otp_service, mock_sms_service)
 
     @pytest.mark.django_db
@@ -246,13 +276,17 @@ class TestRegisterUseCase:
         )
         mock_user_repo.set_password = MagicMock()
 
-        uc     = self._make_uc(mock_user_repo, mock_otp_service, mock_sms_service)
-        result = uc.execute(RegisterInput(
-            nom="Moussa", email="moussa@email.com",
-            telephone="776543210", password="Motdepasse123!",
-        ))
+        uc = self._make_uc(mock_user_repo, mock_otp_service, mock_sms_service)
+        result = uc.execute(
+            RegisterInput(
+                nom="Moussa",
+                email="moussa@email.com",
+                telephone="776543210",
+                password="Motdepasse123!",
+            )
+        )
 
-        assert result.user_id  == "new-user-id"
+        assert result.user_id == "new-user-id"
         assert result.otp_sent is True
         mock_sms_service.send.assert_called_once()
 
@@ -264,10 +298,14 @@ class TestRegisterUseCase:
 
         uc = self._make_uc(mock_user_repo, mock_otp_service, mock_sms_service)
         with pytest.raises(DuplicateEntityException):
-            uc.execute(RegisterInput(
-                nom="Moussa", email="moussa@email.com",
-                telephone="776543210", password="motdepasse123",
-            ))
+            uc.execute(
+                RegisterInput(
+                    nom="Moussa",
+                    email="moussa@email.com",
+                    telephone="776543210",
+                    password="motdepasse123",
+                )
+            )
 
     def test_mot_de_passe_trop_court(self, mock_user_repo, mock_otp_service, mock_sms_service):
         from apps.users.application.use_cases.register import RegisterInput
@@ -278,7 +316,11 @@ class TestRegisterUseCase:
 
         uc = self._make_uc(mock_user_repo, mock_otp_service, mock_sms_service)
         with pytest.raises(ValidationException):
-            uc.execute(RegisterInput(
-                nom="Moussa", email="moussa@email.com",
-                telephone="776543210", password="123",  # Trop court
-            ))
+            uc.execute(
+                RegisterInput(
+                    nom="Moussa",
+                    email="moussa@email.com",
+                    telephone="776543210",
+                    password="123",  # Trop court
+                )
+            )

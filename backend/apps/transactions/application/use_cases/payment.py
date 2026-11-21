@@ -15,21 +15,22 @@ logger = logging.getLogger(__name__)
 # UC: Initier un paiement
 # ════════════════════════════════════════════════════════════════
 
+
 @dataclass
 class InitiatePaymentInput:
-    buyer_id:    str
-    parcel_id:   str
-    provider:    str      # "wave" | "orange_money"
+    buyer_id: str
+    parcel_id: str
+    provider: str  # "wave" | "orange_money"
 
 
 @dataclass
 class InitiatePaymentOutput:
     transaction_id: str
-    payment_url:    str
-    payment_ref:    str
-    amount_fcfa:    float
-    provider:       str
-    message:        str
+    payment_url: str
+    payment_ref: str
+    amount_fcfa: float
+    provider: str
+    message: str
 
 
 class InitiatePaymentUseCase:
@@ -43,14 +44,13 @@ class InitiatePaymentUseCase:
     4. Retourner l'URL de paiement
     """
 
-    def __init__(self, parcel_repo, user_repo, tx_repo,
-                 payment_factory, notification_service, audit_service):
-        self._parcels       = parcel_repo
-        self._users         = user_repo
-        self._transactions  = tx_repo
-        self._payment       = payment_factory
-        self._notify        = notification_service
-        self._audit         = audit_service
+    def __init__(self, parcel_repo, user_repo, tx_repo, payment_factory, notification_service, audit_service):
+        self._parcels = parcel_repo
+        self._users = user_repo
+        self._transactions = tx_repo
+        self._payment = payment_factory
+        self._notify = notification_service
+        self._audit = audit_service
 
     def execute(self, data: InitiatePaymentInput) -> InitiatePaymentOutput:
         from apps.transactions.domain.entities import (
@@ -79,15 +79,11 @@ class InitiatePaymentUseCase:
 
         if not parcel.can_be_purchased():
             raise BusinessRuleViolationException(
-                "Cette parcelle n'est pas disponible à l'achat.",
-                "parcel_not_available"
+                "Cette parcelle n'est pas disponible à l'achat.", "parcel_not_available"
             )
 
         if parcel.owner_id == data.buyer_id:
-            raise BusinessRuleViolationException(
-                "Vous ne pouvez pas acheter votre propre parcelle.",
-                "self_purchase"
-            )
+            raise BusinessRuleViolationException("Vous ne pouvez pas acheter votre propre parcelle.", "self_purchase")
 
         # ─── Créer la transaction ───
         reference = f"SPN-{str(uuid.uuid4())[:8].upper()}"
@@ -103,7 +99,7 @@ class InitiatePaymentUseCase:
         self._transactions.save(tx)
 
         # ─── Initier le paiement ───
-        adapter  = self._payment(data.provider)
+        adapter = self._payment(data.provider)
         pay_result = adapter.initiate_payment(
             amount=parcel.prix,
             phone=str(buyer.telephone),
@@ -117,18 +113,20 @@ class InitiatePaymentUseCase:
 
         # ─── Notifier le vendeur ───
         self._notify.notify_user(
-            parcel.owner_id,
-            "purchase_initiated",
-            {"parcel_titre": parcel.titre, "buyer_nom": buyer.nom}
+            parcel.owner_id, "purchase_initiated", {"parcel_titre": parcel.titre, "buyer_nom": buyer.nom}
         )
 
         # ─── Audit ───
-        self._audit.log(data.buyer_id, "transaction_initiated", {
-            "transaction_id": tx.id,
-            "parcel_id":      data.parcel_id,
-            "amount":         parcel.prix,
-            "provider":       data.provider,
-        })
+        self._audit.log(
+            data.buyer_id,
+            "transaction_initiated",
+            {
+                "transaction_id": tx.id,
+                "parcel_id": data.parcel_id,
+                "amount": parcel.prix,
+                "provider": data.provider,
+            },
+        )
 
         return InitiatePaymentOutput(
             transaction_id=tx.id,
@@ -144,19 +142,20 @@ class InitiatePaymentUseCase:
 # UC: Confirmer un paiement (après webhook)
 # ════════════════════════════════════════════════════════════════
 
+
 @dataclass
 class ConfirmPaymentInput:
-    payment_ref:  str
-    provider:     str
+    payment_ref: str
+    provider: str
     webhook_payload: dict
-    signature:    str
+    signature: str
 
 
 @dataclass
 class ConfirmPaymentOutput:
     transaction_id: str
-    status:         str
-    message:        str
+    status: str
+    message: str
 
 
 class ConfirmPaymentUseCase:
@@ -171,13 +170,12 @@ class ConfirmPaymentUseCase:
     5. Notifier acheteur + vendeur
     """
 
-    def __init__(self, tx_repo, payment_factory,
-                 notification_service, audit_service, celery_app):
+    def __init__(self, tx_repo, payment_factory, notification_service, audit_service, celery_app):
         self._transactions = tx_repo
-        self._payment      = payment_factory
-        self._notify       = notification_service
-        self._audit        = audit_service
-        self._celery       = celery_app
+        self._payment = payment_factory
+        self._notify = notification_service
+        self._audit = audit_service
+        self._celery = celery_app
 
     def execute(self, data: ConfirmPaymentInput) -> ConfirmPaymentOutput:
         from core.exceptions.base import BusinessRuleViolationException, EntityNotFoundException
@@ -186,9 +184,7 @@ class ConfirmPaymentUseCase:
         adapter = self._payment(data.provider)
         if not adapter.verify_webhook(data.webhook_payload, data.signature):
             logger.warning(f"Webhook signature invalide : provider={data.provider}")
-            raise BusinessRuleViolationException(
-                "Signature webhook invalide.", "invalid_webhook_signature"
-            )
+            raise BusinessRuleViolationException("Signature webhook invalide.", "invalid_webhook_signature")
 
         # ─── Récupérer la transaction ───
         tx = self._transactions.get_by_payment_ref(data.payment_ref)
@@ -214,24 +210,28 @@ class ConfirmPaymentUseCase:
                 "blockchain.transfer_ownership",
                 kwargs={
                     "transaction_id": tx.id,
-                    "parcel_id":      tx.parcel_id,
-                    "seller_id":      tx.seller_id,
-                    "buyer_id":       tx.buyer_id,
-                }
+                    "parcel_id": tx.parcel_id,
+                    "seller_id": tx.seller_id,
+                    "buyer_id": tx.buyer_id,
+                },
             )
 
             # ─── Notifications ───
-            self._notify.notify_user(tx.buyer_id, "payment_confirmed", {
-                "transaction_id": tx.id, "amount": tx.amount_fcfa
-            })
-            self._notify.notify_user(tx.seller_id, "payment_received", {
-                "transaction_id": tx.id, "amount": tx.amount_fcfa
-            })
+            self._notify.notify_user(
+                tx.buyer_id, "payment_confirmed", {"transaction_id": tx.id, "amount": tx.amount_fcfa}
+            )
+            self._notify.notify_user(
+                tx.seller_id, "payment_received", {"transaction_id": tx.id, "amount": tx.amount_fcfa}
+            )
 
-            self._audit.log(tx.buyer_id, "transaction_completed", {
-                "transaction_id": tx.id,
-                "parcel_id":      tx.parcel_id,
-            })
+            self._audit.log(
+                tx.buyer_id,
+                "transaction_completed",
+                {
+                    "transaction_id": tx.id,
+                    "parcel_id": tx.parcel_id,
+                },
+            )
 
             return ConfirmPaymentOutput(
                 transaction_id=tx.id,

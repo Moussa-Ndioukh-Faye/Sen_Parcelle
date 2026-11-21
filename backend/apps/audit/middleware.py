@@ -26,28 +26,25 @@ class AuditMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self._audit       = AuditService()
+        self._audit = AuditService()
 
     def __call__(self, request):
         start_time = time.time()
-        response   = self.get_response(request)
-        duration   = round((time.time() - start_time) * 1000, 2)   # ms
+        response = self.get_response(request)
+        duration = round((time.time() - start_time) * 1000, 2)  # ms
 
         # Logguer uniquement les routes sensibles
-        should_log = (
-            any(request.path.startswith(p) for p in SENSITIVE_PATHS)
-            and request.method in SENSITIVE_METHODS
-        )
+        should_log = any(request.path.startswith(p) for p in SENSITIVE_PATHS) and request.method in SENSITIVE_METHODS
 
         if should_log and hasattr(request, "user") and request.user.is_authenticated:
             self._audit.log(
                 user_id=str(request.user.id),
                 action=f"api_{request.method.lower()}",
                 metadata={
-                    "path":         request.path,
-                    "method":       request.method,
-                    "status_code":  response.status_code,
-                    "duration_ms":  duration,
+                    "path": request.path,
+                    "method": request.method,
+                    "status_code": response.status_code,
+                    "duration_ms": duration,
                 },
                 ip_address=self._get_client_ip(request),
                 user_agent=request.META.get("HTTP_USER_AGENT", "")[:200],

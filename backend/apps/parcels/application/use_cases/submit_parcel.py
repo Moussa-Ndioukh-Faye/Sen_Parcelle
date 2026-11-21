@@ -27,28 +27,29 @@ from core.exceptions.base import (
 # UC: Soumettre une parcelle
 # ══════════════════════════════════════════════════════════════
 
+
 @dataclass
 class SubmitParcelInput:
-    owner_id:       str
-    titre:          str
-    description:    str
-    localisation:   str
-    region:         str
-    latitude:       float
-    longitude:      float
-    superficie:     float
-    prix:           float
-    type_terrain:   str         # Enum value
-    document_bytes: bytes       # Contenu du document (PDF/image)
-    document_name:  str
+    owner_id: str
+    titre: str
+    description: str
+    localisation: str
+    region: str
+    latitude: float
+    longitude: float
+    superficie: float
+    prix: float
+    type_terrain: str  # Enum value
+    document_bytes: bytes  # Contenu du document (PDF/image)
+    document_name: str
 
 
 @dataclass
 class SubmitParcelOutput:
-    parcel_id:      str
-    status:         str
-    document_hash:  str
-    message:        str
+    parcel_id: str
+    status: str
+    document_hash: str
+    message: str
 
 
 class SubmitParcelUseCase:
@@ -67,13 +68,19 @@ class SubmitParcelUseCase:
     FRAUD_RADIUS_METERS = 50.0
     MAX_FILE_SIZE_MB = 20
 
-    def __init__(self, parcel_repo: IParcelRepository, user_repo: IUserRepository,
-                 storage_service, notification_service, audit_service):
-        self._parcels       = parcel_repo
-        self._users         = user_repo
-        self._storage       = storage_service
+    def __init__(
+        self,
+        parcel_repo: IParcelRepository,
+        user_repo: IUserRepository,
+        storage_service,
+        notification_service,
+        audit_service,
+    ):
+        self._parcels = parcel_repo
+        self._users = user_repo
+        self._storage = storage_service
         self._notifications = notification_service
-        self._audit         = audit_service
+        self._audit = audit_service
 
     def execute(self, data: SubmitParcelInput) -> SubmitParcelOutput:
         # ─── 1. Vérifier le vendeur ───
@@ -99,8 +106,7 @@ class SubmitParcelUseCase:
         # ─── 4. Vérifier taille du fichier ───
         if len(data.document_bytes) > self.MAX_FILE_SIZE_MB * 1024 * 1024:
             raise BusinessRuleViolationException(
-                f"Le document dépasse la taille maximale de {self.MAX_FILE_SIZE_MB} Mo.",
-                "file_too_large"
+                f"Le document dépasse la taille maximale de {self.MAX_FILE_SIZE_MB} Mo.", "file_too_large"
             )
 
         # ─── 5. Hash SHA-256 du document ───
@@ -108,6 +114,7 @@ class SubmitParcelUseCase:
 
         # ─── 6. Upload S3 (async en production → Celery) ───
         import os
+
         safe_filename = os.path.basename(data.document_name)
         self._storage.upload(
             content=data.document_bytes,
@@ -117,6 +124,7 @@ class SubmitParcelUseCase:
 
         # ─── 7. Créer l'entité ───
         import uuid
+
         parcel = ParcelEntity(
             id=str(uuid.uuid4()),
             owner_id=data.owner_id,
@@ -136,8 +144,7 @@ class SubmitParcelUseCase:
 
         # ─── 8. Notifier les admins ───
         self._notifications.notify_admins(
-            event="new_parcel_pending",
-            data={"parcel_id": saved.id, "titre": data.titre, "region": data.region}
+            event="new_parcel_pending", data={"parcel_id": saved.id, "titre": data.titre, "region": data.region}
         )
 
         # ─── 9. Audit ───
@@ -155,20 +162,21 @@ class SubmitParcelUseCase:
 # UC: Valider + Certifier une parcelle (Admin)
 # ══════════════════════════════════════════════════════════════
 
+
 @dataclass
 class ValidateParcelInput:
-    parcel_id:  str
-    admin_id:   str
-    decision:   str     # "approve" | "reject"
-    reason:     str = ""
+    parcel_id: str
+    admin_id: str
+    decision: str  # "approve" | "reject"
+    reason: str = ""
 
 
 @dataclass
 class ValidateParcelOutput:
-    parcel_id:       str
-    status:          str
+    parcel_id: str
+    status: str
     blockchain_hash: str | None
-    message:         str
+    message: str
 
 
 class ValidateParcelUseCase:
@@ -177,13 +185,14 @@ class ValidateParcelUseCase:
     Si approuvée → déclenchement async blockchain (Celery).
     """
 
-    def __init__(self, parcel_repo: IParcelRepository,
-                 blockchain_service, notification_service, audit_service, celery_app):
-        self._parcels     = parcel_repo
-        self._blockchain  = blockchain_service
-        self._notify      = notification_service
-        self._audit       = audit_service
-        self._celery      = celery_app
+    def __init__(
+        self, parcel_repo: IParcelRepository, blockchain_service, notification_service, audit_service, celery_app
+    ):
+        self._parcels = parcel_repo
+        self._blockchain = blockchain_service
+        self._notify = notification_service
+        self._audit = audit_service
+        self._celery = celery_app
 
     def execute(self, data: ValidateParcelInput) -> ValidateParcelOutput:
         parcel = self._parcels.get_by_id(data.parcel_id)
@@ -192,8 +201,7 @@ class ValidateParcelUseCase:
 
         if not parcel.can_be_validated():
             raise BusinessRuleViolationException(
-                f"Cette parcelle ne peut pas être validée (statut : {parcel.status.value})",
-                "invalid_status"
+                f"Cette parcelle ne peut pas être validée (statut : {parcel.status.value})", "invalid_status"
             )
 
         if data.decision == "approve":
@@ -202,15 +210,12 @@ class ValidateParcelUseCase:
 
             # ─── Déléguer la certification blockchain à Celery (async) ───
             self._celery.send_task(
-                "blockchain.certify_parcel",
-                kwargs={"parcel_id": data.parcel_id, "admin_id": data.admin_id}
+                "blockchain.certify_parcel", kwargs={"parcel_id": data.parcel_id, "admin_id": data.admin_id}
             )
 
             # Notification vendeur
             self._notify.notify_user(
-                user_id=parcel.owner_id,
-                event="parcel_validated",
-                data={"parcel_id": parcel.id, "titre": parcel.titre}
+                user_id=parcel.owner_id, event="parcel_validated", data={"parcel_id": parcel.id, "titre": parcel.titre}
             )
 
             self._audit.log(data.admin_id, "parcel_approved", {"parcel_id": data.parcel_id})
@@ -227,14 +232,10 @@ class ValidateParcelUseCase:
             self._parcels.save(rejected)
 
             self._notify.notify_user(
-                user_id=parcel.owner_id,
-                event="parcel_rejected",
-                data={"parcel_id": parcel.id, "reason": data.reason}
+                user_id=parcel.owner_id, event="parcel_rejected", data={"parcel_id": parcel.id, "reason": data.reason}
             )
 
-            self._audit.log(data.admin_id, "parcel_rejected", {
-                "parcel_id": data.parcel_id, "reason": data.reason
-            })
+            self._audit.log(data.admin_id, "parcel_rejected", {"parcel_id": data.parcel_id, "reason": data.reason})
 
             return ValidateParcelOutput(
                 parcel_id=parcel.id,
@@ -250,27 +251,28 @@ class ValidateParcelUseCase:
 # UC: Recherche de parcelles (avec PostGIS)
 # ══════════════════════════════════════════════════════════════
 
+
 @dataclass
 class SearchParcelsInput:
-    region:         str | None   = None
-    min_prix:       float | None = None
-    max_prix:       float | None = None
+    region: str | None = None
+    min_prix: float | None = None
+    max_prix: float | None = None
     min_superficie: float | None = None
-    type_terrain:   str | None   = None
-    latitude:       float | None = None
-    longitude:      float | None = None
-    radius_km:      float | None = None     # Recherche géographique
-    status:         str             = "certified"
-    page:           int             = 1
-    page_size:      int             = 20
+    type_terrain: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    radius_km: float | None = None  # Recherche géographique
+    status: str = "certified"
+    page: int = 1
+    page_size: int = 20
 
 
 @dataclass
 class SearchParcelsOutput:
-    parcels:    list[ParcelEntity]
-    total:      int
-    page:       int
-    page_size:  int
+    parcels: list[ParcelEntity]
+    total: int
+    page: int
+    page_size: int
 
 
 class SearchParcelsUseCase:
@@ -286,12 +288,12 @@ class SearchParcelsUseCase:
         # Recherche géographique si coordonnées fournies
         if data.latitude and data.longitude and data.radius_km:
             location = GeoPoint(data.latitude, data.longitude)
-            results  = self._parcels.find_nearby(location, data.radius_km * 1000)
+            results = self._parcels.find_nearby(location, data.radius_km * 1000)
         elif data.region:
-            results  = self._parcels.find_by_region(data.region, data.status)
+            results = self._parcels.find_by_region(data.region, data.status)
         else:
             # Fallback : retourner toutes les parcelles filtrées par statut
-            results  = self._parcels.find_by_region(None, data.status)
+            results = self._parcels.find_by_region(None, data.status)
 
         # Filtres prix / superficie en mémoire (ou déléguer au repo selon perf)
         if data.min_prix:
@@ -304,8 +306,8 @@ class SearchParcelsUseCase:
             results = [p for p in results if p.type_terrain == data.type_terrain]
 
         # Pagination
-        total  = len(results)
-        start  = (data.page - 1) * data.page_size
-        paged  = results[start:start + data.page_size]
+        total = len(results)
+        start = (data.page - 1) * data.page_size
+        paged = results[start : start + data.page_size]
 
         return SearchParcelsOutput(parcels=paged, total=total, page=data.page, page_size=data.page_size)

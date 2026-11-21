@@ -15,25 +15,24 @@ class Transaction(BaseModel):
     STATUS_CHOICES = [(s.value, s.value) for s in TransactionStatus]
     PROVIDER_CHOICES = [(p.value, p.value) for p in PaymentProvider]
 
-    parcel  = models.ForeignKey("parcels.Parcel", on_delete=models.PROTECT, related_name="transactions")
-    buyer   = models.ForeignKey("users.User", on_delete=models.PROTECT, related_name="purchases")
-    seller  = models.ForeignKey("users.User", on_delete=models.PROTECT, related_name="sales")
+    parcel = models.ForeignKey("parcels.Parcel", on_delete=models.PROTECT, related_name="transactions")
+    buyer = models.ForeignKey("users.User", on_delete=models.PROTECT, related_name="purchases")
+    seller = models.ForeignKey("users.User", on_delete=models.PROTECT, related_name="sales")
 
-    amount_fcfa   = models.DecimalField(max_digits=14, decimal_places=2)
-    provider      = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
-    status        = models.CharField(max_length=20, choices=STATUS_CHOICES,
-                                     default="initiated", db_index=True)
-    payment_ref   = models.CharField(max_length=255, blank=True, db_index=True)
+    amount_fcfa = models.DecimalField(max_digits=14, decimal_places=2)
+    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="initiated", db_index=True)
+    payment_ref = models.CharField(max_length=255, blank=True, db_index=True)
     blockchain_tx = models.CharField(max_length=255, blank=True)
 
-    confirmed_at  = models.DateTimeField(null=True, blank=True)
-    completed_at  = models.DateTimeField(null=True, blank=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     failure_reason = models.TextField(blank=True)
 
     class Meta:
         db_table = "transactions"
         ordering = ["-created_at"]
-        indexes  = [
+        indexes = [
             models.Index(fields=["payment_ref"]),
             models.Index(fields=["buyer", "status"]),
             models.Index(fields=["seller", "status"]),
@@ -103,13 +102,13 @@ class DjangoTransactionRepository(ITransactionRepository):
         return tx_orm.to_domain()
 
     def find_by_buyer(self, buyer_id: str) -> list[TransactionEntity]:
-        qs = Transaction.objects.select_related('parcel', 'buyer', 'seller').filter(buyer_id=buyer_id)
+        qs = Transaction.objects.select_related("parcel", "buyer", "seller").filter(buyer_id=buyer_id)
         return [t.to_domain() for t in qs]
 
     def find_by_seller(self, seller_id: str) -> list[TransactionEntity]:
-        qs = Transaction.objects.select_related('parcel', 'buyer', 'seller').filter(seller_id=seller_id)
+        qs = Transaction.objects.select_related("parcel", "buyer", "seller").filter(seller_id=seller_id)
         return [t.to_domain() for t in qs]
 
     def find_by_parcel(self, parcel_id: str) -> list[TransactionEntity]:
-        qs = Transaction.objects.select_related('parcel', 'buyer', 'seller').filter(parcel_id=parcel_id)
+        qs = Transaction.objects.select_related("parcel", "buyer", "seller").filter(parcel_id=parcel_id)
         return [t.to_domain() for t in qs]

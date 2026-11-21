@@ -10,21 +10,20 @@ from apps.transactions.presentation.views import TransactionViewSet
 from apps.users.presentation.views import AuthViewSet, UserViewSet
 
 router = DefaultRouter()
-router.register(r"auth",             AuthViewSet,        basename="auth")
-router.register(r"utilisateurs",     UserViewSet,        basename="user")
-router.register(r"parcelles",        ParcelViewSet,      basename="parcel")
-router.register(r"transactions",     TransactionViewSet, basename="transaction")
-router.register(r"blockchain",       BlockchainViewSet,  basename="blockchain")
-router.register(r"audit",            AuditViewSet,       basename="audit")
-router.register(r"notifications",    NotificationViewSet, basename="notification")
-router.register(r"dashboard",        DashboardViewSet,   basename="dashboard")
+router.register(r"auth", AuthViewSet, basename="auth")
+router.register(r"utilisateurs", UserViewSet, basename="user")
+router.register(r"parcelles", ParcelViewSet, basename="parcel")
+router.register(r"transactions", TransactionViewSet, basename="transaction")
+router.register(r"blockchain", BlockchainViewSet, basename="blockchain")
+router.register(r"audit", AuditViewSet, basename="audit")
+router.register(r"notifications", NotificationViewSet, basename="notification")
+router.register(r"dashboard", DashboardViewSet, basename="dashboard")
 
 urlpatterns = [
     path("api/", include(router.urls)),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("api/health/", lambda r: __import__("django.http", fromlist=["JsonResponse"]).JsonResponse({"status": "ok"})),
-
     # Documentation API (Swagger/OpenAPI)
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

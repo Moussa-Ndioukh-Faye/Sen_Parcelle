@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 Dio createMockDio({int statusCode = 200, dynamic data}) {
@@ -32,5 +34,5 @@ class MockAdapter implements HttpClientAdapter {
   }
 
   @override
-  void close() {}
+  void close({bool force = false}) {}
 }

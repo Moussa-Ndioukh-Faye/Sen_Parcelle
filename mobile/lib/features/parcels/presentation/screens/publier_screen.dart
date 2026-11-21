@@ -138,7 +138,7 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: _selectedRegion,
+                      value: _selectedRegion,
                       decoration: const InputDecoration(
                         labelText: 'Région',
                         border: OutlineInputBorder(),
@@ -152,7 +152,7 @@ class _PublierScreenState extends ConsumerState<PublierScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: _selectedType,
+                      value: _selectedType,
                       decoration: const InputDecoration(
                         labelText: 'Type de terrain',
                         border: OutlineInputBorder(),

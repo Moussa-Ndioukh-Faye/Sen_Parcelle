@@ -1,5 +1,6 @@
 import os
-from .base import *
+
+from .base import *  # noqa: F403
 
 DEBUG = bool(int(os.environ.get("DEBUG", "1")))
 
@@ -30,11 +31,12 @@ CELERY_RESULT_BACKEND = "cache+memory://"
 CELERY_BROKER_URL = "memory://"
 
 INSTALLED_APPS = [
-    app for app in INSTALLED_APPS
+    app
+    for app in INSTALLED_APPS  # noqa: F405
     if app not in ("django.contrib.gis", "django_celery_beat", "django_redis")
 ]
 
-MIDDLEWARE = [m for m in MIDDLEWARE if "SecurityHeadersMiddleware" not in m]
+MIDDLEWARE = [m for m in MIDDLEWARE if "SecurityHeadersMiddleware" not in m]  # noqa: F405
 
 CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:80,http://localhost").split(",")
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "http://localhost:80").split(",")

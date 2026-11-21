@@ -22,7 +22,8 @@ class TwilioSMSAdapter(ISMSAdapter):
 
     def __init__(self, account_sid: str, auth_token: str, from_number: str):
         from twilio.rest import Client
-        self._client      = Client(account_sid, auth_token)
+
+        self._client = Client(account_sid, auth_token)
         self._from_number = from_number
 
     def send(self, to: str, message: str) -> bool:
@@ -37,6 +38,7 @@ class TwilioSMSAdapter(ISMSAdapter):
         except Exception as e:
             logger.error(f"Erreur SMS Twilio : to={to} error={e}")
             from core.exceptions.base import ExternalServiceException
+
             raise ExternalServiceException("Twilio SMS", str(e))
 
 
@@ -47,7 +49,7 @@ class ConsoleSMSAdapter(ISMSAdapter):
     """
 
     def send(self, to: str, message: str) -> bool:
-        logger.info(f"\n{'='*50}\n📱 SMS → {to}\n{message}\n{'='*50}")
+        logger.info(f"\n{'=' * 50}\n📱 SMS → {to}\n{message}\n{'=' * 50}")
         return True
 
 
@@ -58,22 +60,23 @@ class OrangeSMSSenegalAdapter(ISMSAdapter):
     """
 
     def __init__(self, api_key: str, sender_id: str):
-        self._api_key   = api_key
+        self._api_key = api_key
         self._sender_id = sender_id
 
     def send(self, to: str, message: str) -> bool:
         import requests
+
         try:
             response = requests.post(
                 "https://api.orange.sn/smsmessaging/v1/outbound/send",
                 headers={
                     "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type":  "application/json",
+                    "Content-Type": "application/json",
                 },
                 json={
                     "outboundSMSMessageRequest": {
-                        "address":              [f"tel:{to}"],
-                        "senderAddress":        f"tel:{self._sender_id}",
+                        "address": [f"tel:{to}"],
+                        "senderAddress": f"tel:{self._sender_id}",
                         "outboundSMSTextMessage": {"message": message},
                     }
                 },
@@ -84,12 +87,14 @@ class OrangeSMSSenegalAdapter(ISMSAdapter):
         except Exception as e:
             logger.error(f"Erreur Orange SMS : {e}")
             from core.exceptions.base import ExternalServiceException
+
             raise ExternalServiceException("Orange SMS", str(e))
 
 
 # ══════════════════════════════════════════════════════════════
 # FACTORY — Sélection automatique de l'adapter
 # ══════════════════════════════════════════════════════════════
+
 
 def get_sms_adapter() -> ISMSAdapter:
     """

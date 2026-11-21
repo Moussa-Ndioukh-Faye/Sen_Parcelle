@@ -14,24 +14,25 @@ from enum import StrEnum
 
 
 class ParcelStatus(StrEnum):
-    PENDING   = "pending"     # Soumise, en attente admin
-    VALIDATED = "validated"   # Validée, pas encore blockchain
-    CERTIFIED = "certified"   # Enregistrée sur blockchain
-    REJECTED  = "rejected"    # Rejetée par admin
-    SOLD      = "sold"        # Vendue
+    PENDING = "pending"  # Soumise, en attente admin
+    VALIDATED = "validated"  # Validée, pas encore blockchain
+    CERTIFIED = "certified"  # Enregistrée sur blockchain
+    REJECTED = "rejected"  # Rejetée par admin
+    SOLD = "sold"  # Vendue
 
 
 class ParcelType(StrEnum):
     RESIDENTIEL = "residentiel"
-    COMMERCIAL  = "commercial"
-    AGRICOLE    = "agricole"
-    INDUSTRIEL  = "industriel"
+    COMMERCIAL = "commercial"
+    AGRICOLE = "agricole"
+    INDUSTRIEL = "industriel"
 
 
 @dataclass(frozen=True)
 class GeoPoint:
     """Coordonnées GPS validées."""
-    latitude:  float
+
+    latitude: float
     longitude: float
 
     def __post_init__(self):
@@ -46,33 +47,35 @@ class GeoPoint:
         Utilisé pour la détection de doublons (fraude).
         """
         import math
+
         R = 6371000  # Rayon Terre en mètres
         phi1 = math.radians(self.latitude)
         phi2 = math.radians(other.latitude)
         dphi = math.radians(other.latitude - self.latitude)
         dlam = math.radians(other.longitude - self.longitude)
-        a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlam/2)**2
+        a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
         return R * 2 * math.asin(math.sqrt(a))
 
 
 @dataclass
 class ParcelEntity:
     """Entité Parcelle — règles métier pures."""
-    id:                  str
-    owner_id:            str
-    titre:               str
-    description:         str
-    location:            GeoPoint
-    localisation:        str
-    region:              str
-    superficie:          float        # m²
-    prix:                float        # FCFA
-    type_terrain:        ParcelType   = ParcelType.RESIDENTIEL
-    status:              ParcelStatus = ParcelStatus.PENDING
-    document_hash:       str | None = None   # SHA-256 du titre foncier
-    ipfs_hash:           str | None = None   # Hash IPFS
-    blockchain_tx_hash:  str | None = None   # TX Polygon
-    created_at:          datetime | None = None
+
+    id: str
+    owner_id: str
+    titre: str
+    description: str
+    location: GeoPoint
+    localisation: str
+    region: str
+    superficie: float  # m²
+    prix: float  # FCFA
+    type_terrain: ParcelType = ParcelType.RESIDENTIEL
+    status: ParcelStatus = ParcelStatus.PENDING
+    document_hash: str | None = None  # SHA-256 du titre foncier
+    ipfs_hash: str | None = None  # Hash IPFS
+    blockchain_tx_hash: str | None = None  # TX Polygon
+    created_at: datetime | None = None
 
     # ─── Règles métier ───
 
@@ -95,6 +98,7 @@ class ParcelEntity:
     def validate(self) -> "ParcelEntity":
         """L'admin valide la parcelle."""
         from dataclasses import replace
+
         if not self.can_be_validated():
             raise ValueError(f"Impossible de valider : statut actuel = {self.status}")
         return replace(self, status=ParcelStatus.VALIDATED)
@@ -102,6 +106,7 @@ class ParcelEntity:
     def certify(self, tx_hash: str, ipfs_hash: str) -> "ParcelEntity":
         """Certification blockchain après validation."""
         from dataclasses import replace
+
         return replace(
             self,
             status=ParcelStatus.CERTIFIED,
@@ -111,10 +116,12 @@ class ParcelEntity:
 
     def reject(self) -> "ParcelEntity":
         from dataclasses import replace
+
         return replace(self, status=ParcelStatus.REJECTED)
 
     def mark_sold(self) -> "ParcelEntity":
         from dataclasses import replace
+
         return replace(self, status=ParcelStatus.SOLD)
 
 
@@ -126,7 +133,6 @@ from abc import ABC, abstractmethod
 
 
 class IParcelRepository(ABC):
-
     @abstractmethod
     def get_by_id(self, parcel_id: str) -> ParcelEntity | None: ...
 

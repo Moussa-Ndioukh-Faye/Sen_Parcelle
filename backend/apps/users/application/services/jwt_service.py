@@ -8,12 +8,10 @@ Service JWT complet pour Sen_parcelle.
 """
 
 import logging
-from datetime import timedelta, timezone
+from datetime import UTC, timedelta
 
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ class JWTService:
     Utilise Redis pour la blacklist (révocation).
     """
 
-    ACCESS_EXPIRE  = timedelta(minutes=15)
+    ACCESS_EXPIRE = timedelta(minutes=15)
     REFRESH_EXPIRE = timedelta(days=7)
 
     def __init__(self, cache_backend=None):
@@ -48,11 +46,11 @@ class JWTService:
         refresh["sub"] = user_id
 
         return {
-            "access":      str(access),
-            "refresh":     str(refresh),
-            "access_jti":  str(access["jti"]),
+            "access": str(access),
+            "refresh": str(refresh),
+            "access_jti": str(access["jti"]),
             "refresh_jti": str(refresh["jti"]),
-            "expires_in":  int(self.ACCESS_EXPIRE.total_seconds()),
+            "expires_in": int(self.ACCESS_EXPIRE.total_seconds()),
         }
 
     # ──────────────────────────────────────────────
@@ -107,6 +105,7 @@ class JWTService:
 
         # Charger les données utilisateur à jour
         from apps.users.infrastructure.models import User
+
         try:
             user = User.objects.get(id=payload["sub"])
         except User.DoesNotExist:
@@ -128,6 +127,7 @@ class JWTService:
         TTL = durée de vie restante du token (inutile de garder plus longtemps).
         """
         from django.core.cache import cache
+
         cache_key = f"jwt:blacklist:{jti}"
         ttl = ttl or int(self.ACCESS_EXPIRE.total_seconds())
         cache.set(cache_key, "1", timeout=ttl)
@@ -137,16 +137,18 @@ class JWTService:
         Révoque tous les tokens d'un utilisateur.
         Utilisé lors d'une déconnexion forcée (compte compromis, changement mdp).
         """
-        from django.core.cache import cache
         from datetime import datetime
+
+        from django.core.cache import cache
+
         # Stocker un timestamp "tous les tokens avant X sont invalides"
         cache.set(
             f"jwt:user_revoked:{user_id}",
-            datetime.now(tz=timezone.utc).timestamp(),
+            datetime.now(tz=UTC).timestamp(),
             timeout=int(self.REFRESH_EXPIRE.total_seconds()),
         )
 
     def _is_blacklisted(self, jti: str) -> bool:
         from django.core.cache import cache
-        return cache.get(f"jwt:blacklist:{jti}") is not None
 
+        return cache.get(f"jwt:blacklist:{jti}") is not None
