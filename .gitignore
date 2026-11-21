@@ -104,3 +104,6 @@ infra/backups/
 # Certificats SSL de développement (générés par infra/scripts/gen-ssl-dev.sh)
 infra/nginx/ssl/*.key
 infra/nginx/ssl/*.crt
+e2e/playwright/.auth/
+e2e/test-results/
+e2e/playwright-report/

@@ -132,35 +132,79 @@ jobs:
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: e2e
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.single
+      SQLITE_PATH: /tmp/e2e.sqlite3
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      CORS_ALLOWED_ORIGINS: http://localhost:4200
+      DEBUG: "0"
+      # Compte admin de test, créé uniquement dans cette base éphémère
+      E2E_ADMIN_EMAIL: admin@e2e.sn
+      E2E_ADMIN_PASSWORD: Admin#E2e2026
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+          cache-dependency-path: backend/poetry.lock
+
+      - name: Démarrer l'API Django
+        working-directory: backend
+        run: |
+          poetry install
+          poetry run python manage.py migrate --noinput
+          poetry run python manage.py shell -c "
+          import os
+          from apps.users.infrastructure.models import User
+          User.objects.create_superuser(os.environ['E2E_ADMIN_EMAIL'], '+221770009999', os.environ['E2E_ADMIN_PASSWORD'], nom='Admin E2E', kyc_status='verified')
+          "
+          nohup poetry run python manage.py runserver 8000 > /tmp/django.log 2>&1 &
 
       - name: Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: e2e/package-lock.json
+          cache-dependency-path: |
+            web/package-lock.json
+            e2e/package-lock.json
+
+      - name: Démarrer l'interface Angular
+        working-directory: web
+        run: |
+          npm ci
+          nohup npx ng serve --port 4200 --proxy-config proxy.conf.json > /tmp/ng.log 2>&1 &
+          npx --yes wait-on --timeout 240000 http-get://localhost:4200 http-get://localhost:8000/api/health/
 
       - name: Install dependencies
+        working-directory: e2e
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install chromium
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
+        working-directory: e2e
         run: npm run test:e2e
+
+      - name: Journaux des serveurs
+        if: failure()
+        run: tail -n 100 /tmp/django.log /tmp/ng.log
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: e2e/playwright-report/
 
   mobile:
     name: Mobile (Flutter)
