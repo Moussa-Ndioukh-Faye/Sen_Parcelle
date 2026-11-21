@@ -156,7 +156,7 @@ void main() {
       };
       final info = CertificatInfo.fromJson(json);
       expect(info.hashBlockchain, '0x123');
-      expect(info.dateValidation, DateTime(2026, 1, 1, 0, 0, 0, 0, 0));
+      expect(info.dateValidation, DateTime.utc(2026, 1, 1));
     });
   });
 
