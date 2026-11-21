@@ -11,14 +11,15 @@ import 'package:sen_parcelle/features/auth/presentation/providers/auth_provider.
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
-  @override ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailCtrl    = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  final _formKey      = GlobalKey<FormState>();
-  bool  _obscure      = true;
+  final _formKey = GlobalKey<FormState>();
+  bool _obscure = true;
 
   @override
   void dispose() {
@@ -30,9 +31,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     await ref.read(authNotifierProvider.notifier).login(
-      _emailCtrl.text.trim(),
-      _passwordCtrl.text,
-    );
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
   }
 
   @override
@@ -70,14 +71,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const Icon(Icons.home, size: 52, color: Colors.white),
                       const SizedBox(height: 12),
                       Text('Sen_parcelle',
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          color: Colors.white, fontSize: 28,
-                        )),
+                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: Colors.white,
+                                fontSize: 28,
+                              )),
                       const SizedBox(height: 6),
                       Text('Votre patrimoine, sécurisé',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white70,
-                        )),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white70,
+                              )),
                     ],
                   ),
                 ),
@@ -93,34 +95,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 8),
-                    Text('Connexion',
-                      style: Theme.of(context).textTheme.headlineMedium),
+                    Text('Connexion', style: Theme.of(context).textTheme.headlineMedium),
                     const SizedBox(height: 4),
                     Text('Bienvenue sur Sen_parcelle',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.muted,
-                      )),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.muted,
+                            )),
                     const SizedBox(height: 24),
 
                     AppTextField(
-                      controller:  _emailCtrl,
-                      label:       'Email',
-                      hint:        'moussa@email.com',
-                      prefixIcon:  Icons.email_outlined,
+                      controller: _emailCtrl,
+                      label: 'Email',
+                      hint: 'moussa@email.com',
+                      prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       validator: (v) => (v?.contains('@') ?? false) ? null : 'Email invalide',
                     ),
                     const SizedBox(height: 16),
 
                     AppTextField(
-                      controller:  _passwordCtrl,
-                      label:       'Mot de passe',
-                      hint:        '••••••••',
-                      prefixIcon:  Icons.lock_outlined,
+                      controller: _passwordCtrl,
+                      label: 'Mot de passe',
+                      hint: '••••••••',
+                      prefixIcon: Icons.lock_outlined,
                       obscureText: _obscure,
-                      suffixIcon:  IconButton(
-                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility,
-                          color: AppTheme.muted),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.muted),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                       validator: (v) => (v?.length ?? 0) >= 8 ? null : 'Minimum 8 caractères',
@@ -143,30 +143,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: AppTheme.red.withValues(alpha: 0.3)),
                         ),
-                        child: Text(authState.error!,
-                          style: const TextStyle(color: AppTheme.red, fontSize: 13)),
+                        child: Text(authState.error!, style: const TextStyle(color: AppTheme.red, fontSize: 13)),
                       ),
                       const SizedBox(height: 16),
                     ],
 
                     GradientButton(
                       label: 'Se connecter',
-
-                      isLoading:  authState.isLoading,
-                      onPressed:  _submit,
+                      isLoading: authState.isLoading,
+                      onPressed: _submit,
                     ),
                     const SizedBox(height: 16),
 
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Text("Pas encore de compte ? ",
-                        style: TextStyle(color: AppTheme.muted)),
+                      const Text("Pas encore de compte ? ", style: TextStyle(color: AppTheme.muted)),
                       GestureDetector(
                         onTap: () => context.push('/auth/register'),
                         child: const Text("S'inscrire",
-                          style: TextStyle(
-                            color: AppTheme.green,
-                            fontWeight: FontWeight.w700,
-                          )),
+                            style: TextStyle(
+                              color: AppTheme.green,
+                              fontWeight: FontWeight.w700,
+                            )),
                       ),
                     ]),
                   ],
@@ -179,6 +176,5 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════

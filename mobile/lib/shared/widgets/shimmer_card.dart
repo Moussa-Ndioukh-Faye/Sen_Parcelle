@@ -9,7 +9,7 @@ class ShimmerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width:  width,
+      width: width,
       height: height,
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(

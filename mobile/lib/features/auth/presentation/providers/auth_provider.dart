@@ -7,18 +7,18 @@ import 'package:sen_parcelle/core/network/result.dart';
 
 // ─── État (NE JAMAIS stocker le mot de passe en mémoire) ───
 class AuthNotifierState {
-  final bool    isLoading;
-  final bool    isAuthenticated;
-  final bool    requiresOTP;
+  final bool isLoading;
+  final bool isAuthenticated;
+  final bool requiresOTP;
   final String? userId;
   final String? role;
   final String? error;
   final String? email;
 
   const AuthNotifierState({
-    this.isLoading       = false,
+    this.isLoading = false,
     this.isAuthenticated = false,
-    this.requiresOTP     = false,
+    this.requiresOTP = false,
     this.userId,
     this.role,
     this.error,
@@ -26,22 +26,23 @@ class AuthNotifierState {
   });
 
   AuthNotifierState copyWith({
-    bool?   isLoading,
-    bool?   isAuthenticated,
-    bool?   requiresOTP,
+    bool? isLoading,
+    bool? isAuthenticated,
+    bool? requiresOTP,
     String? userId,
     String? role,
     String? error,
     String? email,
-  }) => AuthNotifierState(
-    isLoading:       isLoading       ?? this.isLoading,
-    isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-    requiresOTP:     requiresOTP     ?? this.requiresOTP,
-    userId:          userId          ?? this.userId,
-    role:            role            ?? this.role,
-    error:           error,
-    email:           email           ?? this.email,
-  );
+  }) =>
+      AuthNotifierState(
+        isLoading: isLoading ?? this.isLoading,
+        isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+        requiresOTP: requiresOTP ?? this.requiresOTP,
+        userId: userId ?? this.userId,
+        role: role ?? this.role,
+        error: error,
+        email: email ?? this.email,
+      );
 }
 
 // ─── Notifier ───
@@ -101,13 +102,22 @@ class AuthNotifier extends StateNotifier<AuthNotifierState> {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repo.register(
-      nom: nom, email: email, telephone: telephone,
-      password: password, role: role,
+      nom: nom,
+      email: email,
+      telephone: telephone,
+      password: password,
+      role: role,
     );
 
     return result.when(
-      success: (_) { state = state.copyWith(isLoading: false); return true; },
-      failure: (e) { state = state.copyWith(isLoading: false, error: e.message); return false; },
+      success: (_) {
+        state = state.copyWith(isLoading: false);
+        return true;
+      },
+      failure: (e) {
+        state = state.copyWith(isLoading: false, error: e.message);
+        return false;
+      },
     );
   }
 

@@ -41,10 +41,8 @@ class ParcelCard extends StatelessWidget {
                         ? CachedNetworkImage(
                             imageUrl: parcel.photoPrincipale!,
                             fit: BoxFit.cover,
-                            placeholder: (_, __) =>
-                                Container(color: AppTheme.greenLight),
-                            errorWidget: (_, __, ___) =>
-                                _ImagePlaceholder(type: parcel.typeTerrain),
+                            placeholder: (_, __) => Container(color: AppTheme.greenLight),
+                            errorWidget: (_, __, ___) => _ImagePlaceholder(type: parcel.typeTerrain),
                           )
                         : _ImagePlaceholder(type: parcel.typeTerrain),
                   ),
@@ -63,8 +61,7 @@ class ParcelCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(parcel.titre,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
@@ -73,8 +70,7 @@ class ParcelCard extends StatelessWidget {
                     const SizedBox(width: 3),
                     Expanded(
                         child: Text(parcel.localisation,
-                            style: const TextStyle(
-                                color: AppTheme.muted, fontSize: 12),
+                            style: const TextStyle(color: AppTheme.muted, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis)),
                   ]),
@@ -82,10 +78,7 @@ class ParcelCard extends StatelessWidget {
                   Row(children: [
                     Expanded(
                       child: Text(parcel.prixFormate,
-                          style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.greenDark)),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.greenDark)),
                     ),
                     _MetaTag(label: '${parcel.superficie.toStringAsFixed(0)} m²'),
                     const SizedBox(width: 6),
@@ -106,16 +99,14 @@ class _ImagePlaceholder extends StatelessWidget {
   const _ImagePlaceholder({required this.type});
   static const _icons = {
     'residentiel': Icons.home,
-    'commercial':  Icons.business,
-    'agricole':    Icons.agriculture,
-    'industriel':  Icons.factory,
+    'commercial': Icons.business,
+    'agricole': Icons.agriculture,
+    'industriel': Icons.factory,
   };
   @override
   Widget build(BuildContext context) => Container(
         color: AppTheme.greenLight,
-        child: Center(
-            child: Icon(_icons[type] ?? Icons.landscape,
-                size: 50, color: AppTheme.green)),
+        child: Center(child: Icon(_icons[type] ?? Icons.landscape, size: 50, color: AppTheme.green)),
       );
 }
 
@@ -129,20 +120,18 @@ class _CertificationBadge extends StatelessWidget {
           color: isCertified ? AppTheme.green : AppTheme.amber,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isCertified ? Icons.verified : Icons.hourglass_empty,
-              size: 10, color: Colors.white,
-            ),
-            const SizedBox(width: 3),
-            Text(
-              isCertified ? 'Certifiée' : 'En vérification',
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-            ),
-          ]),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(
+            isCertified ? Icons.verified : Icons.hourglass_empty,
+            size: 10,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            isCertified ? 'Certifiée' : 'En vérification',
+            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+          ),
+        ]),
       );
 }
 
@@ -156,10 +145,6 @@ class _MetaTag extends StatelessWidget {
           color: AppTheme.bgLight,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(label,
-            style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.muted)),
+        child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.muted)),
       );
 }

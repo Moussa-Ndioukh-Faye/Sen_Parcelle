@@ -6,25 +6,25 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ─── Couleurs principales ───
-  static const greenDark  = Color(0xFF1B5E20);
-  static const green       = Color(0xFF4CAF50);
+  static const greenDark = Color(0xFF1B5E20);
+  static const green = Color(0xFF4CAF50);
   static const greenLight = Color(0xFFC8E6C9);
-  static const greenBg    = Color(0xFFE8F5E9);
+  static const greenBg = Color(0xFFE8F5E9);
 
-  static const amber      = Color(0xFFFFB300);
-  static const red        = Color(0xFFE53935);
-  static const slate      = Color(0xFF455A64);
+  static const amber = Color(0xFFFFB300);
+  static const red = Color(0xFFE53935);
+  static const slate = Color(0xFF455A64);
 
-  static const bgLight   = Color(0xFFF5F5F5);
-  static const muted     = Color(0xFF757575);
+  static const bgLight = Color(0xFFF5F5F5);
+  static const muted = Color(0xFF757575);
 
   // ─── Tokens additionnels ───
-  static const surfaceDark  = Color(0xFF0F172A);
-  static const green400     = Color(0xFF4ADE80);
+  static const surfaceDark = Color(0xFF0F172A);
+  static const green400 = Color(0xFF4ADE80);
 
   // ─── Spacing tokens ───
-  static const double space4  = 4;
-  static const double space8  = 8;
+  static const double space4 = 4;
+  static const double space8 = 8;
   static const double space12 = 12;
   static const double space16 = 16;
   static const double space20 = 20;
@@ -47,7 +47,7 @@ class AppTheme {
       brightness: Brightness.light,
     ),
     textTheme: GoogleFonts.dmSansTextTheme(),
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: greenDark,
       foregroundColor: Colors.white,
       elevation: 0,
@@ -63,7 +63,7 @@ class AppTheme {
     ),
     textTheme: GoogleFonts.dmSansTextTheme(ThemeData.dark().textTheme),
     scaffoldBackgroundColor: surfaceDark,
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: surfaceDark,
       foregroundColor: Colors.white,
       elevation: 0,
@@ -71,7 +71,7 @@ class AppTheme {
   );
 
   // ─── Gradient decorations ───
-  static BoxDecoration gradientDecoration() => BoxDecoration(
+  static BoxDecoration gradientDecoration() => const BoxDecoration(
         gradient: LinearGradient(
           colors: [greenDark, green],
           begin: Alignment.topLeft,

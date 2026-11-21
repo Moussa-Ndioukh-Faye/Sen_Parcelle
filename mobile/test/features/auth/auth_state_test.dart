@@ -12,7 +12,7 @@ void main() {
     });
 
     test('authenticated devrait renvoyer isAuthenticated true', () {
-      final state = AuthState.authenticated(
+      const state = AuthState.authenticated(
         user: AuthUser(id: '1', email: 'test@sn', nom: 'Test', role: 'acheteur'),
       );
       expect(state.isAuthenticated, true);

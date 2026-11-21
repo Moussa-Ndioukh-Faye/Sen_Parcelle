@@ -19,8 +19,8 @@ void main() async {
 
   // ─── Status bar transparente ───
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor:           Colors.transparent,
-    statusBarIconBrightness:  Brightness.dark,
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
   ));
 
   runApp(
@@ -37,13 +37,13 @@ class SenParcelleApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
-      title:            'Sen_parcelle',
+      title: 'Sen_parcelle',
       debugShowCheckedModeBanner: false,
-      theme:            AppTheme.lightTheme,
-      darkTheme:        AppTheme.darkTheme,
-      themeMode:        ThemeMode.system,
-      routerConfig:     router,
-      builder:          (context, child) => _AppWrapper(child: child!),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      routerConfig: router,
+      builder: (context, child) => _AppWrapper(child: child!),
     );
   }
 }

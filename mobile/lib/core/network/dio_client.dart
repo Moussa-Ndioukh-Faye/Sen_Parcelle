@@ -11,13 +11,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
 // ─── Config ───
-const kBaseUrl     = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:8000/api');
-const kTimeout     = Duration(seconds: 30);
+const kBaseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:8000/api');
+const kTimeout = Duration(seconds: 30);
 const kConnTimeout = Duration(seconds: 10);
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
-    baseUrl:        kBaseUrl,
+    baseUrl: kBaseUrl,
     connectTimeout: kConnTimeout,
     receiveTimeout: kTimeout,
     headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
@@ -32,15 +32,14 @@ final dioProvider = Provider<Dio>((ref) {
   return dio;
 });
 
-
 // ═══════════════════════════════════════════════════════════════
 // INTERCEPTEUR JWT — Injecte le token + refresh auto
 // ═══════════════════════════════════════════════════════════════
 
 class JWTInterceptor extends Interceptor {
-  final Dio         _dio;
-  final Ref         _ref;
-  final _storage  = const FlutterSecureStorage();
+  final Dio _dio;
+  final Ref _ref;
+  final _storage = const FlutterSecureStorage();
   bool _isRefreshing = false;
   Completer<String?>? _refreshTokenCompleter;
 
@@ -107,7 +106,6 @@ class JWTInterceptor extends Interceptor {
   }
 }
 
-
 // ═══════════════════════════════════════════════════════════════
 // INTERCEPTEUR RETRY — Retry automatique en cas d'erreur réseau
 // ═══════════════════════════════════════════════════════════════
@@ -122,11 +120,10 @@ class RetryInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final retries = err.requestOptions.extra['retries'] as int? ?? 0;
 
-    final shouldRetry = (
-      err.type == DioExceptionType.connectionTimeout ||
-      err.type == DioExceptionType.receiveTimeout   ||
-      (err.response?.statusCode != null && err.response!.statusCode! >= 500)
-    ) && retries < _maxRetries;
+    final shouldRetry = (err.type == DioExceptionType.connectionTimeout ||
+            err.type == DioExceptionType.receiveTimeout ||
+            (err.response?.statusCode != null && err.response!.statusCode! >= 500)) &&
+        retries < _maxRetries;
 
     if (shouldRetry) {
       await Future.delayed(Duration(seconds: (retries + 1) * 2));
@@ -141,7 +138,6 @@ class RetryInterceptor extends Interceptor {
     handler.next(err);
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // INTERCEPTEUR LOGGING (masque les tokens et données sensibles)

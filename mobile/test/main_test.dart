@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   group('ProviderScope', () {
-    testWidgets('ProviderScope encapsule correctement MaterialApp',
-        (WidgetTester tester) async {
+    testWidgets('ProviderScope encapsule correctement MaterialApp', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(home: Scaffold()),

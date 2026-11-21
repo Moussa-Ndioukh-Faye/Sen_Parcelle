@@ -2,7 +2,6 @@
 // ═════════════════════════════════════════════
 
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sen_parcelle/core/network/result.dart';
 import 'package:sen_parcelle/core/network/api_exception.dart';
 
@@ -46,9 +45,7 @@ class PaymentRepository {
   Future<Result<List<TransactionDetail>>> getMyPurchases() async {
     try {
       final response = await _dio.get('/transactions/mes-achats/');
-      final list = (response.data as List)
-          .map((json) => TransactionDetail.fromJson(json))
-          .toList();
+      final list = (response.data as List).map((json) => TransactionDetail.fromJson(json)).toList();
       return Success(list);
     } on DioException catch (e) {
       return Failure(ApiException.fromDioError(e));
@@ -60,9 +57,7 @@ class PaymentRepository {
   Future<Result<List<TransactionDetail>>> getMySales() async {
     try {
       final response = await _dio.get('/transactions/mes-ventes/');
-      final list = (response.data as List)
-          .map((json) => TransactionDetail.fromJson(json))
-          .toList();
+      final list = (response.data as List).map((json) => TransactionDetail.fromJson(json)).toList();
       return Success(list);
     } on DioException catch (e) {
       return Failure(ApiException.fromDioError(e));

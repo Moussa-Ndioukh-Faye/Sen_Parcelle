@@ -15,14 +15,13 @@ class OTPScreen extends ConsumerStatefulWidget {
   String get userId => extra['userId'] as String;
   String get _email => extra['email'] as String;
   String get _password => extra['password'] as String;
-  @override ConsumerState<OTPScreen> createState() => _OTPScreenState();
+  @override
+  ConsumerState<OTPScreen> createState() => _OTPScreenState();
 }
 
 class _OTPScreenState extends ConsumerState<OTPScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes =
-      List.generate(6, (_) => FocusNode());
+  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   // int _countdown = 300; // 5 minutes
 
   String get _otpCode => _controllers.map((c) => c.text).join();
@@ -40,10 +39,10 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
   Future<void> _submit() async {
     if (_otpCode.length != 6) return;
     await ref.read(authNotifierProvider.notifier).login(
-      widget._email,
-      widget._password,
-      otp: _otpCode,
-    );
+          widget._email,
+          widget._password,
+          otp: _otpCode,
+        );
   }
 
   @override
@@ -56,72 +55,72 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
       appBar: AppBar(title: const Text('Vérification')),
       body: SafeArea(
         child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 32),
-            const Center(child: Icon(Icons.smartphone_outlined, size: 60, color: AppTheme.greenDark)),
-            const SizedBox(height: 16),
-            Text('Code de vérification',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text('Entrez le code à 6 chiffres envoyé par SMS',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.muted)),
-            const SizedBox(height: 40),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 32),
+              const Center(child: Icon(Icons.smartphone_outlined, size: 60, color: AppTheme.greenDark)),
+              const SizedBox(height: 16),
+              Text('Code de vérification',
+                  textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 8),
+              const Text('Entrez le code à 6 chiffres envoyé par SMS',
+                  textAlign: TextAlign.center, style: TextStyle(color: AppTheme.muted)),
+              const SizedBox(height: 40),
 
-            // ─── 6 cases OTP ───
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(6, (i) => SizedBox(
-                width: 46, height: 56,
-                child: TextField(
-                  controller:  _controllers[i],
-                  focusNode:   _focusNodes[i],
-                  textAlign:   TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  maxLength:   1,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  decoration: InputDecoration(
-                    counterText:  '',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.green, width: 2),
-                    ),
-                  ),
-                  onChanged: (v) => _onDigitChanged(i, v),
-                ),
-              )),
-            ),
-            const SizedBox(height: 32),
+              // ─── 6 cases OTP ───
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(
+                    6,
+                    (i) => SizedBox(
+                          width: 46,
+                          height: 56,
+                          child: TextField(
+                            controller: _controllers[i],
+                            focusNode: _focusNodes[i],
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            maxLength: 1,
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                            decoration: InputDecoration(
+                              counterText: '',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: AppTheme.green, width: 2),
+                              ),
+                            ),
+                            onChanged: (v) => _onDigitChanged(i, v),
+                          ),
+                        )),
+              ),
+              const SizedBox(height: 32),
 
-            Consumer(builder: (_, ref, __) {
-              final state = ref.watch(authNotifierProvider);
-              return GradientButton(
-                label:      'Valider',
-                isLoading:  state.isLoading,
-                onPressed:  _submit,
-              );
-            }),
+              Consumer(builder: (_, ref, __) {
+                final state = ref.watch(authNotifierProvider);
+                return GradientButton(
+                  label: 'Valider',
+                  isLoading: state.isLoading,
+                  onPressed: _submit,
+                );
+              }),
 
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {},
-              child: const Text('Renvoyer le code'),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {},
+                child: const Text('Renvoyer le code'),
+              ),
+            ],
           ),
-        ],
-      ),
-      ),
+        ),
       ),
     );
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════

@@ -37,13 +37,15 @@ class GradientButton extends StatelessWidget {
                 end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(16),
-              boxShadow: isLoading ? null : [
-                BoxShadow(
-                  color: AppTheme.greenDark.withAlpha(76),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              boxShadow: isLoading
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: AppTheme.greenDark.withAlpha(76),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
             child: Center(
               child: isLoading

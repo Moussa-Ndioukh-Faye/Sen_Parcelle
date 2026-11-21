@@ -15,7 +15,7 @@ class CertificatScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Certificat Blockchain')),
       body: parcelAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error:   (e, _) => Center(child: Text('Erreur : $e')),
+        error: (e, _) => Center(child: Text('Erreur : $e')),
         data: (parcel) {
           if (parcel == null || parcel.certificat == null) {
             return const Center(child: Text('Certificat non disponible'));
@@ -24,29 +24,26 @@ class CertificatScreen extends ConsumerWidget {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(children: [
-
               // ─── Badge validé ───
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppTheme.greenDark, AppTheme.green]),
+                  gradient: const LinearGradient(colors: [AppTheme.greenDark, AppTheme.green]),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Column(children: [
-                  const Icon(Icons.check_circle, size: 56, color: Colors.white),
-                  const SizedBox(height: 12),
-                  const Text('Certificat Valide',
-                    style: TextStyle(color: Colors.white, fontSize: 22,
-                      fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  const Text('Enregistré sur Blockchain Polygon',
-                    style: TextStyle(color: Colors.white70, fontSize: 13)),
+                child: const Column(children: [
+                  Icon(Icons.check_circle, size: 56, color: Colors.white),
+                  SizedBox(height: 12),
+                  Text('Certificat Valide',
+                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 6),
+                  Text('Enregistré sur Blockchain Polygon', style: TextStyle(color: Colors.white70, fontSize: 13)),
                 ]),
               ),
               const SizedBox(height: 20),
 
-               // ─── Infos parcelle ───
+              // ─── Infos parcelle ───
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -60,11 +57,11 @@ class CertificatScreen extends ConsumerWidget {
                   ],
                 ),
                 child: Column(children: [
-                  _CertRow('Parcelle',     parcel.titre),
-                  _CertRow('Région',       parcel.region),
-                  _CertRow('Superficie',   '${parcel.superficie.toStringAsFixed(0)} m²'),
-                  _CertRow('Validé le',    _formatDate(cert.dateValidation)),
-                  _CertRow('Réseau',       'Polygon (MATIC)'),
+                  _CertRow('Parcelle', parcel.titre),
+                  _CertRow('Région', parcel.region),
+                  _CertRow('Superficie', '${parcel.superficie.toStringAsFixed(0)} m²'),
+                  _CertRow('Validé le', _formatDate(cert.dateValidation)),
+                  const _CertRow('Réseau', 'Polygon (MATIC)'),
                 ]),
               ),
               const SizedBox(height: 16),
@@ -76,20 +73,22 @@ class CertificatScreen extends ConsumerWidget {
                   color: AppTheme.surfaceDark,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('HASH BLOCKCHAIN',
-                    style: TextStyle(color: Colors.white38, fontSize: 10,
-                      fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-                  SizedBox(height: AppTheme.space8),
-                  Text(cert.hashBlockchain,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      color: AppTheme.green400,
-                      fontSize: 12,
-                      height: 1.6,
-                    )),
-              ],
-              ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('HASH BLOCKCHAIN',
+                        style: TextStyle(
+                            color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                    const SizedBox(height: AppTheme.space8),
+                    Text(cert.hashBlockchain,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          color: AppTheme.green400,
+                          fontSize: 12,
+                          height: 1.6,
+                        )),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -116,7 +115,8 @@ class CertificatScreen extends ConsumerWidget {
                 child: const Row(children: [
                   Icon(Icons.info_outline, color: AppTheme.muted, size: 18),
                   SizedBox(width: 10),
-                  Expanded(child: Text(
+                  Expanded(
+                      child: Text(
                     'Ce certificat peut être vérifié indépendamment sur '
                     'polygonscan.com en utilisant le hash ci-dessus.',
                     style: TextStyle(color: AppTheme.muted, fontSize: 12, height: 1.5),
@@ -130,9 +130,8 @@ class CertificatScreen extends ConsumerWidget {
     );
   }
 
-  String _formatDate(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/'
-    '${d.month.toString().padLeft(2, '0')}/${d.year}';
+  String _formatDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/'
+      '${d.month.toString().padLeft(2, '0')}/${d.year}';
 }
 
 class _CertRow extends StatelessWidget {
@@ -140,14 +139,13 @@ class _CertRow extends StatelessWidget {
   const _CertRow(this.label, this.value);
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    child: Row(children: [
-      Text(label, style: const TextStyle(color: AppTheme.muted, fontSize: 13)),
-      const Spacer(),
-      Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-    ]),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(children: [
+          Text(label, style: const TextStyle(color: AppTheme.muted, fontSize: 13)),
+          const Spacer(),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        ]),
+      );
 }
-
 
 // ═══════════════════════════════════════════════════════════════

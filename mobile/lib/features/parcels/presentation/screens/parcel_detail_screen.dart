@@ -21,14 +21,16 @@ class ParcelDetailScreen extends ConsumerWidget {
 
     return parcelAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error:   (e, _) => Scaffold(
+      error: (e, _) => Scaffold(
         appBar: AppBar(),
         body: Center(child: Text('Erreur : $e')),
       ),
       data: (parcel) {
-        if (parcel == null) return const Scaffold(
-          body: Center(child: Text('Parcelle introuvable')),
-        );
+        if (parcel == null) {
+          return const Scaffold(
+            body: Center(child: Text('Parcelle introuvable')),
+          );
+        }
         return _ParcelDetailView(parcel: parcel);
       },
     );
@@ -50,22 +52,21 @@ class _ParcelDetailView extends ConsumerWidget {
           backgroundColor: AppTheme.greenDark,
           flexibleSpace: FlexibleSpaceBar(
             background: parcel.photoPrincipale != null
-              ? Image.network(parcel.photoPrincipale!, fit: BoxFit.cover)
-              : Container(
-                  decoration: AppTheme.gradientDecoration(),
-                  child: const Center(child: Icon(Icons.home, size: 80, color: Colors.white54)),
-                ),
+                ? Image.network(parcel.photoPrincipale!, fit: BoxFit.cover)
+                : Container(
+                    decoration: AppTheme.gradientDecoration(),
+                    child: const Center(child: Icon(Icons.home, size: 80, color: Colors.white54)),
+                  ),
           ),
         ),
 
-        SliverToBoxAdapter(child: Padding(
+        SliverToBoxAdapter(
+            child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
             // ─── Titre + badge ───
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Text(parcel.titre,
-                style: Theme.of(context).textTheme.headlineMedium)),
+              Expanded(child: Text(parcel.titre, style: Theme.of(context).textTheme.headlineMedium)),
               const SizedBox(width: 8),
               _StatusBadge(isCertified: parcel.isCertified),
             ]),
@@ -73,15 +74,17 @@ class _ParcelDetailView extends ConsumerWidget {
             Row(children: [
               const Icon(Icons.location_on, size: 14, color: AppTheme.muted),
               const SizedBox(width: 4),
-              Text(parcel.localisation, style: TextStyle(color: AppTheme.muted, fontSize: 13)),
+              Text(parcel.localisation, style: const TextStyle(color: AppTheme.muted, fontSize: 13)),
             ]),
             const SizedBox(height: 14),
 
             // ─── Prix ───
             Text(parcel.prixFormate,
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: AppTheme.greenDark, fontWeight: FontWeight.w900, fontSize: 28,
-              )),
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      color: AppTheme.greenDark,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 28,
+                    )),
             const SizedBox(height: 14),
 
             // ─── Métriques ───
@@ -101,23 +104,22 @@ class _ParcelDetailView extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppTheme.greenDark, AppTheme.green]),
+                    gradient: const LinearGradient(colors: [AppTheme.greenDark, AppTheme.green]),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     const Row(
                       children: [
                         Text('CERTIFICAT BLOCKCHAIN',
-                          style: TextStyle(color: Colors.white60,
-                            fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
+                            style: TextStyle(
+                                color: Colors.white60, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
                         SizedBox(width: 4),
                         Icon(Icons.link, size: 12, color: Colors.white60),
                       ],
                     ),
                     const SizedBox(height: 4),
                     const Text('Propriété vérifiée et certifiée',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(8),
@@ -127,16 +129,15 @@ class _ParcelDetailView extends ConsumerWidget {
                       ),
                       child: Text(
                         parcel.certificat!.hashBlockchain,
-                        style: const TextStyle(
-                          fontFamily: 'monospace', color: Colors.white70, fontSize: 10),
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontFamily: 'monospace', color: Colors.white70, fontSize: 10),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(height: 6),
                     const Row(children: [
                       Spacer(),
-                      Text('Voir sur Polygon',
-                        style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      Text('Voir sur Polygon', style: TextStyle(color: Colors.white70, fontSize: 12)),
                       SizedBox(width: 4),
                       Icon(Icons.arrow_forward, size: 12, color: Colors.white70),
                     ]),
@@ -150,8 +151,7 @@ class _ParcelDetailView extends ConsumerWidget {
               const SizedBox(height: 16),
               Text('Description', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 6),
-              Text(parcel.description!,
-                style: TextStyle(color: AppTheme.muted, height: 1.6)),
+              Text(parcel.description!, style: const TextStyle(color: AppTheme.muted, height: 1.6)),
             ],
 
             // ─── Vendeur ───
@@ -165,16 +165,14 @@ class _ParcelDetailView extends ConsumerWidget {
               child: Row(children: [
                 CircleAvatar(
                   backgroundColor: AppTheme.green,
-                  child: Text(
-                    parcel.vendeurNom.isNotEmpty ? parcel.vendeurNom[0] : 'V',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(parcel.vendeurNom.isNotEmpty ? parcel.vendeurNom[0] : 'V',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(parcel.vendeurNom,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                  const Text('Vendeur vérifié',
-                    style: TextStyle(color: AppTheme.muted, fontSize: 12)),
+                Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(parcel.vendeurNom, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const Text('Vendeur vérifié', style: TextStyle(color: AppTheme.muted, fontSize: 12)),
                 ])),
                 ElevatedButton.icon(
                   onPressed: () => context.push('/messages'),
@@ -233,11 +231,9 @@ class _ParcelDetailView extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Choisir un moyen de paiement',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Choisir un moyen de paiement', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Montant à payer : ${parcel.prixFormate}',
-                style: const TextStyle(color: AppTheme.muted)),
+            Text('Montant à payer : ${parcel.prixFormate}', style: const TextStyle(color: AppTheme.muted)),
             const SizedBox(height: 24),
             _PaymentOptionTile(
               title: 'Wave Sénégal',
@@ -259,12 +255,7 @@ class _ParcelDetailView extends ConsumerWidget {
     );
   }
 
-  Future<void> _handlePayment(
-    BuildContext context, 
-    WidgetRef ref, 
-    String parcelId, 
-    String provider
-  ) async {
+  Future<void> _handlePayment(BuildContext context, WidgetRef ref, String parcelId, String provider) async {
     Navigator.pop(context); // Fermer le bottom sheet
 
     // Afficher un loader global ou via le provider
@@ -332,23 +323,23 @@ class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.isCertified});
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: BoxDecoration(
-      color: isCertified ? AppTheme.green : AppTheme.amber,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(isCertified ? Icons.verified : Icons.access_time, size: 12, color: Colors.white),
-        const SizedBox(width: 4),
-        Text(
-          isCertified ? 'Certifiée' : 'En attente',
-          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isCertified ? AppTheme.green : AppTheme.amber,
+          borderRadius: BorderRadius.circular(20),
         ),
-      ],
-    ),
-  );
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(isCertified ? Icons.verified : Icons.access_time, size: 12, color: Colors.white),
+            const SizedBox(width: 4),
+            Text(
+              isCertified ? 'Certifiée' : 'En attente',
+              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
 }
 
 class _MetricChip extends StatelessWidget {
@@ -357,15 +348,15 @@ class _MetricChip extends StatelessWidget {
   const _MetricChip({required this.icon, required this.label});
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-    decoration: BoxDecoration(
-      color: AppTheme.bgLight,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 14, color: AppTheme.green),
-      const SizedBox(width: 5),
-      Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-    ]),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: AppTheme.bgLight,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 14, color: AppTheme.green),
+          const SizedBox(width: 5),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        ]),
+      );
 }

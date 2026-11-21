@@ -39,14 +39,12 @@ class HomeScreen extends ConsumerWidget {
                           Row(children: [
                             const CircleAvatar(
                               backgroundColor: Colors.white24,
-                              child: Text('M', style: TextStyle(
-                                color: Colors.white, fontWeight: FontWeight.bold)),
+                              child: Text('M', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
                             const SizedBox(width: 10),
-                            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('Bonjour', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                              Text('Moussa Faye', style: TextStyle(
-                                color: Colors.white, fontWeight: FontWeight.bold)),
+                              Text('Moussa Faye', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ]),
                             const Spacer(),
                             IconButton(
@@ -56,27 +54,26 @@ class HomeScreen extends ConsumerWidget {
                           ]),
                           const SizedBox(height: 12),
                           Text('Trouvez votre terrain\nidéal',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: Colors.white, height: 1.2,
-                            )),
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                    color: Colors.white,
+                                    height: 1.2,
+                                  )),
                           const SizedBox(height: 14),
                           // ─── Barre de recherche ───
                           GestureDetector(
                             onTap: () => context.push('/explore'),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.25)),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                               ),
-                              child: Row(children: [
-                                const Icon(Icons.search, color: Colors.white70, size: 20),
-                                const SizedBox(width: 10),
+                              child: const Row(children: [
+                                Icon(Icons.search, color: Colors.white70, size: 20),
+                                SizedBox(width: 10),
                                 Text('Rechercher une parcelle...',
-                                  style: TextStyle(color: Colors.white60, fontSize: 14)),
+                                    style: TextStyle(color: Colors.white60, fontSize: 14)),
                               ]),
                             ),
                           ),
@@ -111,8 +108,7 @@ class HomeScreen extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: Row(children: [
-                  Text('Parcelles certifiées',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                  Text('Parcelles certifiées', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                   SizedBox(width: 4),
                   Icon(Icons.verified, size: 16, color: AppTheme.green),
                   Spacer(),
@@ -136,8 +132,7 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(children: [
                       const Icon(Icons.sentiment_dissatisfied, size: 40, color: AppTheme.muted),
                       const SizedBox(height: 8),
-                      Text(e.toString(), textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.muted)),
+                      Text(e.toString(), textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted)),
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () => ref.invalidate(parcelsProvider),
@@ -153,7 +148,7 @@ class HomeScreen extends ConsumerWidget {
                   delegate: SliverChildBuilderDelegate(
                     (ctx, i) => ParcelCard(
                       parcel: response.results[i],
-                      onTap:  () => ctx.push('/parcelle/${response.results[i].id}'),
+                      onTap: () => ctx.push('/parcelle/${response.results[i].id}'),
                     ),
                     childCount: response.results.length,
                   ),
@@ -170,6 +165,5 @@ class HomeScreen extends ConsumerWidget {
 
   static const _filters = ['Tous', 'Dakar', 'Thiès', 'Saint-Louis', 'Agricole', 'Résidentiel'];
 }
-
 
 // ═══════════════════════════════════════════════════════════════

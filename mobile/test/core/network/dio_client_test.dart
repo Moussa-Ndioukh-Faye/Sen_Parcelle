@@ -8,13 +8,13 @@ import 'package:sen_parcelle/core/network/api_exception.dart';
 void main() {
   group('ApiException', () {
     test('devrait créer une exception avec message', () {
-      final exc = ApiException(code: 'network', message: 'Erreur réseau');
+      const exc = ApiException(code: 'network', message: 'Erreur réseau');
       expect(exc.message, 'Erreur réseau');
       expect(exc.toString(), contains('Erreur réseau'));
     });
 
     test('devrait créer une exception avec code statut', () {
-      final exc = ApiException(code: '401', message: 'Non autorisé', statusCode: 401);
+      const exc = ApiException(code: '401', message: 'Non autorisé', statusCode: 401);
       expect(exc.statusCode, 401);
     });
 
@@ -48,7 +48,7 @@ void main() {
     });
 
     test('Failure contient l\'erreur', () {
-      final result = Failure<String>(ApiException(code: 'err', message: 'Erreur'));
+      const result = Failure<String>(ApiException(code: 'err', message: 'Erreur'));
       expect(result.isSuccess, false);
       expect(result.isFailure, true);
       expect(result.errorOrNull, isA<ApiException>());
@@ -63,7 +63,7 @@ void main() {
 
     test('when failure appelle le callback', () {
       var called = false;
-      final result = Failure<String>(ApiException(code: 'e', message: 'err'));
+      const result = Failure<String>(ApiException(code: 'e', message: 'err'));
       result.when(success: (_) => null, failure: (_) => called = true);
       expect(called, true);
     });
@@ -77,7 +77,7 @@ void main() {
 
     test('when failure appelle le callback', () {
       var called = false;
-      final result = Failure<String>(ApiException(code: 'e', message: 'err'));
+      const result = Failure<String>(ApiException(code: 'e', message: 'err'));
       result.when(success: (_) => null, failure: (_) => called = true);
       expect(called, true);
     });
